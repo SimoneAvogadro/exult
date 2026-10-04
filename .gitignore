@@ -340,3 +340,6 @@ data/shortcutbar.vga
 data/shortcutbar_vga.h
 /expack
 /ipack
+
+# Hi-res fork: Python byte code of tools/hires
+__pycache__/
