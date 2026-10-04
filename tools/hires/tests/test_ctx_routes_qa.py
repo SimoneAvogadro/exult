@@ -124,3 +124,39 @@ def test_seam_excess_and_c2(world):
     tiles = {k: rules.nn_upscale(world.flat(*k), 6) for k in world.flat_keys}
     c2 = qa.c2_pairs(world, tiles, Quantizer(world.pal8))
     assert c2["pairs"] > 0 and abs(c2["excess_mean"]) < 1e-9      # NN tiles reproduce the 1x seams
+
+
+@pytest.mark.skipif(not xbrz_available(), reason="libxbrz19.so not built")
+def test_route3_retries_transient_errors(tmp_path, world, monkeypatch):
+    """A window or a key whose computation raises once (a flipped bit) is recomputed; the output is
+    the same as an undisturbed run, and a persistent error still ends the run."""
+    from u7hires import pack, route3
+    from u7hires.consensus import ModeConsensus
+    p = route3.R3Params(variant="xbrz")
+    ref = route3.run(world, str(tmp_path / "ref"), p, workers=1)
+    assert ref["retries"] == {"windows": 0, "keys": 0}
+    seen_w, seen_k = set(), set()
+    orig_w, orig_r = route3._window_instances, ModeConsensus.result
+
+    def flaky_window(job):
+        if job[0].name not in seen_w:
+            seen_w.add(job[0].name)
+            raise IndexError("index 1157 is out of bounds for axis 0 with size 256")
+        return orig_w(job)
+
+    def flaky_result(self, key, parent=None):
+        if key not in seen_k:
+            seen_k.add(key)
+            raise ValueError("cannot reshape array")
+        return orig_r(self, key, parent)
+
+    monkeypatch.setattr(route3, "_window_instances", flaky_window)
+    monkeypatch.setattr(ModeConsensus, "result", flaky_result)
+    meta = route3.run(world, str(tmp_path / "flaky"), p, workers=1)
+    assert meta["retries"] == {"windows": len(seen_w), "keys": len(seen_k)} and seen_w and seen_k
+    a, ma = pack.load_candidates(str(tmp_path / "ref"))
+    b, mb = pack.load_candidates(str(tmp_path / "flaky"))
+    assert sorted(a) == sorted(b) and all(np.array_equal(a[k], b[k]) for k in a) and ma["keys"] == mb["keys"]
+    seen_w.clear()
+    with pytest.raises(IndexError):
+        route3.run(world, str(tmp_path / "noretry"), p, workers=1, retries=0)

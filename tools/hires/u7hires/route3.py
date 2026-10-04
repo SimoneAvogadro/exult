@@ -111,17 +111,35 @@ class R3Kernel:
 
 _K: R3Kernel | None = None
 _HYB: set = set()
+_RETRIES = 0
+# Exceptions a transient hardware error (a flipped bit in an index array) produces in the kernels;
+# a deterministic bug raises again on every attempt and still ends the run (see vote.py).
+TRANSIENT_ERRORS = (IndexError, ValueError, FloatingPointError, OverflowError, MemoryError)
+DEFAULT_RETRIES = 2
 
 
-def _init(pal8, pal6, params_dict, hybrid_keys):
-    global _K, _HYB
+def _init(pal8, pal6, params_dict, hybrid_keys, retries=0):
+    global _K, _HYB, _RETRIES
     single_thread_env()
     _K = R3Kernel(pal8, pal6, R3Params(**params_dict))
     _HYB = set(tuple(k) for k in hybrid_keys)
+    _RETRIES = int(retries)
 
 
 def _run_window(job):
-    """Worker: (window, variant) -> list of (shape, frame, tile48) instances."""
+    """Worker: (window, variant) -> (instances, raw plane or None, retries used). A window whose
+    computation raises one of TRANSIENT_ERRORS is recomputed up to ``_RETRIES`` times."""
+    for attempt in range(_RETRIES + 1):
+        try:
+            return (*_window_instances(job), attempt)
+        except TRANSIENT_ERRORS as e:
+            if attempt >= _RETRIES:
+                raise
+            get_logger().warning("window %s: %r; recomputing (transient error?)", job[0].name, e)
+
+
+def _window_instances(job):
+    """(window, variant) -> (list of (shape, frame, tile48) instances, raw plane or None)."""
     win, variant = job
     S = _K.p.scale
     planes = {}
@@ -151,7 +169,9 @@ def hybrid_key_set(world: World, params: R3Params) -> list[tuple[int, int]]:
 
 
 def run(world: World, out_dir: str, params: R3Params, workers: int = 8, cs: ContextSet | None = None,
-        keep_raw: bool = False, limit: int | None = None, log=None) -> dict:
+        keep_raw: bool = False, limit: int | None = None, log=None, retries: int = DEFAULT_RETRIES) -> dict:
+    """``retries``: recompute a window or a key whose computation raised one of TRANSIENT_ERRORS up
+    to that many times (counted in meta['retries']; the output does not depend on it)."""
     log = log or get_logger()
     t0 = time.time()
     if cs is None:
@@ -172,16 +192,18 @@ def run(world: World, out_dir: str, params: R3Params, workers: int = 8, cs: Cont
     prog = Progress(log, len(windows), "windows")
     jobs = ((w, params.variant) for w in windows)
     pdict = asdict(params)
+    retried = {"windows": 0, "keys": 0}
     if workers > 1:
         ctx = get_context("fork")
-        pool = ctx.Pool(workers, _init, (world.pal8, world.pal6, pdict, hybrid_keys))
+        pool = ctx.Pool(workers, _init, (world.pal8, world.pal6, pdict, hybrid_keys, retries))
         it = pool.imap(_run_window, jobs, chunksize=4)
     else:
-        _init(world.pal8, world.pal6, pdict, hybrid_keys)
+        _init(world.pal8, world.pal6, pdict, hybrid_keys, retries)
         pool = None
         it = map(_run_window, jobs)
     try:
-        for w, (inst, raw) in zip(windows, it):
+        for w, (inst, raw, rt) in zip(windows, it):
+            retried["windows"] += rt
             wt = w.weight if params.weighted else 1.0
             for s, f, tile in inst:
                 cons.add((s, f), tile, wt, w.tier)
@@ -198,10 +220,19 @@ def run(world: World, out_dir: str, params: R3Params, workers: int = 8, cs: Cont
     hset = set(hybrid_keys)
     for key in cons.keys():
         src = world.flat(*key)
-        tile, st = cons.result(key, parent=src)
-        tile, est = k.qz.enforce(tile, src, params.scale, restore_sparkles=params.restore_sparkles)
+        for attempt in range(retries + 1):
+            try:
+                tile, st = cons.result(key, parent=src)           # pure: safe to recompute
+                tile, est = k.qz.enforce(tile, src, params.scale, restore_sparkles=params.restore_sparkles)
+                dropped = dropped_sparkles(tile, src, params.scale)
+                break
+            except TRANSIENT_ERRORS as e:
+                if attempt >= retries:
+                    raise
+                retried["keys"] += 1
+                log.warning("consensus %s: %r; recomputing (transient error?)", key_name(*key), e)
         tiles[key] = tile
-        per_key[key_name(*key)] = {**st, "enforce": est, "dropped_sparkles": dropped_sparkles(tile, src, params.scale),
+        per_key[key_name(*key)] = {**st, "enforce": est, "dropped_sparkles": dropped,
                                    "family": fams.get(key, "other"),
                                    "variant": ("hybrid" if key in hset else "xbrz")
                                    if params.variant == "mixed" else params.variant}
@@ -212,9 +243,9 @@ def run(world: World, out_dir: str, params: R3Params, workers: int = 8, cs: Cont
                      "patched_source_sha256": XBRZ_PATCHED_SOURCE_SHA256},
             "model_sha256": None, "inputs": world.input_hashes(), "keys": per_key,
             "windows": {"terrain": len(cs.terrain), "macro": len(cs.macro), "selfwrap": len(cs.selfwrap)},
-            "seconds": round(time.time() - t0, 1)}
+            "seconds": round(time.time() - t0, 1), "retries": retried}
     save_candidates(out_dir, tiles, meta)
-    log.info("route3 done: %d tiles in %.1fs -> %s", len(tiles), time.time() - t0, out_dir)
+    log.info("route3 done: %d tiles in %.1fs (retried: %s) -> %s", len(tiles), time.time() - t0, retried, out_dir)
     return meta
 
 
@@ -238,6 +269,8 @@ def main(argv=None) -> int:
     ap.add_argument("--workers", type=int, default=8)
     ap.add_argument("--limit", type=int, default=None, help="only the first N terrain windows (smoke runs)")
     ap.add_argument("--keep-raw", action="store_true", help="save every 6x window plane as PNG")
+    ap.add_argument("--retries", type=int, default=DEFAULT_RETRIES,
+                    help="recompute a window/key after a transient IndexError/ValueError (default %(default)s)")
     a = ap.parse_args(argv)
     p = R3Params(variant=a.variant, hybrid_families=tuple(x for x in a.hybrid_families.split(",") if x),
                  apron=a.apron, ramp_expand=a.ramp_expand, weighted=not a.unweighted,
@@ -245,7 +278,7 @@ def main(argv=None) -> int:
     world = World.load(a.static)
     cs = load_context(a.ctx) if a.ctx else None
     out = a.out or os.path.join(DEFAULT_OUT, f"r3-{a.variant}")
-    run(world, out, p, a.workers, cs, a.keep_raw, a.limit)
+    run(world, out, p, a.workers, cs, a.keep_raw, a.limit, retries=a.retries)
     return 0
 
 

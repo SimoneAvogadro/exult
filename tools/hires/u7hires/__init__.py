@@ -16,6 +16,7 @@ Modules (see docs-hires/design/DESIGN.md §5 and §8):
 * ``qa``        QA metrics A1-A3 B1-B4 C1 C2 D1, reports, contact sheets, previews
 * ``route3``    xBRZ 6x + local snap + mode consensus (CPU)
 * ``route2``    spandrel 4x-NXbrz (GPU) + Lanczos 1.5x + back-projection + snap + consensus
+* ``vote``      majority voting over redundant runs (transient hardware errors), pack verification
 
 EA-derived pixels never go into the repository; packs and work data live outside it.
 """
