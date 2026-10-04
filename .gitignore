@@ -348,3 +348,6 @@ data/shortcutbar_vga.h
 
 # Hi-res fork: Python byte code of tools/hires
 __pycache__/
+
+# Hi-res fork: pytest's cache (tools/hires/tests)
+.pytest_cache/

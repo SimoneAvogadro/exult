@@ -1,0 +1,14 @@
+# Companions of check_build_lists.py: pairs of files that must be listed together. Wherever a build
+# description lists the first file, it must list the second one too:
+#   - every variable and every rule (prerequisites and recipe) of each Makefile.am, Makefile.common
+#     and Makefile.mingw, under the same conditionals or fewer (so not only inside "if BUILD_EXULT");
+#   - every *.vcxproj and *.vcxproj.filters under msvcstuff (Exult, Exult Studio, the tools);
+#   - every target of ios/Exult.xcodeproj, and its file references.
+# One entry per line: <first> <second>, repository-relative, then an optional "# reason". A source and
+# its object are the same file (imagewin/ibuf8.cc matches imagewin/ibuf8.o). An entry stays inactive
+# until its second file exists or is listed somewhere; with --strict, an entry whose first file is
+# listed nowhere fails.
+
+# DESIGN.md section 6.1: the hooks in ibuf8.cc call the scaled primitives, so ibuf8_scaled.cc (WP-04)
+# is compiled everywhere ibuf8.cc is.
+imagewin/ibuf8.cc    imagewin/ibuf8_scaled.cc

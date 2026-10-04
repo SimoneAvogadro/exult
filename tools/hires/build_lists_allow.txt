@@ -1,0 +1,30 @@
+# Allowlist of check_build_lists.py: files the build descriptions list that the IDE projects may
+# omit. One entry per line: <glob> <projects>, then an optional "# reason".
+#   glob      repository-relative; "**" matches across directories, "*" and "?" within one
+#   projects  "all", or a comma-separated subset of vcxproj, filters, xcode
+#             (msvcstuff/vs2019/Exult.vcxproj, its .filters, ios/Exult.xcodeproj/project.pbxproj)
+# Seeded in WP-01 with upstream's exceptions at 8b6ab6b43. A new engine source must be added to the
+# projects instead of being listed here.
+
+# Not part of the Exult executable: own projects (expack, exult_studio) or none.
+tools/**                                    all    # tools, compiler, plugins
+mapedit/**                                  all    # Exult Studio
+conf/xmain.cc                               all    # confregress test program
+files/rwregress.cc                          all    # rwregress test program
+tests/**                                    all    # hi-res tests: tests/Makefile.am and Makefile.common only
+
+# Platform-specific sources.
+android/**                                  all    # Android only
+audio/midi_drivers/ALSAMidiDriver.*         all    # Linux (ALSA) only
+audio/midi_drivers/UnixSeqMidiDriver.*      all    # Unix only
+audio/midi_drivers/CoreAudioMidiDriver.*    vcxproj,filters    # macOS and iOS only
+audio/midi_drivers/CoreMidiDriver.*         vcxproj,filters    # macOS and iOS only
+audio/midi_drivers/WindowsMidiDriver.*      xcode    # Windows only
+server/server.*                             xcode    # no Exult Studio server on iOS
+server/servewin32.*                         xcode    # Windows only
+
+# Not in upstream's projects (8b6ab6b43).
+audio/midi_drivers/TimidityMidiDriver.*     all
+audio/midi_drivers/timidity/**              all
+audio/midi_drivers/XMidiRecyclable.h        xcode
+scene_layer.h                               vcxproj,filters
