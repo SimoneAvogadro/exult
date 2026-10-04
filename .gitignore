@@ -334,3 +334,9 @@ android/lib/build/
 docs/xml/web_tmp/docs.html
 docs/xml/web_tmp/faq.html
 docs/xml/web_tmp/studio.html
+
+# Generated in the source tree by the data build and by Makefile.common builds
+data/shortcutbar.vga
+data/shortcutbar_vga.h
+/expack
+/ipack
