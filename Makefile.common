@@ -793,6 +793,43 @@ head2data$(EXEEXT) : tools/ucxt/head2data.o $(FILE_OBJS) usecode/bgintrinsics.h 
 head2data.test: head2data$(EXEEXT)
 	$(SRC)/head2data$(EXEEXT) data/u7bgintrinsics.data data/u7siintrinsics.data data/u7sibetaintrinsics.data
 
+# Hi-res tests (tests/README): hires_unit (SDL-free unit tests) and hires_present (data-free present
+# tests, exit code 77 = skipped). There are no convenience archives here, so the engine objects are
+# listed; FILE_OBJS provides Flex, U7exists and friends for shapes/vgafile.o.
+HIRES_UNIT_OBJS:=\
+	imagewin/ibuf8.o \
+	imagewin/imagebuf.o \
+	shapes/pngio.o \
+	shapes/vgafile.o \
+	$(FILE_OBJS)
+
+HIRES_UNIT_TEST_OBJS:=\
+	tests/unit/main.o \
+	tests/unit/ibuf_ops.o \
+	tests/unit/test_ibuf_golden.o \
+	tests/unit/test_rle_writer.o
+
+HIRES_PRESENT_OBJS:=
+
+HIRES_PRESENT_TEST_OBJS:=\
+	tests/present/test_present.o
+
+$(HIRES_UNIT_TEST_OBJS) $(HIRES_PRESENT_TEST_OBJS): CPPFLAGS+=-I$(SRC)/tests -I$(SRC)/tests/unit \
+	-DHIRES_TEST_DATA_DIR=\"$(SRC)/tests/data\"
+
+hires_unit$(EXEEXT) : $(HIRES_UNIT_TEST_OBJS) $(HIRES_UNIT_OBJS)
+	$(CXX) $(LDFLAGS) -o $(@) $(HIRES_UNIT_TEST_OBJS) $(HIRES_UNIT_OBJS) -lpng -lz
+
+hires_present$(EXEEXT) : $(HIRES_PRESENT_TEST_OBJS) $(HIRES_PRESENT_OBJS)
+	$(CXX) $(LDFLAGS) -o $(@) $(HIRES_PRESENT_TEST_OBJS) $(HIRES_PRESENT_OBJS) $(SDL_LIBS)
+
+check-hires: hires_unit$(EXEEXT) hires_present$(EXEEXT)
+	$(SRC)/hires_unit$(EXEEXT)
+	SDL_VIDEO_DRIVER=offscreen SDL_RENDER_DRIVER=software SDL_AUDIO_DRIVER=dummy $(SRC)/hires_present$(EXEEXT); \
+		rc=$$?; test $$rc -eq 0 -o $$rc -eq 77
+
+-include $(HIRES_UNIT_TEST_OBJS:%.o=%.d) $(HIRES_PRESENT_TEST_OBJS:%.o=%.d)
+
 
 #gitinfo.h will be regenerated if certain git files change
 gitinfo.h: .git/index .git/HEAD .git/config Makefile.common
@@ -851,3 +888,8 @@ toolsclean:
 	rm -f $(UCC_OBJS) ucc$(EXEEXT) ucparse.cc ucparse.h uclex.cc
 	rm -f $(CONFREGRESS_OBJS) confregress$(EXEEXT)
 	rm -f tools/ucxt/head2data.o head2data$(EXEEXT) data/u7bgintrinsics.data data/u7siintrinsics.data data/u7sibetaintrinsics.data
+
+testsclean:
+	rm -f $(HIRES_UNIT_TEST_OBJS) $(HIRES_PRESENT_TEST_OBJS)
+	rm -f $(HIRES_UNIT_TEST_OBJS:%.o=%.d) $(HIRES_PRESENT_TEST_OBJS:%.o=%.d)
+	rm -f hires_unit$(EXEEXT) hires_present$(EXEEXT)

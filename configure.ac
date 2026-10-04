@@ -1348,6 +1348,10 @@ AC_SUBST(OPT_LEVEL)
 AC_SUBST(WARNINGS)
 AC_SUBST(AR_FLAGS)
 
+# Command prefixed to every "make check" test program (tests/Makefile.am), for
+# example a sanitizer build's "setarch x86_64 -R timeout 900". Empty by default.
+AC_ARG_VAR([TEST_WRAPPER], [command prefixed to every test program run by "make check"])
+
 AC_CONFIG_FILES([
 exult.spec
 Info.plist
@@ -1396,6 +1400,7 @@ shapes/shapeinf/Makefile
 usecode/Makefile
 mapedit/Makefile
 server/Makefile
+tests/Makefile
 ])
 AC_OUTPUT
 

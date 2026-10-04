@@ -88,6 +88,10 @@ data/exult_si_flx.h
 /exult
 files/rwregress
 mapedit/exult_studio
+tests/hires_present
+tests/hires_unit
+tests/*.log
+tests/*.trs
 tools/gimp_plugin/u7shp
 tools/cmanip
 tools/expack
@@ -144,6 +148,7 @@ stamp-h
 stamp-h.in
 stamp.h
 stamp-h1
+test-driver
 version.h
 ylwrap
 log

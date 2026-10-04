@@ -1,0 +1,29 @@
+# tests/data/ibuf_golden.txt: digests of test_ibuf_golden (tests/unit/test_ibuf_golden.cc).
+# FNV-1a-64 after each block of ops on scale-1 Image_buffer8 buffers. Recorded on
+# unmodified upstream imagewin/ibuf8.cc and imagebuf.h; record again only on unmodified
+# upstream code and with a written reason (tests/README).
+ibuf_golden v2 seed=0x1b0f901de0000001 blocks=24 ops_per_block=1000
+block 0 70c71abe17057b89
+block 1 1eeb1bd6027ad9d3
+block 2 998940cc836a159f
+block 3 f4dc702061ed0efc
+block 4 3c9dcba876417e90
+block 5 f414243af73088e8
+block 6 5fba61f216819b5e
+block 7 5eb7e9f8d6573328
+block 8 ae360f3c737e9a93
+block 9 dc289194cca0d030
+block 10 efefdad0d0e03196
+block 11 631b59cfc3c9ce8c
+block 12 3bdceba81a4e2764
+block 13 7b94a9b6711461f7
+block 14 9f45aec0accbb7d5
+block 15 9a5787b79ab92e95
+block 16 1117ec46a8b977d1
+block 17 127e4b40322f8e3a
+block 18 41e9dab23c5d6e65
+block 19 35279ee7a91d7092
+block 20 fcfcf6c9a1828059
+block 21 e314d38e3b1fead4
+block 22 4122157a3651ff3a
+block 23 729a73415c59e828

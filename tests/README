@@ -1,0 +1,141 @@
+Tests of the hi-res render path
+===============================
+
+The tests of the hi-res fork (docs/hires/DESIGN.md, section 6). The unit tests
+and the present test use synthetic data only; the game-data scripts read a
+Black Gate installation at run time and never write into it. Nothing derived
+from the game's art is committed: goldens are hash lists only.
+
+Layout
+------
+
+  doctest.h        the test framework (vendored, see below)
+  unit/            hires_unit: SDL-free unit tests
+    main.cc          entry point; data_path() for tests/data
+    test_support.h   deterministic PRNG (SplitMix64) and FNV-1a-64
+    ibuf_ops.h/.cc   a deterministic stream of Image_buffer8 operations
+    test_ibuf_golden.cc
+                     pins the scale-1 behaviour of Image_buffer8 against
+                     data/ibuf_golden.txt (invariant I2)
+    rle_writer.h     test-only writer and reference decoder of RLE frame data
+                     (scans of any width, malformed runs on demand)
+    test_rle_writer.cc
+                     its self-test against Shape_frame::encode_rle and paint_rle
+  present/         hires_present: data-free present tests (offscreen video
+                   driver, software renderer; exit code 77 = skipped)
+  data/
+    ibuf_golden.txt  digests recorded on unmodified upstream imagewin/ibuf8.cc
+  game/            game-data scripts for "make check-game"
+    test.cfg.in      config template; lib.sh fills it in per sandbox
+    lib.sh           shared helpers (skip rule, sandbox, run, log check)
+    smoke.sh         exult --buildmap 0 from a sandbox
+
+Running
+-------
+
+Autotools (any build tree):
+
+  make check          builds and runs hires_unit and hires_present
+  make check-game     runs game/*.sh; set U7_BG_STATIC to the "static"
+                      directory of a Black Gate installation, otherwise every
+                      script is skipped (exit code 77)
+
+make check runs the tests with SDL_VIDEO_DRIVER=offscreen,
+SDL_RENDER_DRIVER=software and SDL_AUDIO_DRIVER=dummy. The configure variable
+TEST_WRAPPER is prefixed to every test program; a sanitizer build sets it, for
+example
+
+  TEST_WRAPPER="env ASAN_OPTIONS=detect_leaks=1 UBSAN_OPTIONS=halt_on_error=1:print_stacktrace=1 setarch x86_64 -R timeout 900"
+
+The game scripts prefix EXULT_WRAPPER (environment) to every exult call; see
+game/lib.sh for that and the other variables. When it is empty and exult is an
+ASan build, lib.sh uses
+
+  env ASAN_OPTIONS=detect_leaks=0 UBSAN_OPTIONS=halt_on_error=1:print_stacktrace=1 setarch x86_64 -R
+
+(ASLR off: the g++ 9.4 ASan runtime hangs at random under WSL2's ASLR; leak
+checks off for the engine). The top-level make check-game builds "all" first,
+and the data build runs ASan tools in a sanitizer tree, so run make there under
+the same environment, for example
+
+  env ASAN_OPTIONS=detect_leaks=0 UBSAN_OPTIONS=halt_on_error=1:print_stacktrace=1 setarch x86_64 -R timeout 5400 make check-game
+
+Makefile.mingw (Windows, via Makefile.common), from the source directory:
+
+  make -f Makefile.mingw check-hires     builds hires_unit.exe and
+                                          hires_present.exe and runs both
+
+hires_unit takes doctest's options, for example -tc='ibuf golden*' to run only
+the test cases whose names match, or -s to list successful assertions too.
+HIRES_TEST_DATA overrides the data directory compiled into it.
+
+The scale-1 golden (data/ibuf_golden.txt)
+-----------------------------------------
+
+test_ibuf_golden runs a fixed-seed stream of 24,000 ops over every
+Image_buffer8 primitive on scale-1 buffers and compares the FNV-1a-64 digest
+after each block of 1,000 ops with data/ibuf_golden.txt. The buffers are owned
+buffers, layer buffers with a guard band and a padded pitch, and (blocks 20-23)
+layer buffers with a logical offset, as the engine's main buffer has when the
+full area is larger than the game area (offset_x = 17 for a 320x200 game area
+in 355x200). The digests cover the whole memory of the buffers, so writes
+outside the logical area count too. Its purpose is invariant I2: the scale-1
+path stays byte-identical to upstream.
+
+The file was recorded on unmodified upstream imagewin/ibuf8.cc and imagebuf.h
+(upstream master 8b6ab6b43), before any hi-res change to the image buffer
+code. The digests do not depend on the platform: the stream uses its own PRNG,
+and fill_static (which draws from std::rand()) is checked against a model of
+upstream's loop and then undone instead of being hashed.
+
+A mismatch means that the scale-1 behaviour changed. Do not record the file
+again to make the test pass. Record it only when the test itself changes (the
+generator, the fixtures or the digest), and then only on unmodified upstream
+image-buffer code: apply the test change to an upstream checkout, build
+hires_unit there and run the recording test case, which never runs otherwise
+(--no-skip) and fails without the variable:
+
+  HIRES_IBUF_GOLDEN_RECORD=/path/to/ibuf_golden.txt hires_unit -tc='ibuf golden: record*' --no-skip
+
+The comparing test ignores HIRES_IBUF_GOLDEN_RECORD. Each block has its own
+generator, so a new block leaves the digests of the others unchanged. Commit
+the new file with the reason in the commit message.
+
+doctest
+-------
+
+doctest.h is the single-header release of doctest, unmodified:
+
+  version   2.5.3 (tag v2.5.3, released 2026-07-06)
+  source    https://raw.githubusercontent.com/doctest/doctest/v2.5.3/doctest/doctest.h
+            identical to doctest/doctest.h in the release asset
+            https://github.com/doctest/doctest/releases/download/v2.5.3/doctest-v2.5.3.tar.gz
+  sha256    cfd518a3ef90f67e1f3ba514df23fb3627437de1a2feeba78cf5062a40021421  doctest.h
+  licence   MIT (the release's LICENSE.txt, reproduced below)
+
+To update it, replace doctest.h with a newer release header and record the new
+version and checksum here.
+
+doctest's LICENSE.txt:
+
+  The MIT License (MIT)
+
+  Copyright (c) 2016-2023 Viktor Kirilov
+
+  Permission is hereby granted, free of charge, to any person obtaining a copy
+  of this software and associated documentation files (the "Software"), to deal
+  in the Software without restriction, including without limitation the rights
+  to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+  copies of the Software, and to permit persons to whom the Software is
+  furnished to do so, subject to the following conditions:
+
+  The above copyright notice and this permission notice shall be included in all
+  copies or substantial portions of the Software.
+
+  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+  IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+  FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+  AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+  SOFTWARE.
