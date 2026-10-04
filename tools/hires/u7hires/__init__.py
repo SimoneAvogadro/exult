@@ -14,6 +14,7 @@ Modules (see docs-hires/design/DESIGN.md §5 and §8):
 * ``pack``      pack writer (loose PNGs, sidecars, pack.txt, bundle), atomic writes
 * ``check``     engine-equivalent validator (N1 F1 F2 F3 F4 P0 P4 G1 G2 R1) + offline P2/E1
 * ``qa``        QA metrics A1-A3 B1-B4 C1 C2 D1, reports, contact sheets, previews
+* ``compare``   side-by-side pack comparison: per-family and sparkle sheets, 6x view crops, metrics
 * ``route3``    xBRZ 6x + local snap + mode consensus (CPU)
 * ``route2``    spandrel 4x-NXbrz (GPU) + Lanczos 1.5x + back-projection + snap + consensus
 * ``vote``      majority voting over redundant runs (transient hardware errors), pack verification

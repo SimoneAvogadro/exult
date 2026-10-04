@@ -25,6 +25,7 @@ Input: the BG `STATIC` dir (`--static`, else `$U7_BG_STATIC`, else the ext4 cach
 | A3 pack | `mkpack.py CANDIDATES NAME [--edge nn3] [--bundle]` | `packs/NAME/{pack.txt,x6/flats/SSSS/SSSS_FF.png+.json,x6/.reload}` |
 | check | `hirescheck.py packs/NAME [--strict] [--restamp] [--json F]` | engine rules N1 F1 F2 F3 F4 P0 P4 G1 G2 R1 B0, offline P2 E1 |
 | QA | `hiresqa.py packs/NAME [--baseline OTHER]` | `art_work/qa/NAME/{report.json,report.md,per_tile.json,sheets/,previews/}` |
+| compare | `hirescompare.py --pack LABEL=PATH[@BASE] ... [--out DIR]` | `art_work/qa/compare/{sheets/,views/,previews/,metrics.md,metrics.json}`: per-family sheets (1x NN \| pack 1 \| ...), sparkle sheets, 1:1 crops of the QA preview views, per-family metrics; `@BASE` draws a subset pack over a full one |
 | publish | `publish.sh [--delete] [--dry-run] NAME` | mirror to `/mnt/e/Dati/Ultima7_Upscale/packs/NAME`, touch `.reload` on both sides |
 | parity | `mkctx.py --parity-dump DUMP_DIR` | compares the engine's `--dump-art` `terrain/<t1>.png` with the Python fill port |
 | vote | `vote.py cand OUT RUN1 RUN2 [RUN3]`, `vote.py tree OUT A B [C]`, `vote.py compare A B`, `vote.py verify CANDIDATES PACK` | per-key / per-file strict majority of redundant runs; pack PNGs checked against the candidates |
@@ -46,7 +47,9 @@ plane could change a value silently. Production art is therefore never taken fro
 3. build the pack twice from the voted candidates (`mkpack.py --packs DIR1|DIR2`), `vote.py compare`
    the trees (or `vote.py tree` over three), move the agreed copy into `packs/`, then
    `vote.py verify CANDIDATES packs/NAME`;
-4. run `hirescheck.py` and `hiresqa.py` twice and compare their JSON output (`seconds` aside).
+4. run `hirescheck.py` and `hiresqa.py` twice and compare their JSON output (`seconds` aside);
+5. `hirescompare.py` re-derives every per-key metric and fails when one differs from the pack's QA
+   `per_tile.json`; its output has no timestamps, so two runs can be checked with `vote.py compare`.
 
 Load limits (the host crashed twice with bugcheck 0x1A MEMORY_MANAGEMENT): at most 4 CPU worker
 processes in total (`--workers 4`, `OMP_NUM_THREADS=1` for the single-process tools), and never
