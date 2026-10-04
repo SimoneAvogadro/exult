@@ -110,6 +110,80 @@ def test_known_models_are_complete():
     assert route2.to_6x(np.zeros((80, 64, 3), np.float32), 8, 10, 8).shape == (60, 48, 3)   # box 8->6
 
 
+class _FakeSR:
+    """CPU stand-in for route2.SRModel (NN 4x of the window RGB), so that run()'s main-process path
+    is tested without torch."""
+    scale, device, fp16 = 4, "cpu", False
+
+    def __init__(self, path, fp16=True):
+        pass
+
+    def __call__(self, batch_rgb):
+        return np.repeat(np.repeat(np.asarray(batch_rgb, np.float32), 4, 1), 4, 2)
+
+    def vram(self):
+        return {"device": self.device}
+
+
+@pytest.mark.parametrize("consensus", ["mode", "medoid"])
+def test_run_main_process_retries(tmp_path, world, monkeypatch, consensus):
+    """A transient exception in a main-process step (GPU batch, consensus add, consensus result,
+    save) is recomputed: the output equals an undisturbed run, the retries are counted in
+    faults.main_retries, and a persistent error still ends the run."""
+    _xbrz_or_skip()
+    from u7hires import pack
+    from u7hires.consensus import MedoidConsensus, ModeConsensus
+    left = {"model": 0, "add": 0, "result": 0, "save": 0}
+    raised = []
+
+    def maybe_raise(what):
+        if left[what]:
+            left[what] -= 1
+            raised.append(what)
+            raise IndexError("index 1157 is out of bounds for axis 0 with size 256")
+
+    class Flaky(_FakeSR):
+        def __call__(self, batch_rgb):
+            maybe_raise("model")
+            return super().__call__(batch_rgb)
+
+    cls = ModeConsensus if consensus == "mode" else MedoidConsensus
+    orig_add, orig_res, orig_save = cls.add, cls.result, route2.save_candidates
+
+    def add(self, *a, **k):
+        maybe_raise("add")
+        return orig_add(self, *a, **k)
+
+    def result(self, *a, **k):
+        maybe_raise("result")
+        return orig_res(self, *a, **k)
+
+    def save(*a, **k):
+        maybe_raise("save")
+        return orig_save(*a, **k)
+
+    monkeypatch.setattr(route2, "SRModel", Flaky)
+    monkeypatch.setattr(cls, "add", add)
+    monkeypatch.setattr(cls, "result", result)
+    monkeypatch.setattr(route2, "save_candidates", save)
+    model_file = tmp_path / "fake.pth"
+    model_file.write_bytes(b"not a model")
+    p = route2.R2Params(model="fake", model_path=str(model_file), batch=4, chunk=8, consensus=consensus)
+    ref = route2.run(world, str(tmp_path / "ref"), p, workers=1, limit=3)
+    assert ref["faults"]["main_retries"] == 0 and ref["torch"] is None and not raised
+    left.update(model=1, add=1, result=1, save=1)
+    meta = route2.run(world, str(tmp_path / "flaky"), p, workers=1, limit=3)
+    assert sorted(raised) == ["add", "model", "result", "save"] and not any(left.values())
+    assert meta["faults"]["main_retries"] == 4 and meta["faults"]["errors"] == 0
+    a, ma = pack.load_candidates(str(tmp_path / "ref"))
+    b, mb = pack.load_candidates(str(tmp_path / "flaky"))
+    assert a and sorted(a) == sorted(b) and all(np.array_equal(a[k], b[k]) for k in a)
+    assert ma["keys"] == mb["keys"]
+    left["model"] = 99                                          # not transient: the run still fails
+    with pytest.raises(RuntimeError):
+        route2.run(world, str(tmp_path / "dead"), p, workers=1, limit=3)
+
+
 def _gpu_ready():
     if importlib.util.find_spec("torch") is None or importlib.util.find_spec("spandrel") is None:
         return False
@@ -130,5 +204,7 @@ def test_route2_gpu_subset_meta(tmp_path, world):
     assert m["subset"]["keys"] == len(keys) and m["subset"]["windows"] == meta["windows"]["processed"]
     assert m["faults"]["attempts"] >= 2 * meta["windows"]["processed"]
     assert m["gpu"]["max_allocated_mb"] > 0 and m["gpu"]["seconds"] >= 0
+    import torch
+    assert m["torch"] == torch.__version__ and m["faults"]["main_retries"] == 0
     for k, t in tiles.items():
         assert rules.p4_violations(t, world.flat(*k)) == 0 and not (t == 0xFF).any()

@@ -2,6 +2,7 @@ import hashlib
 import os
 
 import numpy as np
+import pytest
 
 from u7hires import check, pack, pngio, rules
 from u7hires.consensus import MedoidConsensus, ModeConsensus
@@ -56,6 +57,32 @@ def test_medoid():
         c.add((0, 1), base + v, w)
     t, st = c.result((0, 1))
     assert (t == 110).all() and st["used_instances"] == 4
+
+
+def test_medoid_prune_keeps_heaviest_and_is_atomic(monkeypatch):
+    """Past 4*cap distinct tiles the 2*cap heaviest are kept (ties: earliest); an add that fails in
+    the prune leaves the consensus unchanged, so route 2 may retry it."""
+    from u7hires import consensus
+    base = np.zeros((1, 1, 3), np.uint8)
+    weights = [3.0, 1.0, 5.0, 2.0, 5.0, 0.5, 4.0, 1.5]           # 8 = 4*cap distinct tiles: no prune yet
+    c = MedoidConsensus(cap=2)
+    for v, w in enumerate(weights):
+        c.add((0, 0), base + v, w)
+    e = c.entries[(0, 0)]
+    assert len(e.tiles) == 8 and e.seq == 8
+    state = (dict(e.tiles), e.seq, e.instances, e.weight)
+
+    def boom(*a, **k):
+        raise MemoryError("flip")
+
+    monkeypatch.setattr(consensus, "sorted", boom, raising=False)
+    with pytest.raises(MemoryError):
+        c.add((0, 0), base + 8, 4.5)
+    assert (dict(e.tiles), e.seq, e.instances, e.weight) == state
+    monkeypatch.delattr(consensus, "sorted")
+    c.add((0, 0), base + 8, 4.5)                                 # 9th tile: prune to the 4 heaviest
+    kept = sorted(int(r[0][0, 0, 0]) for r in e.tiles.values())
+    assert kept == [2, 4, 6, 8] and e.seq == 9 and e.instances == 9 and e.weight == sum(weights) + 4.5
 
 
 def test_pack_writer_layout_and_determinism(tmp_path, provider):

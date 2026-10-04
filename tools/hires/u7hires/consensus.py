@@ -114,11 +114,13 @@ class MedoidConsensus(_Base):
         d = _digest(t)
         rec = e.tiles.get(d)
         if rec is None:
-            e.tiles[d] = [t, float(weight), 1, e.seq]
+            new = [t, float(weight), 1, e.seq]
+            if len(e.tiles) >= 4 * self.cap:     # prune lightest, keep memory bounded; computed before any
+                items = [*e.tiles.items(), (d, new)]   # state changes, so a failed add can be retried
+                e.tiles = dict(sorted(items, key=lambda kv: (-kv[1][1], kv[1][3]))[:2 * self.cap])
+            else:
+                e.tiles[d] = new
             e.seq += 1
-            if len(e.tiles) > 4 * self.cap:      # prune lightest, keep memory bounded
-                keep = sorted(e.tiles.items(), key=lambda kv: (-kv[1][1], kv[1][3]))[:2 * self.cap]
-                e.tiles = dict(keep)
         else:
             rec[1] += float(weight)
             rec[2] += 1

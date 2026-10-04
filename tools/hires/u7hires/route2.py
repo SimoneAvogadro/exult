@@ -16,7 +16,9 @@ The model file's SHA-256 is verified and recorded in every sidecar.
 
 ``--redundancy N`` repeats the CPU stage of every window until N results agree (exceptions are
 retried; ``util.redundant_call``), because the production machine shows transient CPU/RAM faults
-under all-core load. Fault counts and the GPU time / peak VRAM go into ``tiles.json``. Independent
+under all-core load. Main-process steps (GPU batches, consensus adds and results, save) raise before
+they change any state, or are pure or idempotent, so they are recomputed on an exception as well
+(``faults.main_retries``). Fault counts and the GPU time / peak VRAM go into ``tiles.json``. Independent
 whole runs are compared with ``vote.py``. ``--subset SPEC`` restricts a run to the windows holding the
 keys picked by ``families.select_keys`` (look comparisons on a representative frame set); every
 picked key's consensus sees the same windows as in a full run (only the GPU batching differs).
@@ -274,8 +276,17 @@ def run(world: World, out_dir: str, params: R2Params, workers: int = 8, cs: Cont
     med = MedoidConsensus(params.medoid_cap) if params.consensus == "medoid" else None
     r3c = ModeConsensus() if params.consensus == "medoid" else None
     prog = Progress(log, len(windows), "windows")
-    faults = {"windows": 0, "attempts": 0, "errors": 0, "mismatches": 0, "rebuilds": 0, "events": []}
+    faults = {"windows": 0, "attempts": 0, "errors": 0, "mismatches": 0, "rebuilds": 0, "events": [],
+              "main_retries": 0}
     gpu_s = 0.0
+
+    def retry(fn, what):
+        """Main-process steps are pure or idempotent: recompute them on a transient exception."""
+        r, st = redundant_call(fn, 1)
+        if st["errors"]:
+            faults["main_retries"] += st["errors"]
+            log.warning("%s: %d transient errors retried %s", what, st["errors"], st["error_text"][:1])
+        return r
 
     def infer(chunk):
         nonlocal gpu_s
@@ -287,7 +298,7 @@ def run(world: World, out_dir: str, params: R2Params, workers: int = 8, cs: Cont
         for shp, ids in groups.items():
             for b0 in range(0, len(ids), params.batch):
                 bi = ids[b0:b0 + params.batch]
-                res = model(np.stack([world.pal8[chunk[i].idx] for i in bi]))
+                res = retry(lambda: model(np.stack([world.pal8[chunk[i].idx] for i in bi])), "GPU batch")
                 for i, r in zip(bi, res):
                     outs[i] = r.astype(np.float16)
         gpu_s += time.time() - tg
@@ -309,10 +320,10 @@ def run(world: World, out_dir: str, params: R2Params, workers: int = 8, cs: Cont
                 if keyset is not None and (s, f) not in keyset:
                     continue
                 if ti is not None:
-                    mode.add((s, f), ti, wt, w.tier)
+                    retry(lambda: mode.add((s, f), ti, wt, w.tier), "consensus add")
                 else:
-                    med.add((s, f), trgb, wt, w.tier)
-                    r3c.add((s, f), tr3, wt, w.tier)
+                    retry(lambda: med.add((s, f), trgb, wt, w.tier), "consensus add")
+                    retry(lambda: r3c.add((s, f), tr3, wt, w.tier), "consensus add")
             prog.step()
 
     pending = None
@@ -337,11 +348,10 @@ def run(world: World, out_dir: str, params: R2Params, workers: int = 8, cs: Cont
             pool.close()
             pool.join()
     vram = model.vram()
-    fams = frame_families(world)
-    k = R3Kernel(world.pal8, world.pal6, R3Params(scale=params.scale))
-    tiles, per_key = {}, {}
-    keys = mode.keys() if params.consensus == "mode" else med.keys()
-    for key in keys:
+    fams = retry(lambda: frame_families(world), "families")
+    k = retry(lambda: R3Kernel(world.pal8, world.pal6, R3Params(scale=params.scale)), "kernel")
+
+    def finish_key(key):
         src = world.flat(*key)
         if params.consensus == "mode":
             tile, st = mode.result(key, parent=src)
@@ -351,19 +361,24 @@ def run(world: World, out_dir: str, params: R2Params, workers: int = 8, cs: Cont
             stat = k.qz.local_snap(rgb, src, params.scale, 1, forbid=IS_CYCLING, ramp_expand=params.ramp_expand)
             tile = np.where(IS_CYCLING[cy], cy, stat).astype(np.uint8)
         tile, est = k.qz.enforce(tile, src, params.scale)
+        return tile, st, est, dropped_sparkles(tile, src, params.scale)
+
+    tiles, per_key = {}, {}
+    keys = mode.keys() if params.consensus == "mode" else med.keys()
+    for key in keys:
+        tile, st, est, dropped = retry(lambda: finish_key(key), f"consensus {key_name(*key)}")
         tiles[key] = tile
-        per_key[key_name(*key)] = {**st, "enforce": est, "dropped_sparkles": dropped_sparkles(tile, src, params.scale),
-                                   "family": fams.get(key, "other")}
-    import torch
+        per_key[key_name(*key)] = {**st, "enforce": est, "dropped_sparkles": dropped, "family": fams.get(key, "other")}
     meta = {"route": f"r2-{params.model.lower()}", "origin": f"route2 {params.model} spandrel {params.consensus}",
             "params": pdict, "model_sha256": sha, "model_file": path, "model_license": info.get("license"),
-            "model_scale": model.scale, "torch": torch.__version__, "device": model.device,
+            "model_scale": model.scale, "torch": getattr(getattr(model, "torch", None), "__version__", None),
+            "device": model.device,
             "inputs": world.input_hashes(), "keys": per_key,
             "windows": {"terrain": len(cs.terrain), "macro": len(cs.macro), "selfwrap": len(cs.selfwrap),
                         "processed": len(windows)},
             "subset": subset_info, "faults": faults, "gpu": {"seconds": round(gpu_s, 1), **vram},
             "gpu_seconds": round(gpu_s, 1), "seconds": round(time.time() - t0, 1)}
-    save_candidates(out_dir, tiles, meta)
+    retry(lambda: save_candidates(out_dir, tiles, meta), "save")
     log.info("route2 done: %d tiles in %.1fs (GPU %.1fs, peak alloc %s MB); faults: %d windows, %d errors, "
              "%d mismatches -> %s", len(tiles), time.time() - t0, gpu_s, vram.get("max_allocated_mb"),
              faults["windows"], faults["errors"], faults["mismatches"], out_dir)
