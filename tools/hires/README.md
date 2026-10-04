@@ -55,6 +55,16 @@ route 2 with 8 workers raised 10 transient errors in its first 2,005 of 2,787 wi
 360 windows) before the host crashed; four route-3 passes with 4 workers alone raised none (xbrz
 154-161 s, mixed 214-224 s per pass; the passes of a variant were identical).
 
+Route 2 alone with 4 workers (RTX 5070 Ti, fp16; `art_work/r2prod`): a full 4x-NXbrz pass over the
+2,787 windows takes 350-354 s (GPU 61 s; torch peak 834 MB allocated / 1,430 MB reserved; nvidia-smi
+1.7 GB above the idle desktop); two passes, no faults, identical. The 8x-Arzenal-v1-1 look subset
+(`--subset water:50,shore:50,grass:50,dirt:50,roads=21+24:50,floor:50 --batch 4`: 300 keys in 1,745
+windows) takes 296-301 s (GPU 73-76 s; 1,633 MB allocated / 2,354 MB reserved; +2.6 GB). Two of its
+three passes each had one key whose per-key stats (not the tile) differed silently from the other two,
+with no fault reported, and the third pass also retried 2 `IndexError`s: a run that reports 0 faults is
+still no proof, so always compare two passes. `vote.py` treats the per-run measurements of route 2
+(`faults`, `gpu`, `gpu_seconds`) like `seconds` and keeps them per run under `vote.run_stats`.
+
 ## Tests
 
 ```sh
