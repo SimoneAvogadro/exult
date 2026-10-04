@@ -48,6 +48,13 @@ plane could change a value silently. Production art is therefore never taken fro
    `vote.py verify CANDIDATES packs/NAME`;
 4. run `hirescheck.py` and `hiresqa.py` twice and compare their JSON output (`seconds` aside).
 
+Load limits (the host crashed twice with bugcheck 0x1A MEMORY_MANAGEMENT): at most 4 CPU worker
+processes in total (`--workers 4`, `OMP_NUM_THREADS=1` for the single-process tools), and never
+route 2 (GPU) and route 3 at the same time. Measured on 2026-10-04: route 3 with 8 workers next to
+route 2 with 8 workers raised 10 transient errors in its first 2,005 of 2,787 windows (route 2: 8 in
+360 windows) before the host crashed; four route-3 passes with 4 workers alone raised none (xbrz
+154-161 s, mixed 214-224 s per pass; the passes of a variant were identical).
+
 ## Tests
 
 ```sh
