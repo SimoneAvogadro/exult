@@ -57,6 +57,33 @@ def test_vote_candidates_meta_and_missing_key(tmp_path, provider):
         vote.vote_candidates([a, d, e])                    # run-level meta without a majority
 
 
+def test_vote_candidates_route2_run_measurements(tmp_path, provider):
+    """Route 2 records per-execution measurements (GPU time and peak VRAM, fault counts) in its meta.
+    They differ between identical runs, so they must not block the comparison or the vote; the voted
+    set keeps every run's measurements under ``vote.run_stats``."""
+    tiles, meta = _cands(provider)
+
+    def r2meta(gpu_s, faults):
+        return {**meta, "route": "r2-4x-nxbrz", "model_sha256": "ab" * 32, "seconds": 10.0 + gpu_s,
+                "gpu_seconds": gpu_s, "gpu": {"seconds": gpu_s, "device": "cuda", "max_allocated_mb": 512.0},
+                "faults": {"windows": faults, "errors": faults, "mismatches": 0, "rebuilds": 0, "events": [],
+                           "attempts": 6 + faults, "main_retries": 0}}
+
+    a = _save(tmp_path / "a", tiles, r2meta(3.5, 0))
+    b = _save(tmp_path / "b", tiles, r2meta(4.25, 1))
+    cmp = vote.compare_candidates(a, b)
+    assert cmp["identical"] and cmp["meta_equal"]
+    r = vote.vote_candidates([a, b], str(tmp_path / "out"))
+    assert r["unanimous"] == 4 and not r["outvoted"]
+    got, gm = pack.load_candidates(str(tmp_path / "out"))
+    assert all(np.array_equal(got[k], tiles[k]) for k in tiles) and gm["route"] == "r2-4x-nxbrz"
+    stats = gm["vote"]["run_stats"]
+    assert [s["dir"] for s in stats] == [a, b]
+    assert [s["gpu_seconds"] for s in stats] == [3.5, 4.25] and [s["faults"]["errors"] for s in stats] == [0, 1]
+    c = _save(tmp_path / "c", tiles, {**r2meta(3.5, 0), "model_sha256": "cd" * 32})
+    assert not vote.compare_candidates(a, c)["meta_equal"]  # a result-relevant field still counts
+
+
 def test_vote_trees(tmp_path):
     def tree(name, files):
         for rel, data in files.items():

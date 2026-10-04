@@ -10,7 +10,9 @@ the runs agree on are kept:
 
 * ``vote_candidates``: per-key majority over N candidate sets (route outputs ``tiles.npz`` +
   ``tiles.json``). A key's value is its tile together with its per-key stats; the run-level meta
-  (everything except ``VOLATILE_META``: keys, seconds, retries, vote) needs a majority too.
+  (everything except ``VOLATILE_META``: keys, vote and the measurements of one execution -- seconds,
+  retries, faults, gpu, gpu_seconds) needs a majority too. The voted meta keeps each run's
+  measurements under ``vote.run_stats``.
 * ``tree_digests`` / ``vote_trees``: per-file majority over N copies of a directory tree (a pack,
   a QA output). A file missing from one copy counts as a distinct value.
 * ``verify_pack``: decode every flat PNG of a pack and compare it with the candidate tiles it was
@@ -43,7 +45,10 @@ from .util import get_logger, key_name
 
 IGNORE_NAMES = (".reload",)
 IGNORE_SUFFIXES = (".tmp",)
-VOLATILE_META = ("keys", "seconds", "retries", "vote")   # run-level fields that may differ between runs
+# Run-level fields that may differ between runs: per-key stats (voted per key), the vote record, and
+# measurements of one execution (wall time, route-3 retries, route-2 fault counts, GPU time and VRAM).
+VOLATILE_META = ("keys", "seconds", "retries", "vote", "faults", "gpu", "gpu_seconds")
+RUN_STATS = ("seconds", "retries", "faults", "gpu", "gpu_seconds")   # kept per run in the voted meta
 
 
 class VoteError(RuntimeError):
@@ -137,9 +142,10 @@ def vote_candidates(dirs: list[str], out: str | None = None, log=None) -> dict:
     if out is not None:
         from .pack import load_candidates, save_candidates
         base = next(r[2] for r, gl in zip(runs, globs) if gl == g)
+        run_stats = [{"dir": d, **{k: r[2][k] for k in RUN_STATS if k in r[2]}} for d, r in zip(dirs, runs)]
         meta = {**{k: v for k, v in base.items() if k not in VOLATILE_META}, "keys": per_key,
                 "seconds": base.get("seconds"),
-                "vote": {"runs": len(dirs), "unanimous": unanimous, "outvoted": outvoted}}
+                "vote": {"runs": len(dirs), "unanimous": unanimous, "outvoted": outvoted, "run_stats": run_stats}}
         save_candidates(out, tiles, meta)
         t2, m2 = load_candidates(out)                      # read back: catches write-path errors
         if sorted(t2) != sorted(tiles) or any(not np.array_equal(t2[k], tiles[k]) for k in tiles) \
