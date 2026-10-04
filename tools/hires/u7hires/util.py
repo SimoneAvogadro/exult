@@ -119,3 +119,39 @@ def timed(log: logging.Logger, what: str):
 
 def key_name(shape: int, frame: int) -> str:
     return f"{shape:04d}_{frame:02d}"
+
+
+def redundant_call(fn, need: int = 1, digest=None, before=None, max_attempts: int | None = None):
+    """Call ``fn()`` until ``need`` results agree, as a guard against transient CPU/RAM faults.
+
+    The tooling verification measured such faults on the production machine under all-core load
+    (single bit flips in NumPy results; ``IndexError`` from flipped indices). Results are compared by
+    ``digest(result)`` (bytes); an exception counts as a failed attempt and is retried. ``before()``
+    runs ahead of every attempt and returns 1 when it had to repair worker state (counted as
+    ``rebuilds``). Returns ``(result, stats)`` where stats = attempts, errors, mismatches (attempts
+    whose result differed from every earlier one), rebuilds and the first error texts. Raises
+    RuntimeError when ``max_attempts`` (default ``need + 3``) pass without ``need`` agreeing results.
+    With ``need == 1`` the first result that does not raise is returned."""
+    need = max(1, int(need))
+    max_attempts = max_attempts or need + 3
+    seen: dict = {}
+    st = {"attempts": 0, "errors": 0, "mismatches": 0, "rebuilds": 0, "error_text": []}
+    for _ in range(max_attempts):
+        st["attempts"] += 1
+        try:
+            if before is not None:
+                st["rebuilds"] += int(before() or 0)
+            r = fn()
+            d = digest(r) if (digest is not None and need > 1) else b""
+        except Exception as e:  # noqa: BLE001 - any fault is retried; a real bug fails max_attempts times
+            st["errors"] += 1
+            if len(st["error_text"]) < 3:
+                st["error_text"].append(repr(e)[:200])
+            continue
+        if seen and d not in seen:
+            st["mismatches"] += 1
+        n, first = seen.get(d, (0, r))
+        seen[d] = (n + 1, first)
+        if n + 1 >= need:
+            return first, st
+    raise RuntimeError(f"no {need} agreeing results in {max_attempts} attempts: {st}")

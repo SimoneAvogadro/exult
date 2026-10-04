@@ -116,6 +116,38 @@ def shape_families(world, overrides="auto") -> dict[int, str]:
     return {s: max(d.items(), key=lambda kv: (kv[1], kv[0]))[0] for s, d in acc.items()}
 
 
+def select_keys(world, spec: str, fams: dict | None = None) -> tuple[list[tuple[int, int]], dict[str, list[str]]]:
+    """Representative subset of flat keys for look comparisons (route-2 ``--subset``).
+
+    ``spec`` is a comma-separated list of ``group:count`` items. ``group`` is a frame family name
+    (``water``, ``dirt+grass``, ...) or ``label=S1+S2+...`` for every frame of the listed shapes (BG
+    roads: ``roads=21+24``, flagstone paving and cobble roads). Each group takes its ``count`` most
+    used keys (map occurrences, ties by key) that no earlier group took. Returns the sorted key list and
+    ``{label: [key names]}``. Deterministic for a given world."""
+    from .util import key_name
+    fams = frame_families(world) if fams is None else fams
+    use = world.flat_use
+    taken: set[tuple[int, int]] = set()
+    groups: dict[str, list[str]] = {}
+    for item in (x.strip() for x in spec.split(",")):
+        if not item:
+            continue
+        group, _, count = item.rpartition(":")
+        if not group or not count.isdigit():
+            raise ValueError(f"bad subset item {item!r} (want group:count)")
+        if "=" in group:
+            label, shapes = group.split("=", 1)
+            sset = {int(s) for s in shapes.split("+") if s.strip()}
+            pool = [k for k in world.flat_keys if k[0] in sset]
+        else:
+            label = group
+            pool = [k for k in world.flat_keys if fams.get(k) == group]
+        pool = sorted((k for k in pool if k not in taken), key=lambda k: (-use.get(k, 0), k))[:int(count)]
+        taken.update(pool)
+        groups[label] = [key_name(*k) for k in pool]
+    return sorted(taken), groups
+
+
 def family_order(fams) -> list[str]:
     base = ["water", "shore", "marsh", "grass", "sand", "dirt", "stone", "floor"]
     rest = sorted(set(fams) - set(base) - {"void", "other"})
