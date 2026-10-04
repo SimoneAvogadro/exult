@@ -1,0 +1,8 @@
+# CPU tools (tools-venv, Python 3.11):
+#   VIRTUAL_ENV=/home/simonea/ultima7_exult/tools-venv uv pip install -r tools/hires/requirements.txt
+numpy==2.4.6
+pillow==12.3.0
+pytest==9.1.1
+# GPU route 2 only (tmp/factcheck/venv_cu130): torch 2.14.1+cu130 from
+# https://download.pytorch.org/whl/cu130 and
+#   spandrel==0.4.2

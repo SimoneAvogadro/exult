@@ -1,0 +1,25 @@
+# Hash vectors shared by the Python tools and the engine tests (DESIGN §5.2, §5.4).
+# Format: <kind> <input bytes as hex, '-' = empty> <output>. Synthetic inputs only.
+# crc32 = CRC-32/ISO-HDLC (zlib); fnv1a64 = FNV-1a 64 (offset cbf29ce484222325, prime 100000001b3);
+# get_color8 = Get_color8(v, 63, 100) with the clamp at 255 (input decimal, output decimal).
+# BG palette 0 (not stored here): palette_crc32 = c9c2c0e7 with the clamp, 78d19732 with a uint8 wrap.
+crc32 - 00000000
+crc32 313233343536373839 cbf43926
+crc32 54686520717569636b2062726f776e20666f78206a756d7073206f76657220746865206c617a7920646f67 414fa339
+crc32 00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000 758d6336
+crc32 000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f202122232425262728292a2b2c2d2e2f303132333435363738393a3b3c3d3e3f 100ece8c
+crc32 ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff 0f6187ba
+fnv1a64 - cbf29ce484222325
+fnv1a64 61 af63dc4c8601ec8c
+fnv1a64 666f6f626172 85944171f73967e8
+fnv1a64 5537544b01 8eb9550d0feadbdb
+fnv1a64 000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f202122232425262728292a2b2c2d2e2f303132333435363738393a3b3c3d3e3f 8368214f77995ee5
+get_color8 0 0
+get_color8 1 4
+get_color8 31 125
+get_color8 32 129
+get_color8 62 250
+get_color8 63 255
+get_color8 64 255
+get_color8 250 255
+get_color8 255 255
