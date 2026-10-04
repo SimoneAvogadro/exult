@@ -258,6 +258,9 @@ Image_buffer8* Chunk_terrain::render_flats() {
 		}
 		rendered_flats = new Image_buffer8(c_chunksize, c_chunksize);
 	}
+	// Cells that get no flat are not painted: clear them, so they never show
+	// uninitialised memory or the previous render.
+	rendered_flats->fill8(0);
 	// Go through array of tiles.
 	for (int tiley = 0; tiley < c_tiles_per_chunk; tiley++) {
 		for (int tilex = 0; tilex < c_tiles_per_chunk; tilex++) {
