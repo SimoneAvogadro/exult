@@ -10,7 +10,7 @@ AM_CPPFLAGS = -I$(srcdir) -I$(srcdir)/headers -I$(srcdir)/imagewin -I$(srcdir)/s
 
 SUBDIRS = files conf data shapes imagewin pathfinder \
 	gamemgr flic usecode tools audio gumps objs server \
-	mapedit desktop docs
+	mapedit desktop docs tests
 
 if BUILD_MODS
 SUBDIRS += content
@@ -353,6 +353,12 @@ gitinfo.h: $(srcdir)/.git/index $(srcdir)/.git/HEAD $(srcdir)/.git/config Makefi
 $(srcdir)/.git/index:
 $(srcdir)/.git/HEAD:
 $(srcdir)/.git/config:
+
+# Game-data tests (tests/game, skipped without U7_BG_STATIC); they run the exult built here.
+check-game: all
+	cd tests && $(MAKE) $(AM_MAKEFLAGS) check-game
+
+.PHONY: check-game
 
 BUILT_SOURCES=gitinfo.h
 
