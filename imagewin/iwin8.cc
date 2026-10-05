@@ -101,6 +101,7 @@ void Image_window8::set_palette(
 	// Get the colors.
 	SDL_Color colors2[256];
 	for (int i = 0; i < 256; i++) {
+		colors2[i].a = 255;    // Opaque: SDL copies the alpha too.
 		colors2[i].r = colors[i * 3] = GammaRed[Get_color8(rgbs[3 * i], maxval, brightness)];
 		colors2[i].g = colors[i * 3 + 1] = GammaGreen[Get_color8(rgbs[3 * i + 1], maxval, brightness)];
 		colors2[i].b = colors[i * 3 + 2] = GammaBlue[Get_color8(rgbs[3 * i + 2], maxval, brightness)];
@@ -153,6 +154,7 @@ void Image_window8::rotate_colors(
 	if (upd) {    // Take effect now?
 		SDL_Color colors2[256];
 		for (int i = 0; i < 256; i++) {
+			colors2[i].a = 255;    // Opaque: SDL copies the alpha too.
 			colors2[i].r = colors[i * 3];
 			colors2[i].g = colors[i * 3 + 1];
 			colors2[i].b = colors[i * 3 + 2];
