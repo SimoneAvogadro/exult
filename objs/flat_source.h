@@ -54,10 +54,9 @@ inline bool Is_flat(Tile_kind kind) {
  *  Output: the tile number of the source, or -1 if the cell gets nothing.
  *
  *  A flat tile paints itself.  Under an RLE tile, the first flat of the 3x3
- *  neighbourhood (row by row, void tile skipped) is used, else the first flat
- *  of the whole chunk (row by row).  One quirk of the original rule remains
- *  (tests/unit/test_flat_source.cc pins it): the whole-chunk search does not
- *  skip the void tile.
+ *  neighbourhood is used, else the first flat of the whole chunk; both are
+ *  searched row by row, and both skip the void tile
+ *  (tests/unit/test_flat_source.cc pins the rule).
  */
 template <class Is_void_fn, class Kind_fn>
 int find_flat_source(int tx, int ty, Is_void_fn is_void, Kind_fn kind_of) {
@@ -82,7 +81,7 @@ int find_flat_source(int tx, int ty, Is_void_fn is_void, Kind_fn kind_of) {
 	}
 	// Couldn't find a nearby flat, so search the entire chunk.
 	for (int t = 0; t < c_tiles_per_chunk * c_tiles_per_chunk; t++) {
-		if (Is_flat(kind_of(t))) {
+		if (!is_void(t) && Is_flat(kind_of(t))) {
 			return t;
 		}
 	}

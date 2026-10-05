@@ -1,8 +1,8 @@
 /*
  *  test_flat_source.cc - Pins the fill rule of a chunk's flat layer,
  *  find_flat_source() (objs/flat_source.h), to the loop it replaced in
- *  Chunk_terrain::paint_tile, with the row-0 bound fixed (DESIGN.md
- *  sections 3.4, 6.2).
+ *  Chunk_terrain::paint_tile, with the row-0 bound fixed and the void tile
+ *  skipped everywhere (DESIGN.md sections 3.4, 6.2).
  *
  *  Copyright (C) 2026  The Exult Team
  *
@@ -29,6 +29,7 @@
 #include "objs/flat_source.h"
 #include "test_support.h"
 
+#include <algorithm>
 #include <array>
 #include <vector>
 
@@ -106,7 +107,8 @@ namespace {
 	/*
 	 *  The selection of the original Chunk_terrain::paint_tile (upstream
 	 *  8b6ab6b43, objs/chunkter.cc:86-133), transcribed statement by statement,
-	 *  with the neighbourhood bound "tiley + y > 0" fixed to ">= 0".
+	 *  with the neighbourhood bound "tiley + y > 0" fixed to ">= 0" and the
+	 *  void tile skipped by the whole-chunk search too.
 	 *  get_shape() logs each call: in the engine each call can load a frame,
 	 *  so the calls must come in the same order.  The painted frame is the
 	 *  one the last call returned.
@@ -162,6 +164,10 @@ namespace {
 			found = shape ? Found::Neighbour : Found::Chunk_search;
 			for (int y = 0; !shape && y < tiles_per_chunk; y++) {
 				for (int x = 0; !shape && x < tiles_per_chunk; x++) {
+					auto sid = get_flat(x, y);
+					if (sid.shape == 12 && sid.frame == 0) {
+						continue;
+					}
 					shape = get_shape(x, y);
 					if (shape && shape->is_rle()) {
 						shape = nullptr;
@@ -255,7 +261,7 @@ TEST_CASE("flat source: row 0 fills its neighbours like any other row") {
 	CHECK(e.source(5, 1) == tile_num(4, 1));
 }
 
-TEST_CASE("flat source: the void tile 12/0 is skipped among neighbours, not by the chunk search") {
+TEST_CASE("flat source: the void tile 12/0 never fills the cell under an RLE tile") {
 	// Neighbourhood: (7,7) is void, so (9,9), the last neighbour, wins.
 	Chunk c;
 	c.void_flat(7, 7);
@@ -266,12 +272,14 @@ TEST_CASE("flat source: the void tile 12/0 is skipped among neighbours, not by t
 	// asked again in the loop, as the original did.
 	const std::vector<int> expected{136, 120, 121, 135, 136, 137, 151, 152, 153};
 	CHECK(calls == expected);
-	// Chunk search: no flat neighbour, and the void tile (7,7) is the first
-	// flat of the chunk, so it is used (legacy quirk).
+	// Chunk search: no flat neighbour; the void tile (7,7) is the first flat
+	// of the chunk, but (15,15) is used, and the void tile is never asked.
 	Chunk d;
 	d.void_flat(7, 7);
 	d.flat(15, 15);
-	CHECK(d.source(8, 8) == tile_num(7, 7));
+	calls.clear();
+	CHECK(d.source(8, 8, &calls) == tile_num(15, 15));
+	CHECK(std::find(calls.begin(), calls.end(), tile_num(7, 7)) == calls.end());
 	// The near misses 12/1 and 13/0 are ordinary flats.
 	Chunk e;
 	e.set(7, 7, 12, 1, Tile_kind::Flat);
@@ -303,6 +311,7 @@ TEST_CASE("flat source: equals the reference loop, frame loads included") {
 	int searched    = 0;
 	int nothing     = 0;
 	int void_source = 0;    // The chunk search returned the void tile.
+	int void_passed = 0;    // The chunk search passed over a flat void tile.
 	int row0_used   = 0;    // A flat row-0 neighbour was used.
 	for (int n = 0; n < 2000; n++) {
 		const Chunk c = random_chunk(rng);
@@ -335,6 +344,12 @@ TEST_CASE("flat source: equals the reference loop, frame loads included") {
 				case Found::Chunk_search:
 					searched++;
 					void_source += c.is_void(want) ? 1 : 0;
+					for (int t = 0; t < want; t++) {
+						if (c.kind(t) == Tile_kind::Flat_void) {
+							void_passed++;
+							break;
+						}
+					}
 					break;
 				}
 			}
@@ -342,12 +357,13 @@ TEST_CASE("flat source: equals the reference loop, frame loads included") {
 	}
 	CHECK(mismatches == 0);
 	// Every path was taken, both quirks included.
-	MESSAGE("itself ", itself, ", neighbour ", neighbour, " (row 0 ", row0_used, "), chunk search ", searched, " (void ",
-			void_source, "), nothing ", nothing);
+	MESSAGE("itself ", itself, ", neighbour ", neighbour, " (row 0 ", row0_used, "), chunk search ", searched,
+			" (void tile passed over ", void_passed, "), nothing ", nothing);
 	CHECK(itself > 0);
 	CHECK(neighbour > 0);
 	CHECK(searched > 0);
 	CHECK(nothing > 0);
-	CHECK(void_source > 0);
+	CHECK(void_source == 0);
+	CHECK(void_passed > 0);
 	CHECK(row0_used > 0);
 }
