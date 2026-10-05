@@ -1165,6 +1165,9 @@
     <ClInclude Include="..\..\objs\flags.h">
       <Filter>objs</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\objs\flat_source.h">
+      <Filter>objs</Filter>
+    </ClInclude>
     <ClInclude Include="..\..\objs\iregobjs.h">
       <Filter>objs</Filter>
     </ClInclude>

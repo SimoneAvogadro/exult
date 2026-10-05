@@ -585,6 +585,7 @@
 		E700DCC11A6E30D8006C8BE4 /* egg.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = egg.h; path = ../objs/egg.h; sourceTree = "<group>"; };
 		E700DCC21A6E30D8006C8BE4 /* find_nearby.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = find_nearby.h; path = ../objs/find_nearby.h; sourceTree = "<group>"; };
 		E700DCC31A6E30D8006C8BE4 /* flags.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = flags.h; path = ../objs/flags.h; sourceTree = "<group>"; };
+		E700DCC31A6E30D8006C8BF0 /* flat_source.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = flat_source.h; path = ../objs/flat_source.h; sourceTree = "<group>"; };
 		E700DCC41A6E30D8006C8BE4 /* iregobjs.cc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = iregobjs.cc; path = ../objs/iregobjs.cc; sourceTree = "<group>"; };
 		E700DCC51A6E30D8006C8BE4 /* iregobjs.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = iregobjs.h; path = ../objs/iregobjs.h; sourceTree = "<group>"; };
 		E700DCC61A6E30D8006C8BE4 /* jawbone.cc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = jawbone.cc; path = ../objs/jawbone.cc; sourceTree = "<group>"; };
@@ -1229,6 +1230,7 @@
 				E700DCC11A6E30D8006C8BE4 /* egg.h */,
 				E700DCC21A6E30D8006C8BE4 /* find_nearby.h */,
 				E700DCC31A6E30D8006C8BE4 /* flags.h */,
+				E700DCC31A6E30D8006C8BF0 /* flat_source.h */,
 				E700DCC41A6E30D8006C8BE4 /* iregobjs.cc */,
 				E700DCC51A6E30D8006C8BE4 /* iregobjs.h */,
 				E700DCC61A6E30D8006C8BE4 /* jawbone.cc */,

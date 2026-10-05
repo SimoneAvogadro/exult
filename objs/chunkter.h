@@ -50,7 +50,6 @@ class Chunk_terrain : public Game_singletons {
 	void insert_in_queue();    // Queue methods.
 	void remove_from_queue();
 	// Create rendered_flats.
-	void           paint_tile(int tilex, int tiley);
 	Image_buffer8* render_flats();
 	void           free_rendered_flats();
 
@@ -99,6 +98,9 @@ public:
 		}
 		return rendered_flats ? rendered_flats : render_flats();
 	}
+
+	// Paint the flats (c_chunksize x c_chunksize) into dst.
+	void paint_flats(Image_buffer8& dst, bool overrides);
 
 	void render_all(int cx, int cy, int pass);    // Render terrain-editing mode.
 	// Write out to chunk.

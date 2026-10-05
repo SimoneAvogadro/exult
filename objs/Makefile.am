@@ -24,6 +24,7 @@ libobjs_la_SOURCES = \
 	egg.h \
 	find_nearby.h \
 	flags.h \
+	flat_source.h \
 	iregobjs.cc \
 	iregobjs.h \
 	mappatch.cc \
