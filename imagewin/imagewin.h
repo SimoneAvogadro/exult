@@ -319,6 +319,8 @@ public:
 
 protected:
 	Image_buffer* ibuf;            // Where the data is actually stored.
+	Image_buffer* main_ibuf;       // The window's own buffer, on draw_surface;
+								   //   ibuf can be a pushed render target.
 	int           scale;           // Only 1 or 2 for now.
 	int           scaler;          // What scaler do we want to use
 	bool          uses_palette;    // Does this window have a palette
@@ -569,10 +571,10 @@ public:
 	Image_window(
 			Image_buffer* ib, int w, int h, int gamew, int gameh, int scl = 1, bool fs = false, int sclr = point,
 			FillMode fmode = AspectCorrectCentre, int fillsclr = point)
-			: ibuf(ib), scale(scl), scaler(sclr), uses_palette(true), fullscreen(fs), game_width(gamew), game_height(gameh),
-			  saved_game_width(gamew), saved_game_height(gameh), fill_mode(fmode), fill_scaler(fillsclr), screen_window(nullptr),
-			  screen_renderer(nullptr), screen_texture(nullptr), screen_texture_a(nullptr), paletted_surface(nullptr),
-			  inter_surface(nullptr), draw_surface(nullptr) {
+			: ibuf(ib), main_ibuf(ib), scale(scl), scaler(sclr), uses_palette(true), fullscreen(fs), game_width(gamew),
+			  game_height(gameh), saved_game_width(gamew), saved_game_height(gameh), fill_mode(fmode), fill_scaler(fillsclr),
+			  screen_window(nullptr), screen_renderer(nullptr), screen_texture(nullptr), screen_texture_a(nullptr),
+			  paletted_surface(nullptr), inter_surface(nullptr), draw_surface(nullptr) {
 		static_init();
 		create_surface(w, h);
 	}

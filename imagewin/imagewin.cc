@@ -517,7 +517,7 @@ void Image_window::static_init() {
 
 Image_window::~Image_window() {
 	free_surface();
-	delete ibuf;
+	delete main_ibuf;    // ibuf may be a pushed buffer that its owner deletes.
 
 	// Clean up the SDL window.  Not particularly important for standalone
 	// executable builds, but on android, if the app remains in memory after
@@ -534,10 +534,34 @@ Image_window::~Image_window() {
 	screen_window   = nullptr;
 }
 
+namespace {
+	// Points a window's ibuf at another buffer until the scope ends, also when
+	// it ends with an exception.
+	class Ibuf_scope {
+		Image_buffer*& ibuf;
+		Image_buffer*  saved;
+
+	public:
+		Ibuf_scope(Image_buffer*& ib, Image_buffer* tmp) : ibuf(ib), saved(ib) {
+			ibuf = tmp;
+		}
+
+		~Ibuf_scope() {
+			ibuf = saved;
+		}
+
+		Ibuf_scope(const Ibuf_scope&)            = delete;
+		Ibuf_scope& operator=(const Ibuf_scope&) = delete;
+	};
+}    // namespace
+
 /*
  *   Create the surface.
  */
 void Image_window::create_surface(unsigned int w, unsigned int h) {
+	// This sets up the main buffer, also while a render target is pushed:
+	// in here, ibuf is main_ibuf.
+	const Ibuf_scope main_buffer(ibuf, main_ibuf);
 	uses_palette = true;
 	free_surface();
 
@@ -826,7 +850,7 @@ void Image_window::free_surface() {
 	paletted_surface = nullptr;
 	inter_surface    = nullptr;
 	draw_surface     = nullptr;
-	ibuf->bits       = nullptr;
+	main_ibuf->bits  = nullptr;    // Not ibuf: a pushed buffer stays valid.
 	free_layer_textures();
 	if (screen_renderer != nullptr) {
 		SDL_DestroyRenderer(screen_renderer);
