@@ -14,6 +14,7 @@ Layout
     main.cc          entry point; data_path() for tests/data
     test_support.h   deterministic PRNG (SplitMix64) and FNV-1a-64
     ibuf_ops.h/.cc   a deterministic stream of Image_buffer8 operations
+    test_effects.cc  where a sprite effect is painted while the view scrolls
     test_flat_source.cc
                      pins the fill rule of the flat layer
                      (objs/flat_source.h) to the original loop, quirks and

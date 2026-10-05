@@ -31,6 +31,7 @@ hires_unit_SOURCES = \
 	unit/ibuf_ops.cc \
 	unit/ibuf_ops.h \
 	unit/rle_writer.h \
+	unit/test_effects.cc \
 	unit/test_flat_source.cc \
 	unit/test_ibuf_golden.cc \
 	unit/test_rle_writer.cc \

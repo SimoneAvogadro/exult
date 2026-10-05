@@ -453,10 +453,11 @@ void Sprites_effect::paint() {
 	if (sprite.get_framenum() >= frames) {
 		return;
 	}
-	const int lp = pos.tz / 2;    // Account for lift.
-	sprite.paint_shape(
-			xoff + (pos.tx - lp - gwin->get_scrolltx()) * c_tilesize - gwin->get_scrolltx_lo(),
-			yoff + (pos.ty - lp - gwin->get_scrollty()) * c_tilesize - gwin->get_scrolltx_lo());
+	int x;
+	int y;
+	get_paint_position(
+			pos, xoff, yoff, gwin->get_scrolltx(), gwin->get_scrollty(), gwin->get_scrolltx_lo(), gwin->get_scrollty_lo(), x, y);
+	sprite.paint_shape(x, y);
 }
 
 static inline int get_explosion_shape(int weap, int proj) {

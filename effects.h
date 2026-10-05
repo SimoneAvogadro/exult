@@ -131,6 +131,17 @@ public:
 	bool is_sprite() const override {
 		return true;
 	}
+
+	// Where paint() draws the sprite: at tile 'pos', moved by (xoff, yoff)
+	// pixels, with the view scrolled to tile (scrolltx, scrollty) and, while
+	// it scrolls smoothly, (scrolltx_lo, scrollty_lo) pixels further.
+	static void get_paint_position(
+			const Tile_coord& pos, int xoff, int yoff, int scrolltx, int scrollty, int scrolltx_lo, int scrollty_lo, int& x,
+			int& y) {
+		const int lp = pos.tz / 2;    // Account for lift.
+		x            = xoff + (pos.tx - lp - scrolltx) * c_tilesize - scrolltx_lo;
+		y            = yoff + (pos.ty - lp - scrollty) * c_tilesize - scrollty_lo;
+	}
 };
 
 /*
