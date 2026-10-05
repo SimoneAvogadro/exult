@@ -759,6 +759,7 @@ for /f "tokens=* delims=" %%u in ('git ls-remote --get-url') do echo #define GIT
     <ClInclude Include="..\..\objs\egg.h" />
     <ClInclude Include="..\..\objs\find_nearby.h" />
     <ClInclude Include="..\..\objs\flags.h" />
+    <ClInclude Include="..\..\objs\flat_source.h" />
     <ClInclude Include="..\..\objs\iregobjs.h" />
     <ClInclude Include="..\..\objs\jawbone.h" />
     <ClInclude Include="..\..\objs\mappatch.h" />
