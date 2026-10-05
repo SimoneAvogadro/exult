@@ -1701,11 +1701,13 @@ bool Game_map::write_minimap() {
 	eman->center_text(get_text_msg(0x761 - msg_file_start));    // "Encoding chunks"
 	gwin->paint();
 	gwin->show();
+	// Paint each terrain into this buffer, so the render cache stays as it is.
+	Image_buffer8 flats(c_chunksize, c_chunksize);
 	for (auto* ter : *chunk_terrains) {
-		Image_buffer8* ibuf    = ter->get_rendered_flats();
-		unsigned char* terbits = ibuf->get_bits();
-		const int      w       = ibuf->get_width();
-		const int      h       = ibuf->get_height();
+		ter->paint_flats(flats, false);
+		unsigned char* terbits = flats.get_bits();
+		const int      w       = flats.get_width();
+		const int      h       = flats.get_height();
 		unsigned long  r       = 0;
 		unsigned long  g       = 0;
 		unsigned long  b       = 0;
