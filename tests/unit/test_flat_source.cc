@@ -356,7 +356,7 @@ TEST_CASE("flat source: equals the reference loop, frame loads included") {
 		}
 	}
 	CHECK(mismatches == 0);
-	// Every path was taken, both quirks included.
+	// Every path was taken, both fixed cases included (row 0, void tile).
 	MESSAGE("itself ", itself, ", neighbour ", neighbour, " (row 0 ", row0_used, "), chunk search ", searched,
 			" (void tile passed over ", void_passed, "), nothing ", nothing);
 	CHECK(itself > 0);

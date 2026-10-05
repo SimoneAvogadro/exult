@@ -17,7 +17,8 @@ Layout
     test_effects.cc  where a sprite effect is painted while the view scrolls
     test_flat_source.cc
                      pins the fill rule of the flat layer
-                     (objs/flat_source.h) to the original loop, quirks and
+                     (objs/flat_source.h): the original loop with the row-0
+                     bound fixed and the void tile skipped everywhere,
                      frame-load order included
     test_ibuf_golden.cc
                      pins the scale-1 behaviour of Image_buffer8 against
