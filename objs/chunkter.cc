@@ -31,6 +31,7 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #include "gamewin.h"
 #include "ignore_unused_variable_warning.h"
 
+#include <algorithm>
 #include <cstring>
 
 Chunk_terrain* Chunk_terrain::render_queue = nullptr;
@@ -224,13 +225,14 @@ void Chunk_terrain::abort_edits() {
  *  Figure max. queue size for given game window.
  */
 static int Figure_queue_size() {
-	// Game_window *gwin = Game_window::get_instance();
-	// int w = gwin->get_width(), h = gwin->get_height();
-	//  Figure # chunks, rounding up.
-	// int cw = (w + c_chunksize - 1)/c_chunksize,
-	//     ch = (h + c_chunksize - 1)/c_chunksize;
-	//  Add extra in each dir.
-	return 100;    //(cw + 3)*(ch + 3);
+	const Game_window* gwin = Game_window::get_instance();
+	const int          w    = gwin->get_width();
+	const int          h    = gwin->get_height();
+	// Figure # chunks, rounding up.
+	const int cw = (w + c_chunksize - 1) / c_chunksize;
+	const int ch = (h + c_chunksize - 1) / c_chunksize;
+	// Add extra in each dir, but never go below the old fixed size.
+	return std::max(100, (cw + 3) * (ch + 3));
 }
 
 /*
