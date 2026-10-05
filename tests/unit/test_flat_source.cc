@@ -1,7 +1,8 @@
 /*
  *  test_flat_source.cc - Pins the fill rule of a chunk's flat layer,
  *  find_flat_source() (objs/flat_source.h), to the loop it replaced in
- *  Chunk_terrain::paint_tile, quirks included (DESIGN.md sections 3.4, 6.2).
+ *  Chunk_terrain::paint_tile, with the row-0 bound fixed (DESIGN.md
+ *  sections 3.4, 6.2).
  *
  *  Copyright (C) 2026  The Exult Team
  *
@@ -94,7 +95,7 @@ namespace {
 		}
 	};
 
-	// Where legacy_source() found the source.
+	// Where reference_source() found the source.
 	enum class Found {
 		Nothing,
 		Itself,
@@ -104,12 +105,13 @@ namespace {
 
 	/*
 	 *  The selection of the original Chunk_terrain::paint_tile (upstream
-	 *  8b6ab6b43, objs/chunkter.cc:86-133), transcribed statement by statement.
+	 *  8b6ab6b43, objs/chunkter.cc:86-133), transcribed statement by statement,
+	 *  with the neighbourhood bound "tiley + y > 0" fixed to ">= 0".
 	 *  get_shape() logs each call: in the engine each call can load a frame,
 	 *  so the calls must come in the same order.  The painted frame is the
 	 *  one the last call returned.
 	 */
-	int legacy_source(const Chunk& c, int tilex, int tiley, std::vector<int>& calls, Found& found) {
+	int reference_source(const Chunk& c, int tilex, int tiley, std::vector<int>& calls, Found& found) {
 		struct Frame {
 			bool rle;
 
@@ -145,7 +147,7 @@ namespace {
 			shape = nullptr;
 			for (int y = -1; !shape && y <= 1; y++) {
 				for (int x = -1; !shape && x <= 1; x++) {
-					if (tilex + x >= 0 && tilex + x < tiles_per_chunk && tiley + y > 0 && tiley + y < tiles_per_chunk) {
+					if (tilex + x >= 0 && tilex + x < tiles_per_chunk && tiley + y >= 0 && tiley + y < tiles_per_chunk) {
 						auto sid = get_flat(tilex + x, tiley + y);
 						if (sid.shape == 12 && sid.frame == 0) {
 							continue;
@@ -234,18 +236,18 @@ TEST_CASE("flat source: under an RLE tile the first flat neighbour wins, row by 
 	CHECK(e.source(15, 15) == tile_num(0, 2));
 }
 
-TEST_CASE("flat source: row 0 never fills a neighbour (legacy bound y > 0)") {
-	// The row-0 neighbour (4,0) is ignored; the chunk search finds (0,0) first.
+TEST_CASE("flat source: row 0 fills its neighbours like any other row") {
+	// The row-0 neighbour (4,0) wins over (0,0), the first flat of the chunk.
 	Chunk c;
 	c.flat(4, 0);
 	c.flat(0, 0);
-	CHECK(c.source(5, 1) == tile_num(0, 0));
-	// A tile in row 0 looks at row 1 only: (6,1) wins over (4,0) and (6,0).
+	CHECK(c.source(5, 1) == tile_num(4, 0));
+	// A tile in row 0 looks at rows 0 and 1: (4,0) comes first.
 	Chunk d;
 	d.flat(4, 0);
 	d.flat(6, 0);
 	d.flat(6, 1);
-	CHECK(d.source(5, 0) == tile_num(6, 1));
+	CHECK(d.source(5, 0) == tile_num(4, 0));
 	// Row 1 itself is a valid neighbourhood row.
 	Chunk e;
 	e.flat(0, 0);
@@ -293,7 +295,7 @@ TEST_CASE("flat source: an RLE tile in a chunk without flats gets nothing") {
 	}
 }
 
-TEST_CASE("flat source: equals the original paint_tile loop, frame loads included") {
+TEST_CASE("flat source: equals the reference loop, frame loads included") {
 	Rng rng(0xf1a750u);
 	int mismatches  = 0;
 	int itself      = 0;
@@ -301,7 +303,7 @@ TEST_CASE("flat source: equals the original paint_tile loop, frame loads include
 	int searched    = 0;
 	int nothing     = 0;
 	int void_source = 0;    // The chunk search returned the void tile.
-	int row0_skip   = 0;    // A flat row-0 neighbour was passed over.
+	int row0_used   = 0;    // A flat row-0 neighbour was used.
 	for (int n = 0; n < 2000; n++) {
 		const Chunk c = random_chunk(rng);
 		for (int ty = 0; ty < tiles_per_chunk; ty++) {
@@ -309,11 +311,11 @@ TEST_CASE("flat source: equals the original paint_tile loop, frame loads include
 				std::vector<int> want_calls;
 				std::vector<int> got_calls;
 				Found            found;
-				const int        want = legacy_source(c, tx, ty, want_calls, found);
+				const int        want = reference_source(c, tx, ty, want_calls, found);
 				const int        got  = c.source(tx, ty, &got_calls);
 				if (got != want || got_calls != want_calls) {
 					if (mismatches++ == 0) {
-						INFO("chunk ", n, ", tile (", tx, ",", ty, "): legacy ", want, ", find_flat_source ", got);
+						INFO("chunk ", n, ", tile (", tx, ",", ty, "): reference ", want, ", find_flat_source ", got);
 						CHECK(got == want);
 						CHECK(got_calls == want_calls);
 					}
@@ -328,31 +330,24 @@ TEST_CASE("flat source: equals the original paint_tile loop, frame loads include
 					break;
 				case Found::Neighbour:
 					neighbour++;
+					row0_used += want < tiles_per_chunk ? 1 : 0;    // In row 0.
 					break;
 				case Found::Chunk_search:
 					searched++;
 					void_source += c.is_void(want) ? 1 : 0;
 					break;
 				}
-				if (found != Found::Itself && c.kind(tile_num(tx, ty)) == Tile_kind::Rle && ty <= 1) {
-					for (int x = tx - 1; x <= tx + 1; x++) {
-						if (x >= 0 && x < tiles_per_chunk && !c.is_void(x) && Is_flat(c.kind(x))) {
-							row0_skip++;
-							break;
-						}
-					}
-				}
 			}
 		}
 	}
 	CHECK(mismatches == 0);
 	// Every path was taken, both quirks included.
-	MESSAGE("itself ", itself, ", neighbour ", neighbour, ", chunk search ", searched, " (void ", void_source, ", row-0 skip ",
-			row0_skip, "), nothing ", nothing);
+	MESSAGE("itself ", itself, ", neighbour ", neighbour, " (row 0 ", row0_used, "), chunk search ", searched, " (void ",
+			void_source, "), nothing ", nothing);
 	CHECK(itself > 0);
 	CHECK(neighbour > 0);
 	CHECK(searched > 0);
 	CHECK(nothing > 0);
 	CHECK(void_source > 0);
-	CHECK(row0_skip > 0);
+	CHECK(row0_used > 0);
 }

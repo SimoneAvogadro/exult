@@ -55,10 +55,9 @@ inline bool Is_flat(Tile_kind kind) {
  *
  *  A flat tile paints itself.  Under an RLE tile, the first flat of the 3x3
  *  neighbourhood (row by row, void tile skipped) is used, else the first flat
- *  of the whole chunk (row by row).  The rule is the one Chunk_terrain always
- *  used, quirks included (tests/unit/test_flat_source.cc pins both):
- *    - the neighbourhood bound is "y > 0", so row 0 never fills a neighbour;
- *    - the whole-chunk search does not skip the void tile.
+ *  of the whole chunk (row by row).  One quirk of the original rule remains
+ *  (tests/unit/test_flat_source.cc pins it): the whole-chunk search does not
+ *  skip the void tile.
  */
 template <class Is_void_fn, class Kind_fn>
 int find_flat_source(int tx, int ty, Is_void_fn is_void, Kind_fn kind_of) {
@@ -72,7 +71,7 @@ int find_flat_source(int tx, int ty, Is_void_fn is_void, Kind_fn kind_of) {
 		for (int dx = -1; dx <= 1; dx++) {
 			const int x = tx + dx;
 			const int y = ty + dy;
-			if (x >= 0 && x < c_tiles_per_chunk && y > 0 && y < c_tiles_per_chunk) {
+			if (x >= 0 && x < c_tiles_per_chunk && y >= 0 && y < c_tiles_per_chunk) {
 				const int t = c_tiles_per_chunk * y + x;
 				// Skip the palette cycling void tile.
 				if (!is_void(t) && Is_flat(kind_of(t))) {
