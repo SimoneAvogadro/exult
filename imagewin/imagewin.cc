@@ -876,6 +876,18 @@ std::unique_ptr<Image_buffer> Image_window::create_buffer(
 }
 
 /*
+ *   Create a buffer with one byte per game pixel, whatever the current
+ *   target is.  For buffers whose bits are used directly (the SDL surfaces
+ *   of the intro) or that are kept across targets (the FLI frame).
+ */
+
+std::unique_ptr<Image_buffer> Image_window::create_buffer_1x(
+		int w, int h    // Dimensions.
+) {
+	return std::make_unique<Image_buffer8>(w, h);
+}
+
+/*
  *   Window was resized.
  */
 

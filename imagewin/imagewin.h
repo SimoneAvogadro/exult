@@ -677,6 +677,9 @@ public:
 
 	// Create a compatible image buffer.
 	std::unique_ptr<Image_buffer> create_buffer(int w, int h);
+	// Create a buffer with one byte per game pixel, whatever the current
+	// target is: for code that uses the bits directly.
+	std::unique_ptr<Image_buffer> create_buffer_1x(int w, int h);
 	// Resize event occurred.
 	void resized(
 			unsigned int neww, unsigned int newh, bool newfs, unsigned int newgw, unsigned int newgh, int newsc,

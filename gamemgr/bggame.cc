@@ -1275,9 +1275,9 @@ void BG_Game::scene_desk() {
 
 		// Zoom out from zoomed in screen
 		{
-			unique_ptr<Image_buffer> unzoomed(win->create_buffer(320, 200));
+			unique_ptr<Image_buffer> unzoomed(win->create_buffer_1x(320, 200));
 			win->get(unzoomed.get(), 0 + (win->get_game_width() - 320) / 2, 0 + (win->get_game_height() - 200) / 2);
-			const unique_ptr<Image_buffer> zoomed(win->create_buffer(320, 200));
+			const unique_ptr<Image_buffer> zoomed(win->create_buffer_1x(320, 200));
 
 			const Image_window::ScalerInfo& scaler = Image_window::Scalers[Image_window::point];
 
@@ -1450,9 +1450,9 @@ void BG_Game::scene_moongate() {
 	sman->paint_shape(centerx + 1, centery + 1, shapes.get_shape(0x04, 0));
 	sman->paint_shape(centerx + 1, centery + 1, shapes.get_shape(0x05, 0));
 
-	const unique_ptr<Image_buffer> unzoomed(win->create_buffer(320, 200));
+	const unique_ptr<Image_buffer> unzoomed(win->create_buffer_1x(320, 200));
 	win->get(unzoomed.get(), 0 + (win->get_game_width() - 320) / 2, 0 + (win->get_game_height() - 200) / 2);
-	const unique_ptr<Image_buffer> zoomed(win->create_buffer(320, 200));
+	const unique_ptr<Image_buffer> zoomed(win->create_buffer_1x(320, 200));
 
 	const Image_window::ScalerInfo& scaler = Image_window::Scalers[Image_window::point];
 
