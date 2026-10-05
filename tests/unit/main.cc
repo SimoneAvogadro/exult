@@ -1,6 +1,6 @@
 /*
  *  main.cc - Entry point of hires_unit, the SDL-free unit tests of the hi-res
- *  render path (DESIGN.md section 6.2).
+ *  render path.
  *
  *  Copyright (C) 2026  The Exult Team
  *

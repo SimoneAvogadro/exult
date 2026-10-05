@@ -2,7 +2,7 @@
  *  test_flat_source.cc - Pins the fill rule of a chunk's flat layer,
  *  find_flat_source() (objs/flat_source.h), to the loop it replaced in
  *  Chunk_terrain::paint_tile, with the row-0 bound fixed and the void tile
- *  skipped everywhere (DESIGN.md sections 3.4, 6.2).
+ *  skipped everywhere.
  *
  *  Copyright (C) 2026  The Exult Team
  *

@@ -5,7 +5,7 @@
 #                    unset, every script exits with 77 (skipped).
 #   EXULT_BUILD_DIR  the build tree whose exult and data are tested ("make check-game" sets it).
 #   EXULT_WRAPPER    prefixed to every exult call. When it is empty and exult is an ASan build,
-#                    game_require_build sets it to $game_asan_wrapper (below, DESIGN.md section 6.5):
+#                    game_require_build sets it to $game_asan_wrapper (below):
 #                    ASLR off and LeakSanitizer off. An explicit value is used as it is.
 #   HIRES_TEST_TMP   where the sandboxes are created; default: "tmp" next to the build tree.
 #   GAME_TIMEOUT     seconds before an exult run is killed (default 1800).
@@ -13,8 +13,8 @@
 #
 # The game data stays untouched: the config (test.cfg.in) points every writable path (game,
 # patch, mods, source, saves, gamedat, hires, HOME) into the sandbox. Rendered output depends on
-# heap address order, so runs are comparable only when they come from the same harness
-# (DESIGN.md section 6.4). Therefore nothing of the caller or of the build tree reaches exult:
+# heap address order, so runs are comparable only when they come from the same harness.
+# Therefore nothing of the caller or of the build tree reaches exult:
 # mktemp keeps the sandbox path length constant, the build's exult and data are linked into the
 # sandbox (argv[0] and data_path name sandbox paths only), the config is written per sandbox, and
 # exult runs from the sandbox under env -i with a fixed environment (SDL3 copies every
@@ -22,7 +22,7 @@
 
 game_tests_srcdir=${HIRES_TESTS_SRCDIR:-$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)}
 
-# The wrapper of an ASan exult (DESIGN.md section 6.5): ASLR off, because the g++ 9.4 runtime hangs
+# The wrapper of an ASan exult: ASLR off, because the g++ 9.4 runtime hangs
 # at random under WSL2's ASLR; LeakSanitizer off, because leaks at exit are not test failures; fatal
 # UBSan reports. game_run_exult adds the timeout.
 game_asan_wrapper="env ASAN_OPTIONS=detect_leaks=0 UBSAN_OPTIONS=halt_on_error=1:print_stacktrace=1 setarch $(uname -m) -R"

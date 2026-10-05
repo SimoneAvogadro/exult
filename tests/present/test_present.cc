@@ -1,6 +1,6 @@
 /*
  *  test_present.cc - hires_present, the data-free present tests of the hi-res
- *  render path (DESIGN.md section 6.3).
+ *  render path.
  *
  *  They run SDL with the offscreen video driver and the software renderer
  *  (make check sets SDL_VIDEO_DRIVER=offscreen and SDL_RENDER_DRIVER=software)

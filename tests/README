@@ -1,10 +1,10 @@
 Tests of the hi-res render path
 ===============================
 
-The tests of the hi-res fork (docs/hires/DESIGN.md, section 6). The unit tests
-and the present test use synthetic data only; the game-data scripts read a
-Black Gate installation at run time and never write into it. Nothing derived
-from the game's art is committed: goldens are hash lists only.
+The tests of the hi-res fork. The unit tests and the present test use
+synthetic data only; the game-data scripts read a Black Gate installation at
+run time and never write into it. Nothing derived from the game's art is
+committed: goldens are hash lists only.
 
 Layout
 ------

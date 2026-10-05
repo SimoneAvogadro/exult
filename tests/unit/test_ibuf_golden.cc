@@ -1,6 +1,5 @@
 /*
- *  test_ibuf_golden.cc - Pins the scale-1 behaviour of Image_buffer8
- *  (DESIGN.md invariant I2).
+ *  test_ibuf_golden.cc - Pins the scale-1 behaviour of Image_buffer8.
  *
  *  A fixed-seed stream of 24,000 ops over every primitive (ibuf_ops.h) runs on
  *  scale-1 buffers: owned buffers, layer-constructor buffers with a guard band

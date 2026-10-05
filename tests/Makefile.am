@@ -1,4 +1,4 @@
-# Tests of the hi-res render path (DESIGN.md section 6).
+# Tests of the hi-res render path (see README).
 #
 # "make check" builds and runs:
 #   hires_unit     SDL-free doctest unit tests (unit/);
@@ -59,10 +59,10 @@ AM_TESTS_ENVIRONMENT = SDL_VIDEO_DRIVER=offscreen SDL_RENDER_DRIVER=software SDL
 
 # Empty by default. build-asan sets it at configure time to run every test
 # under "setarch x86_64 -R timeout ..." with pinned sanitizer options
-# (DESIGN.md sections 6.1 and 6.5).
+# (README).
 LOG_COMPILER = $(TEST_WRAPPER)
 
-# Game-data tests (DESIGN.md section 6.4), run one after another.
+# Game-data tests, run one after another.
 GAME_TESTS = \
 	game/smoke.sh
 
