@@ -40,3 +40,11 @@ std::string hires_test::data_path(const std::string& name) {
 	}
 	return std::string(dir) + "/" + name;
 }
+
+std::string hires_test::scratch_path(const std::string& name) {
+	const char* dir = std::getenv("HIRES_TEST_TMP");
+	if (dir == nullptr || *dir == '\0') {
+		dir = ".";
+	}
+	return std::string(dir) + "/hires_unit_" + name;
+}

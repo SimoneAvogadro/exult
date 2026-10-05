@@ -94,6 +94,11 @@ namespace hires_test {
 	// Path of a file in tests/data: $HIRES_TEST_DATA if set, else the source
 	// directory compiled in (HIRES_TEST_DATA_DIR). Defined in main.cc.
 	std::string data_path(const std::string& name);
+
+	// Path of a scratch file "hires_unit_<name>" that a test writes and
+	// removes: in $HIRES_TEST_TMP if set, else in the current directory (the
+	// build tree under make check). Defined in main.cc.
+	std::string scratch_path(const std::string& name);
 }    // namespace hires_test
 
 #endif

@@ -808,6 +808,7 @@ HIRES_UNIT_TEST_OBJS:=\
 	tests/unit/ibuf_ops.o \
 	tests/unit/test_flat_source.o \
 	tests/unit/test_ibuf_golden.o \
+	tests/unit/test_pngio.o \
 	tests/unit/test_rle_writer.o
 
 HIRES_PRESENT_OBJS:=

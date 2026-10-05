@@ -80,6 +80,12 @@ int Import_png8(
 	if (setjmp(png_jmpbuf(png))) {    // Handle errors.
 		png_destroy_read_struct(&png, &info, nullptr);
 		fclose(fp);
+		// Free what we allocated.  These are references, so they keep
+		// their values across the longjmp.
+		delete[] palette;
+		palette = nullptr;
+		delete[] pixels;
+		pixels = nullptr;
 		return 0;
 	}
 	png_init_io(png, fp);    // Init. for reading.
@@ -297,6 +303,10 @@ int Import_png32(
 	if (setjmp(png_jmpbuf(png))) {    // Handle errors.
 		png_destroy_read_struct(&png, &info, nullptr);
 		fclose(fp);
+		// Free what we allocated.  This is a reference, so it keeps its
+		// value across the longjmp.
+		delete[] pixels;
+		pixels = nullptr;
 		return 0;
 	}
 	png_init_io(png, fp);    // Init. for reading.

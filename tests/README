@@ -21,6 +21,8 @@ Layout
     test_ibuf_golden.cc
                      pins the scale-1 behaviour of Image_buffer8 against
                      data/ibuf_golden.txt (invariant I2)
+    test_pngio.cc    Import_png8/Import_png32 free their buffers when libpng
+                     fails half-way through a file
     rle_writer.h     test-only writer and reference decoder of RLE frame data
                      (scans of any width, malformed runs on demand)
     test_rle_writer.cc
