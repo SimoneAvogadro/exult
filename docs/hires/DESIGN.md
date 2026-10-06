@@ -15,6 +15,9 @@ oracle also checks for mixed-scale blits and a terrain edit (§6, §9 WP-07); §
 Revision 2.4 (2026-10-06): after the WP-11 review, §4.2 gives the exact `--dump-art` formats, the canonical-terrain
 rule and the output-directory policy (with `manifest.txt`), and the T1/fill parity check is in the tree; §12.4
 lists the changes.
+Revision 2.5 (2026-10-06): after the WP-10 review, the `.reload` poll watches `x<S_art>` (and `x<S>` when it
+differs) (§3.8, §5.7), §4.2 lists the render-test keys `dev` and `keys` and the `inspect.json` shape, and the WP-10
+tests check the dev-mode gate of the keys and the 2 s reload limit; §12.5 lists the changes.
 Repo: `/home/simonea/ultima7_exult/exult-hires`, fork base = upstream master `8b6ab6b43`.
 Every `file:line` anchor refers to that commit. The lead architect re-checked the anchors in code; the
 analysis documents in `docs-hires/analysis/` back the other measured facts.
@@ -653,7 +656,8 @@ appended to `data/bg/defaultkeys.txt` and the SI file; these combinations are un
 | `HIRES_RELOAD` | Ctrl-Alt-R | `Hires::reload()`: rescan and revalidate all roots, generation++, `set_all_dirty()`, then a toast with the summary (`loaded 3880, rejected 5 (see log)`). |
 | `HIRES_INSPECT` | Ctrl-Alt-I | Mouse → `screen_to_game` → tile (tx,ty), then terrain number, T1 key, cell, own (shape:frame), effective source (from `find_flat_source`) and the result (`TERRAIN <path>`, `TILE <path>`, or `NN (<state>: <rule> <detail>)`). Shown as `center_text`, written to stdout, and copied to the clipboard (`SDL_SetClipboardText`). |
 
-* **Trigger file:** every 500 ms in dev mode, the `mtime` of `<root>/x<S>/.reload` is checked; a change calls `reload()`. Each engine watches its own pack copy (§5.7). The Windows engine reads `E:` natively, so `publish.sh` and ComfyUI tools touch `E:\…\x6\.reload`. A WSL engine reads the ext4 copy, so WSL tools touch the ext4 `.reload`. Art made in WSL or ComfyUI therefore shows up in whichever engine is running.
+* **Trigger file:** every 500 ms in dev mode, the `mtime` of `<root>/x<S_art>/.reload` is checked for every root, plus `<root>/x<S>/.reload` when the render scale S > 1 differs from the art scale (packs hold only `x<S_art>`; the store reduces); a change of either (including its creation or removal) calls `reload()`. The first look at a file is a baseline only, and dev mode off resets the watch. **Tools touch `x<S_art>/.reload`** (`x6/.reload` for the default packs), whatever S the engine runs at. Each engine watches its own pack copy (§5.7). The Windows engine reads `E:` natively, so `publish.sh` and ComfyUI tools touch `E:\…\x6\.reload`. A WSL engine reads the ext4 copy, so WSL tools touch the ext4 `.reload`. Art made in WSL or ComfyUI therefore shows up in whichever engine is running. The poll runs in the main loop only (`Handle_events`): during a modal gump loop the reload waits for the next main-loop frame (§12.5).
+* **Gate:** with dev mode off the three keys do nothing but log the config key and show "Hi-res dev mode is off" (the full key does not fit the 320 px toast).
 * **Reload is the single sync point.** A partly written PNG fails to read, is rejected, and is retried on the next reload. Tools write to `*.tmp` and rename.
 * Not included (C's extras, see §11): in-game template export (`--dump-art` writes templates instead), fallback overlay, recorder, named sets.
 
@@ -719,7 +723,9 @@ Environment (debug): `EXULT_HIRES_FULL_UPLOAD=1` disables the write tracker.
 | `resize` | `force6:off:force3:force6` | After the first render, cycle S through these policies with `Game_window::resized` (fullscreen off), re-render and re-check NN equality after each step. This is the S-transition regression (I12) |
 | `pushed_resize` | 0 \| 1 | Push a layer buffer, call `resized()` (and the fullscreen toggle path), pop, then assert that the layer's `bits` are unchanged and the main buffer satisfies I12 |
 | `bench` | N | Median and p95 of world paint, and of upload and present when `present=1` |
-| `inspect` | `tx:ty` | JSON of `explain_at` |
+| `inspect` | `tx:ty` (may repeat) | After every other step (frame loads change the heap and paint order), `Hires::explain_at` for that tile at each S: `inspect.json` = `{"inspect": [ … ]}` with one object per tile and S (tiles in key order, S inner; keys `tile`, `map`, `chunk`, `cell`, `terrain`, `t1`, `own` {shape, frame, kind}, `source` {cell, shape, frame}, `scale`, `overrides`, `terrain_override` and `tile_override` {result, reason, where, reduced, bundle}, `result`; `<HIRES>`-relative paths only, no pixels), `inspect_<tx>_<ty>_s<S>` = result in the digest, the text on stdout |
+| `dev` | 0 \| 1 | Needs `overrides=yes`, no S = 1, no `identity`. Sets `config/video/hires/dev=yes`. After each S render (the pack must differ from NN): the toggle action off (NN) and on (the first render), the reload action (new generation, every flats cache of the view repainted, same render), then the `.reload` poll: no reload without a change; `x<S>/flats` and `flats.next` of the first root (`x<S_art>` when `x<S>` has no `flats.next`) swapped and that `.reload` touched: reload within 2 s and NN (`flats.next` holds identity flats); swapped back and touched: the first render; dev mode off: a touch does not reload. **Renames directories in the pack: scratch packs only** |
+| `keys` | 0 \| 1 | Needs `dev=1`. At the end, Ctrl-Alt-O, R and I as SDL key events through the key bindings at the window's S: nothing with cheats off; toggle twice, reload, and the inspector's text for the tile under the mouse on the clipboard with cheats on; nothing (cheats on) with dev mode off |
 | `expect` | `nn` \| `identity` \| `marker:<idx>` | The oracle to assert |
 | `seed` | 1 | `srand` after `init_files`, overriding `gamewin.cc:587-588` |
 | `out` | DIR | Output directory |
@@ -892,7 +898,7 @@ metrics (§8.2 A4).
 
   Every entry is validated like a loose tile (N1, P0, P4, G1). F1-F3 hold by construction, and F2 is covered by the header CRC (B0). **Entries are independent**: a bundle has no strict groups, so one bad tile never drops a whole shape. Loose PNGs override bundle entries with the same key, so hand edits stay simple. Strict groups (G2) are a loose-directory feature for curated sets.
 * **Development and personal use:** loose PNG directories for hand-made or curated art, the bundle for generated art. EA-derived packs are never committed or distributed. The pipeline and tools are.
-* **Hot reload:** dev mode only (§3.8). Ctrl-Alt-R or a touched `.reload`. Tools write `*.tmp`, rename, then touch `.reload`.
+* **Hot reload:** dev mode only (§3.8). Ctrl-Alt-R or a touched `.reload`. Tools write `*.tmp`, rename, then touch `<root>/x<S_art>/.reload` (`x6/.reload`); the engine watches that file at every S, and `x<S>/.reload` as well when S differs from the art scale.
 * **M2 shipping format:** the sparse companion VGA (map D8), required only where libpng is missing.
 
 ---
@@ -1044,7 +1050,7 @@ changes them with the environment and the path as well. Therefore:
 | WP-07 | O2, O6, O7, present read-back (1:1 and non-1:1), offsets, S cycle and pushed resize under ASan, determinism, perf baseline recorded → **M1a gate** |
 | WP-08 | `test_hires_png`, `test_hires_rules`, `test_hires_store` (including the bundle cases), `test_editor_fixtures` |
 | WP-09 | O4a (tiles), O4b, toggle test → **M1b engine gate** |
-| WP-10 | manual: O/R/I keys; **per side**: the Windows engine (reading `E:` natively) shows a `publish.sh` change within 2 s of the `.reload` touch, and a WSL engine (reading the ext4 copy) shows a WSL tool's change within 2 s; `inspect=` golden JSON for 3 known tiles |
+| WP-10 | manual: O/R/I keys; **per side**: the Windows engine (reading `E:` natively) shows a `publish.sh` change within 2 s of the `.reload` touch, and a WSL engine (reading the ext4 copy) shows a WSL tool's change within 2 s; `inspect=` golden JSON for 3 known tiles (as built: `tests/game/dev_loop.sh`, four tiles at S = 2 and 6, the `.reload` poll within 2 s at S = 2 and 6, the keys through the bindings incl. the cheat and dev-mode gates, §12.5) |
 | WP-11 | dump determinism, CRC parity with `u7art.py`, T1 parity with Python |
 | WP-12 | pytest: the validator reproduces the expected rule IDs on `tests/data/hires/rules` (P4 identical to the engine on the shared fixtures); `mkpack` round trip for loose files and bundle (the engine's `test_hires_store` reads a bundle written by `mkpack`); `palette_crc32` copied from `ref.txt`; quantizer never emits ≥ 0xE0 outside the in-tile P4 mask |
 | WP-13 | `hirescheck` 0 errors on the full pack (P4: 0 non-compliant pixels); QA gates §8.3 as recalibrated (B1 aggregate and floor, histogram in the report); engine loads the 3,885-entry bundle with 0 rejects |
@@ -1478,6 +1484,18 @@ corrections are folded into the sections in the last column. The details are in
 | W11-2 | minor | The code fixed on-disk formats the spec left open, some differently from its text (a `u32` map number in front of each `terrain_map.bin` record, the 16-byte `U7HR` header, `terrain.txt`'s `same_layer`, `classes.txt` in hex, extra `ref.txt` keys, `game=BG` + `game_variant`), recorded only in the WP notes | **Fixed** (the spec follows the code) | §4.2 |
 | W11-3 | minor | A dump into an earlier dump ran `remove_all` on its entries, so files a modder added to or edited in `templates/` were deleted without a warning | **Fixed.** The dump writes `manifest.txt` (CRC and size of every file); a new dump into it refuses (exit code 2, names up to ten files) while an entry holds an unlisted or changed file, or when the manifest is missing. `ref.txt` and the templates' `pack.txt` title say to copy the templates out before editing. `dump_art.sh` covers an added and a changed template | §4.2 |
 | W11-4 | minor | `art_ref/bg/ref.txt` names `engine_rev` = the `HEAD` before WP-11, because the binary was built from the uncommitted tree and the git revision has no dirty marker | **Deferred to the WP-11 commit step:** after the commit, rebuild `build-o2` and regenerate `art_ref/bg` (delete it first: the earlier dump has no manifest). A dirty marker would change upstream's `gitinfo.h` rule, which the fork keeps as it is | §4.2 |
+
+### 12.5 WP-10 corrections (revision 2.5)
+
+The independent review of WP-10 found four minor issues; none changes pixels or the S=1 path. The corrections are
+folded into the sections in the last column. The details are in `docs-hires/impl/WP-10.md` §2 and §3.
+
+| ID | Sev. | Finding (short) | Disposition | Where |
+|---|---|---|---|---|
+| W10-1 | minor | The dev-mode gate of the three key actions had no test: `keys=1` pressed them with cheats off and with cheats and dev mode on only, so a removed or inverted `dev_keys_on()` passed every test | **Fixed.** `keys=1` also sets `config/video/hires/dev=no`, reloads, presses Ctrl-Alt-O, R and I with cheats on and asserts that `is_enabled`, the generation and the clipboard are unchanged, then restores dev mode. Mutations (gate removed in all three actions; in the inspector only) fail `dev-window` | §4.2, §6.7 |
+| W10-2 | minor | The automated reload check allowed 3 s; §6.7's acceptance is 2 s | **Fixed.** The pass limit is 2 s in every lane; the poll still waits up to four times the limit so that the digest's `time_*_reload_ms` has the actual time. Measured: 0.3-0.4 s at -O2 and under ASan. A 2.5 s poll interval (mutation) fails it with 2.4 s | §4.2, §6.7 |
+| W10-3 | minor | The ASan, -O0 and SDL 3.2 results were from objects built before the last `hires_dev.cc` edit (`explain_at`'s chunk lookup) | **Fixed.** All lanes rebuilt from the final sources and `dev_loop.sh` re-run on each (ASan with the §7.1 wrapper) | WP-10 notes |
+| W10-4 | minor | Deviations recorded only in the WP-10 notes: the poll watches `x<S_art>/.reload` (and `x<S>` when S differs) instead of `x<S>`; the new render-test keys `dev` and `keys`; `inspect=` writes `{"inspect": [ … ]}` with one object per tile and S | **Fixed** (the spec follows the code). Tools touch `x<S_art>/.reload`. The other notes-only items also go here: terrain overrides are reported, not painted, before WP-17; `explain_at` creates no chunk (map terrain number when the chunk is not in memory); `explain_flat`/`explain_terrain` return `Hires::Explanation` with root-relative paths; the poll runs in the main loop only | §3.8, §4.2, §5.7 |
 
 ---
 
