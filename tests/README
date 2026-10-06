@@ -21,6 +21,12 @@ Layout
     test_ibuf_golden.cc
                      pins the scale-1 behaviour of Image_buffer8 against
                      data/ibuf_golden.txt (invariant I2)
+    test_ibuf_scaled.cc
+                     the scaled storage (pixel scale 2, 3, 6): oracle O1
+                     (the op stream equals NN of the scale-1 reference after
+                     every op; tracker_complete), get/put/blit for every pair
+                     of scales, put_phys, get_pixel8, fill_static, copy()
+                     out of range, wide and malformed RLE scans
     test_pngio.cc    Import_png8/Import_png32 free their buffers when libpng
                      fails half-way through a file
     rle_writer.h     test-only writer and reference decoder of RLE frame data

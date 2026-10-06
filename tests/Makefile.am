@@ -33,6 +33,7 @@ hires_unit_SOURCES = \
 	unit/rle_writer.h \
 	unit/test_flat_source.cc \
 	unit/test_ibuf_golden.cc \
+	unit/test_ibuf_scaled.cc \
 	unit/test_pngio.cc \
 	unit/test_rle_writer.cc \
 	unit/test_support.h
