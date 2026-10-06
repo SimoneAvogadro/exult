@@ -76,6 +76,7 @@ GAME_TESTS = \
 	game/buildmap_golden.sh \
 	game/render_regions.sh \
 	game/override_regions.sh \
+	game/dump_art.sh \
 	game/resize_cycle.sh \
 	game/perf.sh
 
@@ -110,6 +111,7 @@ EXTRA_DIST = \
 	game/lib.sh \
 	game/test.cfg.in \
 	game/regions.txt \
+	game/dump_art_check.py \
 	game/regen_goldens.sh \
 	game/perf_baseline.json \
 	game/golden/buildmap0.sha256 \

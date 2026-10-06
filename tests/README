@@ -109,6 +109,20 @@ Layout
                      flat cell of the view (some but not all with
                      coverage=partial), and the store must load every flat
                      of the pack, no reject
+    dump_art.sh      --dump-art (DESIGN.md section 4.2): two dumps give
+                     identical trees; dump_art_check.py checks the tree
+                     against the game's files (flat CRCs and palette CRC as
+                     mkpack_identity.py computes them, u7chunks, u7map) and
+                     its own ports of the tile kinds, the fill and the T1
+                     key (T1 and fill parity, terrain layers, usage);
+                     the templates load as an identity pack with no reject
+                     and pass O4a; a second dump into the same directory
+                     gives the same tree; a dump holding an added or a
+                     changed template (manifest.txt), a non-empty directory
+                     without a dump and one inside the static directory are
+                     refused untouched
+    dump_art_check.py
+                     the tree check of dump_art.sh (standard library only)
     resize_cycle.sh  the S cycle force6 -> off -> force3 -> force6 (I12), a
                      terrain edit at S > 1, the pushed resize; fails on a
                      "[hires] mixed-scale" log line
