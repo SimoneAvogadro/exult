@@ -76,6 +76,8 @@ EXULTSOURCES =	\
 	gamewin.h	\
 	headers/gamma.h	\
 	hash_utils.h	\
+	hires_glue.cc	\
+	hires_glue.h	\
 	headers/ignore_unused_variable_warning.h	\
 	headers/ios_state.hpp	\
 	istring.cc	\

@@ -288,6 +288,11 @@
 		E738C8561A6FFF75003A950D /* libvorbis.a in Frameworks */ = {isa = PBXBuildFile; fileRef = E738C8541A6FFF65003A950D /* libvorbis.a */; };
 		E738C8611A71DEA1003A950D /* touchui.cc in Sources */ = {isa = PBXBuildFile; fileRef = E738C85F1A71DEA1003A950D /* touchui.cc */; };
 		FDB8BFC60E5A0F6A00980157 /* CoreGraphics.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = FDB8BFC50E5A0F6A00980157 /* CoreGraphics.framework */; };
+		B59DA0369E5E295F94310978 /* hires_glue.cc in Sources */ = {isa = PBXBuildFile; fileRef = D844736DB3BDA8E658B082B2 /* hires_glue.cc */; };
+		98DB70C73434DA2DA73289C6 /* hires_bundle.cc in Sources */ = {isa = PBXBuildFile; fileRef = FBAE7FE7B4DF0ADF56E45305 /* hires_bundle.cc */; };
+		92B4264B4E772AF380DB1CF9 /* hires_png.cc in Sources */ = {isa = PBXBuildFile; fileRef = 414F77F396750A2169BD1E06 /* hires_png.cc */; };
+		1AA7D2514B40DB92B195296D /* hires_rules.cc in Sources */ = {isa = PBXBuildFile; fileRef = 9401DEC293892D94BC8863CF /* hires_rules.cc */; };
+		30761590BED95E6907636399 /* hires_store.cc in Sources */ = {isa = PBXBuildFile; fileRef = 1930BF6D58D6D3A986CB600A /* hires_store.cc */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -890,6 +895,17 @@
 		FD77A0840E26BDB800F39101 /* AudioToolbox.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AudioToolbox.framework; path = System/Library/Frameworks/AudioToolbox.framework; sourceTree = SDKROOT; };
 		FDB8BFC50E5A0F6A00980157 /* CoreGraphics.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreGraphics.framework; path = System/Library/Frameworks/CoreGraphics.framework; sourceTree = SDKROOT; };
 		FE4F4F1A887E52F238D70180 /* lightinf.cc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = lightinf.cc; sourceTree = "<group>"; };
+		D844736DB3BDA8E658B082B2 /* hires_glue.cc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = hires_glue.cc; path = ../hires_glue.cc; sourceTree = "<group>"; };
+		F146CF99F9DB5B5B38B8533E /* hires_glue.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = hires_glue.h; path = ../hires_glue.h; sourceTree = "<group>"; };
+		FBAE7FE7B4DF0ADF56E45305 /* hires_bundle.cc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = hires_bundle.cc; path = ../shapes/hires_bundle.cc; sourceTree = "<group>"; };
+		B45ACAD665A8D98AD4EF1554 /* hires_bundle.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = hires_bundle.h; path = ../shapes/hires_bundle.h; sourceTree = "<group>"; };
+		414F77F396750A2169BD1E06 /* hires_png.cc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = hires_png.cc; path = ../shapes/hires_png.cc; sourceTree = "<group>"; };
+		59968A9C1EB62593096BD857 /* hires_png.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = hires_png.h; path = ../shapes/hires_png.h; sourceTree = "<group>"; };
+		9401DEC293892D94BC8863CF /* hires_rules.cc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = hires_rules.cc; path = ../shapes/hires_rules.cc; sourceTree = "<group>"; };
+		8E288ACDD8B6D1A54F0D18D4 /* hires_rules.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = hires_rules.h; path = ../shapes/hires_rules.h; sourceTree = "<group>"; };
+		1930BF6D58D6D3A986CB600A /* hires_store.cc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = hires_store.cc; path = ../shapes/hires_store.cc; sourceTree = "<group>"; };
+		9704B4B982A8054A77D6F33D /* hires_store.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = hires_store.h; path = ../shapes/hires_store.h; sourceTree = "<group>"; };
+		DC32DF6C5D46E1230C1A6690 /* hires_vga.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = hires_vga.h; path = ../shapes/hires_vga.h; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -1176,6 +1192,8 @@
 				E700E0271A6E4067006C8BE4 /* gamewin.cc */,
 				E700E0281A6E4067006C8BE4 /* gamewin.h */,
 				E700DC611A6E30A7006C8BE4 /* hash_utils.h */,
+				D844736DB3BDA8E658B082B2 /* hires_glue.cc */,
+				F146CF99F9DB5B5B38B8533E /* hires_glue.h */,
 				E700DC621A6E30A7006C8BE4 /* istring.cc */,
 				E700DC631A6E30A7006C8BE4 /* istring.h */,
 				E700DC641A6E30A7006C8BE4 /* keyactions.cc */,
@@ -1276,6 +1294,15 @@
 				E700DCED1A6E3121006C8BE4 /* fontgen.h */,
 				E700DCEE1A6E3121006C8BE4 /* fontvga.cc */,
 				E700DCEF1A6E3121006C8BE4 /* fontvga.h */,
+				FBAE7FE7B4DF0ADF56E45305 /* hires_bundle.cc */,
+				B45ACAD665A8D98AD4EF1554 /* hires_bundle.h */,
+				414F77F396750A2169BD1E06 /* hires_png.cc */,
+				59968A9C1EB62593096BD857 /* hires_png.h */,
+				9401DEC293892D94BC8863CF /* hires_rules.cc */,
+				8E288ACDD8B6D1A54F0D18D4 /* hires_rules.h */,
+				1930BF6D58D6D3A986CB600A /* hires_store.cc */,
+				9704B4B982A8054A77D6F33D /* hires_store.h */,
+				DC32DF6C5D46E1230C1A6690 /* hires_vga.h */,
 				E700DCF21A6E3121006C8BE4 /* items.cc */,
 				E700DCF31A6E3121006C8BE4 /* items.h */,
 				E700DCF41A6E3121006C8BE4 /* miscinf.cc */,
@@ -2128,6 +2155,7 @@
 				E700DD8B1A6E3161006C8BE4 /* crc.cc in Sources */,
 				E700DCAD1A6E30A7006C8BE4 /* schedule.cc in Sources */,
 				E700DC981A6E30A7006C8BE4 /* effects.cc in Sources */,
+				B59DA0369E5E295F94310978 /* hires_glue.cc in Sources */,
 				E700DCA11A6E30A7006C8BE4 /* istring.cc in Sources */,
 				E700DC291A6E2CE7006C8BE4 /* WavAudioSample.cc in Sources */,
 				E700DCA91A6E30A7006C8BE4 /* palette.cc in Sources */,
@@ -2136,6 +2164,10 @@
 				E700DC231A6E2CE7006C8BE4 /* OggAudioSample.cc in Sources */,
 				E700DE861A6E3497006C8BE4 /* GameDisplayOptions_gump.cc in Sources */,
 				E700DD651A6E3121006C8BE4 /* vgafile.cc in Sources */,
+				98DB70C73434DA2DA73289C6 /* hires_bundle.cc in Sources */,
+				92B4264B4E772AF380DB1CF9 /* hires_png.cc in Sources */,
+				1AA7D2514B40DB92B195296D /* hires_rules.cc in Sources */,
+				30761590BED95E6907636399 /* hires_store.cc in Sources */,
 				E700DD3B1A6E3121006C8BE4 /* items.cc in Sources */,
 				E700DF4F1A6E34C6006C8BE4 /* ucmachine.cc in Sources */,
 				8A38EB772E2AA11300450868 /* playscene.cc in Sources */,

@@ -37,6 +37,19 @@ Layout
                      the scale policy (render_scale off/art/auto/force:N and
                      its caps), the present filter ladder and tracked_to_phys
                      (imagewin/world_scale.h)
+    hires_test_util.h/.cc
+                     scratch directories, a chunk-level PNG builder, a fake
+                     source provider and the synthetic game of data/hires/rules
+    test_hires_rules.cc
+                     hashes, the T1 terrain key, the palette-0 clamp, rule P4,
+                     the class-preserving reduction (shared vectors)
+    test_hires_png.cc
+                     the raw-index PNG reader and writer (hardening, failures)
+    test_hires_store.cc
+                     the override store: rules and IDs, groups, roots,
+                     reduction, terrain overrides, bundles, the store set
+    test_editor_fixtures.cc
+                     PNGs laid out like Aseprite and GIMP exports
   present/         hires_present: data-free present tests (offscreen video
                    driver, software renderer; exit code 77 = skipped)
     test_present.cc  the read-back harness and World_presenter: 1:1 exact,
@@ -46,6 +59,18 @@ Layout
                      too with SDL 3.4 or newer)
   data/
     ibuf_golden.txt  digests recorded on unmodified upstream imagewin/ibuf8.cc
+    hires/           hi-res store fixtures (synthetic palette and pixels only)
+      hash_vectors.txt  CRC32, FNV-1a-64, Get_color8, T1 and palette vectors,
+                        shared with tools/hires (pytest)
+      rules/            rule fixtures + expected.txt and the synthetic game
+                        (game/palettes.flx, game/shapes.vga), shared with
+                        tools/hires/hirescheck.py
+      editor/           editor-like exports + expected.txt; editor/real/ (WP-15)
+                        holds real exports when present
+      bundle/           a pack root whose flats.bundle and pack.txt were written
+                        by tools/hires/u7hires/pack.py
+      make_fixtures.py, make_mkpack_bundle.py
+                        the generators (deterministic)
   game/            game-data scripts for "make check-game"
     test.cfg.in      config template; lib.sh fills it in per sandbox
     lib.sh           shared helpers (skip rule, sandbox, run, log checks,
@@ -127,7 +152,27 @@ Makefile.mingw (Windows, via Makefile.common), from the source directory:
 
 hires_unit takes doctest's options, for example -tc='ibuf golden*' to run only
 the test cases whose names match, or -s to list successful assertions too.
-HIRES_TEST_DATA overrides the data directory compiled into it.
+HIRES_TEST_DATA overrides the data directory compiled into it. The store tests
+create scratch directories (hires_unit.<pid>.<n>) under HIRES_TEST_TMP, else in
+the current directory, and remove them; one test case reads the installed
+Black Gate palette when U7_BG_STATIC is set and is skipped otherwise.
+
+The hi-res store fixtures (data/hires)
+--------------------------------------
+
+Everything in data/hires is synthetic: no palette or pixel of the game is
+stored, only the CRC of Black Gate's palette 0 (checked against the installed
+game when U7_BG_STATIC is set). rules/ and the crc32, fnv1a64 and get_color8
+lines of hash_vectors.txt come from tools/hires/tests/make_rule_fixtures.py;
+expected.txt names the primary rule (or OK) and the severity of each file, as
+the engine and hirescheck.py report them. editor/ and the t1 and pal8_crc32
+lines are written by make_fixtures.py (Python 3, standard library only), and
+bundle/ by make_mkpack_bundle.py with the u7hires package. Rerunning the
+generators gives the same bytes; change a fixture only together with both
+test suites. make_rule_fixtures.py and u7hires/pack.py live on the art track
+(branch hires-art), which keeps its own copy of rules/ in
+tools/hires/tests/data/rules: until the two tracks merge into one copy, the
+two trees must stay byte-identical.
 
 The scale-1 golden (data/ibuf_golden.txt)
 -----------------------------------------

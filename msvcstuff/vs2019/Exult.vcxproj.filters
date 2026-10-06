@@ -227,6 +227,9 @@
     <ClCompile Include="..\..\gamewin.cc">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\hires_glue.cc">
+      <Filter>Source Files</Filter>
+    </ClCompile>
     <ClCompile Include="..\..\istring.cc">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -274,6 +277,18 @@
     </ClCompile>
     <ClCompile Include="..\..\shapeid.cc">
       <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\shapes\hires_bundle.cc">
+      <Filter>shapes</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\shapes\hires_png.cc">
+      <Filter>shapes</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\shapes\hires_rules.cc">
+      <Filter>shapes</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\shapes\hires_store.cc">
+      <Filter>shapes</Filter>
     </ClCompile>
     <ClCompile Include="..\..\touchui.cc">
       <Filter>Source Files</Filter>
@@ -859,6 +874,9 @@
     <ClInclude Include="..\..\hash_utils.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\hires_glue.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
     <ClInclude Include="..\..\istring.h">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -900,6 +918,21 @@
     </ClInclude>
     <ClInclude Include="..\..\shapeid.h">
       <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\shapes\hires_bundle.h">
+      <Filter>shapes</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\shapes\hires_png.h">
+      <Filter>shapes</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\shapes\hires_rules.h">
+      <Filter>shapes</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\shapes\hires_store.h">
+      <Filter>shapes</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\shapes\hires_vga.h">
+      <Filter>shapes</Filter>
     </ClInclude>
     <ClInclude Include="..\..\singles.h">
       <Filter>Header Files</Filter>

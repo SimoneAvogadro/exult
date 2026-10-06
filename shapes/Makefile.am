@@ -13,6 +13,15 @@ endif
 noinst_LTLIBRARIES = libshapes.la
 
 libshapes_la_SOURCES = \
+	hires_bundle.cc \
+	hires_bundle.h \
+	hires_png.cc \
+	hires_png.h \
+	hires_rules.cc \
+	hires_rules.h \
+	hires_store.cc \
+	hires_store.h \
+	hires_vga.h \
 	pngio.cc \
 	pngio.h \
 	vgafile.cc \

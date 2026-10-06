@@ -1,0 +1,6 @@
+game=TEST
+scale=6
+palette_crc32=fe2c67d1
+edge=none
+route=unit
+title=mkpack bundle fixture

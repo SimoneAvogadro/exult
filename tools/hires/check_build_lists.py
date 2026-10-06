@@ -324,7 +324,9 @@ def makefile_lists(root, rel_path):
             elif ":" in line:
                 targets, _, prerequisites = line.partition(":")
                 if "=" not in prerequisites:    # Otherwise a target-specific variable.
-                    rule = (state, keys(prerequisites.lstrip(":")))
+                    # The dependency rule of an object ("shapeid.o: shapeid.cc ...") names
+                    # its own source; that does not make it a list the source is in.
+                    rule = (state, keys(prerequisites.lstrip(":")) - keys(targets))
                     lists.setdefault(f"{rel_path}: rule {' '.join(targets.split())}", []).append(rule)
     return lists
 
