@@ -76,6 +76,11 @@ namespace Hires {
 	void set_enabled(bool enabled);
 	bool is_enabled();
 
+	// The report of the last load of 'scale', failed loads included (then
+	// Report::failed is set and the counts are 0); nullptr when 'scale' has
+	// not been loaded since the last invalidate().
+	const Report* report(int scale);
+
 	// The roots of the current game, in precedence order.
 	std::vector<Root> roots();
 

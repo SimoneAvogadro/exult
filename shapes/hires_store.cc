@@ -428,6 +428,10 @@ namespace Hires {
 
 	std::string Report::summary(int scale) const {
 		std::ostringstream out;
+		if (failed) {
+			out << "x" << scale << ": load failed: " << failure;
+			return out.str();
+		}
 		out << "x" << scale << ": " << loaded << " tiles loaded (bundle " << bundled << "), " << rejected << " rejected, "
 			<< groups_skipped << " groups skipped, " << unguarded << " unguarded, " << warnings << " warnings, " << terrains
 			<< " terrains; " << roots << " roots";
@@ -1090,7 +1094,14 @@ namespace Hires {
 				return nullptr;    // No memory even for the entry: tried again on the next call.
 			}
 			entry->store.reset();
-			entry->failed = true;
+			entry->failed        = true;
+			entry->report        = Report();
+			entry->report.failed = true;
+			try {
+				entry->report.failure = e.what();
+			} catch (const std::exception&) {
+				// No message; the failed flag stands.
+			}
 			try {
 				if (text_fn) {
 					text_fn("x" + std::to_string(scale) + ": overrides disabled: " + e.what());

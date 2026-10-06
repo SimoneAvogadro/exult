@@ -140,8 +140,13 @@ namespace Hires {
 		std::vector<Finding>     findings;
 		std::vector<std::string> lines;    // findings formatted, in order
 		double                   ms = 0;
+		// Store_set only: the load threw before Store::load could report
+		// (latched until invalidate()); failure holds the message, if any.
+		bool        failed = false;
+		std::string failure;
 
-		// One line: "x6: 3885 tiles loaded (bundle 3885), 0 rejected, ...".
+		// One line: "x6: 3885 tiles loaded (bundle 3885), 0 rejected, ...",
+		// or "x6: load failed: <failure>".
 		std::string summary(int scale) const;
 	};
 

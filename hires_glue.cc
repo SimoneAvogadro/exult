@@ -183,6 +183,10 @@ namespace Hires {
 		return stores().enabled();
 	}
 
+	const Report* report(int scale) {
+		return stores().report(scale);
+	}
+
 	std::vector<Root> roots() {
 		std::vector<Root> out;
 

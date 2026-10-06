@@ -1046,6 +1046,7 @@ TEST_CASE("hires store: Store_set loads lazily per scale; generation, toggle, fa
 	CHECK(calls == 2);
 	REQUIRE(set.report(6) != nullptr);
 	CHECK(set.report(6)->loaded == 1);
+	CHECK_FALSE(set.report(6)->failed);
 	CHECK(set.report(2) == nullptr);
 	CHECK(set.generation() == g0);    // loading does not change answers already given
 
@@ -1135,5 +1136,14 @@ TEST_CASE("hires store: Store_set survives report and text functions that throw"
 	CHECK(set.flat(14, 0, 6).px == nullptr);
 	CHECK(set.store(6) == nullptr);
 	CHECK(texts == 2);
-	CHECK(set.report(6) != nullptr);
+	REQUIRE(set.report(6) != nullptr);
+	CHECK(set.report(6)->failed);    // Not an empty but valid load.
+	CHECK(set.report(6)->loaded == 0);
+	CHECK(set.report(6)->failure == "palette missing");
+	CHECK(set.report(6)->summary(6) == "x6: load failed: palette missing");
+	fail_inputs = false;
+	set.invalidate();
+	CHECK(set.flat(14, 0, 6).side == 48);
+	REQUIRE(set.report(6) != nullptr);
+	CHECK_FALSE(set.report(6)->failed);
 }
