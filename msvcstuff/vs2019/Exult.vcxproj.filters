@@ -266,6 +266,9 @@
     <ClCompile Include="..\..\readnpcs.cc">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\render_test.cc">
+      <Filter>Source Files</Filter>
+    </ClCompile>
     <ClCompile Include="..\..\schedule.cc">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -1553,6 +1556,9 @@
       <Filter>gumps</Filter>
     </ClInclude>
     <ClInclude Include="..\..\playscene.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\render_test.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="..\..\cheat_screen_strings.h">

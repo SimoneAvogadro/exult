@@ -129,6 +129,7 @@
 		E700DCAA1A6E30A7006C8BE4 /* party.cc in Sources */ = {isa = PBXBuildFile; fileRef = E700DC741A6E30A7006C8BE4 /* party.cc */; };
 		E700DCAB1A6E30A7006C8BE4 /* paths.cc in Sources */ = {isa = PBXBuildFile; fileRef = E700DC761A6E30A7006C8BE4 /* paths.cc */; };
 		E700DCAC1A6E30A7006C8BE4 /* readnpcs.cc in Sources */ = {isa = PBXBuildFile; fileRef = E700DC781A6E30A7006C8BE4 /* readnpcs.cc */; };
+		4855C0D70000000000000001 /* render_test.cc in Sources */ = {isa = PBXBuildFile; fileRef = 4855C0D70000000000000002 /* render_test.cc */; };
 		E700DCAD1A6E30A7006C8BE4 /* schedule.cc in Sources */ = {isa = PBXBuildFile; fileRef = E700DC7A1A6E30A7006C8BE4 /* schedule.cc */; };
 		E700DCAE1A6E30A7006C8BE4 /* shapeid.cc in Sources */ = {isa = PBXBuildFile; fileRef = E700DC7D1A6E30A7006C8BE4 /* shapeid.cc */; };
 		E700DCB01A6E30A7006C8BE4 /* tqueue.cc in Sources */ = {isa = PBXBuildFile; fileRef = E700DC831A6E30A7006C8BE4 /* tqueue.cc */; };
@@ -559,6 +560,8 @@
 		E700DC761A6E30A7006C8BE4 /* paths.cc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = paths.cc; path = ../paths.cc; sourceTree = "<group>"; };
 		E700DC771A6E30A7006C8BE4 /* paths.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = paths.h; path = ../paths.h; sourceTree = "<group>"; };
 		E700DC781A6E30A7006C8BE4 /* readnpcs.cc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = readnpcs.cc; path = ../readnpcs.cc; sourceTree = "<group>"; };
+		4855C0D70000000000000002 /* render_test.cc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = render_test.cc; path = ../render_test.cc; sourceTree = "<group>"; };
+		4855C0D70000000000000003 /* render_test.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = render_test.h; path = ../render_test.h; sourceTree = "<group>"; };
 		E700DC791A6E30A7006C8BE4 /* rect.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = rect.h; path = ../rect.h; sourceTree = "<group>"; };
 		E700DC7A1A6E30A7006C8BE4 /* schedule.cc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = schedule.cc; path = ../schedule.cc; sourceTree = "<group>"; };
 		E700DC7B1A6E30A7006C8BE4 /* schedule.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = schedule.h; path = ../schedule.h; sourceTree = "<group>"; };
@@ -1198,6 +1201,8 @@
 				8A38EB752E2AA11300450868 /* playscene.h */,
 				8A38EB762E2AA11300450868 /* playscene.cc */,
 				E700DC781A6E30A7006C8BE4 /* readnpcs.cc */,
+				4855C0D70000000000000002 /* render_test.cc */,
+				4855C0D70000000000000003 /* render_test.h */,
 				E700DC791A6E30A7006C8BE4 /* rect.h */,
 				8AE3D1093001610500BCB1FF /* scene_layer.h */,
 				E700DC7A1A6E30A7006C8BE4 /* schedule.cc */,
@@ -2015,6 +2020,7 @@
 				8A057F9227A8362E00948459 /* CoreAudioMidiDriver.cpp in Sources */,
 				E700DD531A6E3121006C8BE4 /* effhpinf.cc in Sources */,
 				E700DCAC1A6E30A7006C8BE4 /* readnpcs.cc in Sources */,
+				4855C0D70000000000000001 /* render_test.cc in Sources */,
 				E700DD3D1A6E3121006C8BE4 /* pngio.cc in Sources */,
 				E71BBD821A725E150003F662 /* GamePadView.m in Sources */,
 				E700DCA41A6E30A7006C8BE4 /* menulist.cc in Sources */,

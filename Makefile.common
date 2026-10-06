@@ -34,6 +34,7 @@ MAIN_OBJS:=actions.o \
 	paths.o \
 	playscene.o \
 	readnpcs.o \
+	render_test.o \
 	schedule.o \
 	shapeid.o \
 	touchui.o \

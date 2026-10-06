@@ -107,6 +107,8 @@ EXULTSOURCES =	\
 	playscene.h	\
 	readnpcs.cc	\
 	rect.h		\
+	render_test.cc	\
+	render_test.h	\
 	scene_layer.h	\
 	schedule.cc	\
 	schedule.h	\
