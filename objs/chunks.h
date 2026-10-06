@@ -225,8 +225,8 @@ public:
 		return terrain ? terrain->get_flat(tilex, tiley) : ShapeID();
 	}
 
-	Image_buffer8* get_rendered_flats() {
-		return terrain ? terrain->get_rendered_flats() : nullptr;
+	Image_buffer8* get_rendered_flats(int scale = 1) {
+		return terrain ? terrain->get_rendered_flats(scale) : nullptr;
 	}
 
 	// Get/create/setup cache.

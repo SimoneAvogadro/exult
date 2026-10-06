@@ -41,6 +41,7 @@ class Chunk_terrain : public Game_singletons {
 	int            num_clients;       // # of Chunk's that point to us.
 	bool           modified;          // Changed (by map-editor).
 	Image_buffer8* rendered_flats;    // Flats rendered for entire chunk.
+	int            rendered_scale = 1;    // Its pixel scale.
 	// Most-recently used circular queue
 	//   for rendered_flats:
 	static Chunk_terrain* render_queue;
@@ -49,8 +50,9 @@ class Chunk_terrain : public Game_singletons {
 	//   Kept only for nearby chunks.
 	void insert_in_queue();    // Queue methods.
 	void remove_from_queue();
-	// Create rendered_flats.
-	Image_buffer8* render_flats();
+	void trim_render_queue();    // Hi-res: evict down to the limit.
+	// Create rendered_flats at the given pixel scale.
+	Image_buffer8* render_flats(int scale = 1);
 	void           free_rendered_flats();
 
 public:
@@ -91,12 +93,14 @@ public:
 	//   edited.
 	void abort_edits();    // Undo changes.
 
-	Image_buffer8* get_rendered_flats() {
+	// The flats at the given pixel scale (that of the buffer they are
+	//   painted into); re-rendered when the cached scale differs.
+	Image_buffer8* get_rendered_flats(int scale = 1) {
 		if (render_queue != this) {    // Not already first in queue?
 			// Move to front of queue.
 			insert_in_queue();
 		}
-		return rendered_flats ? rendered_flats : render_flats();
+		return rendered_flats && rendered_scale == scale ? rendered_flats : render_flats(scale);
 	}
 
 	// Paint the flats (c_chunksize x c_chunksize) into dst.

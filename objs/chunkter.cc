@@ -204,7 +204,7 @@ bool Chunk_terrain::commit_edits() {
 	}
 	delete[] undo_shapes;
 	undo_shapes = nullptr;
-	render_flats();    // Update with new data.
+	render_flats(rendered_scale);    // Update with new data.
 	return true;
 }
 
@@ -236,10 +236,34 @@ static int Figure_queue_size() {
 }
 
 /*
+ *  Hi-res: free the least recently used caches until the queue is back
+ *  within Figure_queue_size().  Upstream evicts one per new cache, so the
+ *  queue never shrinks after the view does; at S > 1 every cache is S*S
+ *  larger, so trim it fully.  Stops before reaching this terrain.
+ */
+
+void Chunk_terrain::trim_render_queue() {
+	const int limit = Figure_queue_size();
+	while (queue_size > limit && render_queue) {
+		Chunk_terrain* last = render_queue->render_queue_prev;
+		if (last == this) {
+			break;
+		}
+		last->free_rendered_flats();
+		last->remove_from_queue();
+	}
+}
+
+/*
  *  Create rendered_flats buffer.
  */
 
-Image_buffer8* Chunk_terrain::render_flats() {
+Image_buffer8* Chunk_terrain::render_flats(int scale) {
+	if (rendered_flats && rendered_scale != scale) {
+		free_rendered_flats();    // Another pixel scale: replace in place.
+		trim_render_queue();
+		rendered_flats = new Image_buffer8(c_chunksize, c_chunksize, scale);
+	}
 	if (!rendered_flats) {
 		if (queue_size > Figure_queue_size()) {
 			// Grown too big.  Remove last.
@@ -250,8 +274,12 @@ Image_buffer8* Chunk_terrain::render_flats() {
 			last->render_queue_next = last->render_queue_prev = nullptr;
 			queue_size--;
 		}
-		rendered_flats = new Image_buffer8(c_chunksize, c_chunksize);
+		if (scale > 1) {
+			trim_render_queue();
+		}
+		rendered_flats = new Image_buffer8(c_chunksize, c_chunksize, scale);
 	}
+	rendered_scale = scale;
 	paint_flats(*rendered_flats, true);
 	return rendered_flats;
 }
