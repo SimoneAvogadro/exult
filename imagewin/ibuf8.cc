@@ -45,6 +45,9 @@ void Image_buffer8::copy(
 		int srcw, int srch,     // Dimensions to copy.
 		int destx, int desty    // Where to copy to.
 ) {
+	if (pixel_scale != 1) {
+		return s_copy(srcx, srcy, srcw, srch, destx, desty);
+	}
 	int ynext;
 	int yfrom;
 	int yto;                // Figure y stuff.
@@ -75,6 +78,9 @@ void Image_buffer8::get(
 		Image_buffer* dest,    // Copy to here.
 		int srcx, int srcy     // Upper-left corner of source rect.
 ) {
+	if (pixel_scale != 1 || dest->pixel_scale != 1) {
+		return s_get(dest, srcx, srcy);
+	}
 	int srcw  = dest->width;
 	int srch  = dest->height;
 	int destx = 0;
@@ -106,6 +112,9 @@ void Image_buffer8::put(
 		Image_buffer* src,      // Copy from here.
 		int destx, int desty    // Copy to here.
 ) {
+	if (pixel_scale != 1 || src->pixel_scale != 1) {
+		return s_put(src, destx, desty);
+	}
 	Image_buffer8::copy8(src->bits, src->get_width(), src->get_height(), destx, desty);
 }
 
@@ -113,6 +122,9 @@ void Image_buffer8::put(
  * Fill buffer with random static
  */
 void Image_buffer8::fill_static(int black, int gray, int white) {
+	if (pixel_scale != 1) {
+		return s_fill_static(black, gray, white);
+	}
 	for (int y = 0; y < height; ++y) {
 		unsigned char* p = bits + (y - offset_y) * line_width - offset_x;
 		for (int x = 0; x < width; ++x) {
@@ -138,6 +150,9 @@ void Image_buffer8::fill_static(int black, int gray, int white) {
  */
 
 void Image_buffer8::fill8(unsigned char pix) {
+	if (pixel_scale != 1) {
+		return s_fill8(pix);
+	}
 	unsigned char* pixels = bits - offset_y * line_width - offset_x;
 	const int      cnt    = line_width * height;
 	for (int i = 0; i < cnt; i++) {
@@ -150,6 +165,9 @@ void Image_buffer8::fill8(unsigned char pix) {
  */
 
 void Image_buffer8::fill8(unsigned char pix, int srcw, int srch, int destx, int desty) {
+	if (pixel_scale != 1) {
+		return s_fill8(pix, srcw, srch, destx, desty);
+	}
 	int srcx = 0;
 	int srcy = 0;
 	// Constrain to window's space.
@@ -171,6 +189,9 @@ void Image_buffer8::fill8(unsigned char pix, int srcw, int srch, int destx, int 
  */
 
 void Image_buffer8::fill_hline8(unsigned char pix, int srcw, int destx, int desty) {
+	if (pixel_scale != 1) {
+		return s_fill_hline8(pix, srcw, destx, desty);
+	}
 	int srcx = 0;
 	// Constrain to window's space.
 	if (!clip_x(srcx, srcw, destx, desty)) {
@@ -237,6 +258,9 @@ constexpr static bool isoob(int x, int y, int cx, int cw, int cy, int ch) {
 }
 
 void Image_buffer8::draw_line8(unsigned char val, int startx, int starty, int endx, int endy, const Xform_palette* xform) {
+	if (pixel_scale != 1) {
+		return s_draw_line8(val, startx, starty, endx, endy, xform);
+	}
 	// 16:16 fixed point
 	typedef uint32 fixedu1616;
 
@@ -361,6 +385,9 @@ void Image_buffer8::copy8(
 		const unsigned char* src_pixels,    // Source rectangle pixels.
 		int srcw, int srch,                 // Dimensions of source.
 		int destx, int desty) {
+	if (pixel_scale != 1) {
+		return s_copy8(src_pixels, srcw, srch, destx, desty);
+	}
 	if (!src_pixels) {
 		cerr << "WTF! src_pixels in Image_buffer8::copy8 was 0!" << endl;
 		return;
@@ -391,6 +418,9 @@ void Image_buffer8::copy_hline8(
 		const unsigned char* src_pixels,    // Source rectangle pixels.
 		int                  srcw,          // Width to copy.
 		int destx, int desty) {
+	if (pixel_scale != 1) {
+		return s_copy_hline8(src_pixels, srcw, destx, desty);
+	}
 	int srcx = 0;
 	// Constrain to window's space.
 	if (!clip_x(srcx, srcw, destx, desty)) {
@@ -415,6 +445,9 @@ void Image_buffer8::copy_hline_translucent8(
 												   //   (last_translucent -
 												   //    first_translucent + 1).
 ) {
+	if (pixel_scale != 1) {
+		return s_copy_hline_translucent8(src_pixels, srcw, destx, desty, first_translucent, last_translucent, xforms);
+	}
 	int srcx = 0;
 	// Constrain to window's space.
 	if (!clip_x(srcx, srcw, destx, desty)) {
@@ -442,6 +475,9 @@ void Image_buffer8::fill_hline_translucent8(
 		int srcw, int destx, int desty,
 		const Xform_palette& xform    // Transform table.
 ) {
+	if (pixel_scale != 1) {
+		return s_fill_hline_translucent8(srcw, destx, desty, xform);
+	}
 	ignore_unused_variable_warning(val);
 	int srcx = 0;
 	// Constrain to window's space.
@@ -464,6 +500,9 @@ void Image_buffer8::fill_translucent8(
 		int srcw, int srch, int destx, int desty,
 		const Xform_palette& xform    // Transform table.
 ) {
+	if (pixel_scale != 1) {
+		return s_fill_translucent8(srcw, srch, destx, desty, xform);
+	}
 	int srcx = 0;
 	int srcy = 0;
 	// Constrain to window's space.
@@ -489,6 +528,9 @@ void Image_buffer8::copy_transparent8(
 		const unsigned char* src_pixels,    // Source rectangle pixels.
 		int srcw, int srch,                 // Dimensions of source.
 		int destx, int desty) {
+	if (pixel_scale != 1) {
+		return s_copy_transparent8(src_pixels, srcw, srch, destx, desty);
+	}
 	int       srcx      = 0;
 	int       srcy      = 0;
 	const int src_width = srcw;    // Save full source width.
@@ -514,6 +556,9 @@ void Image_buffer8::copy_transparent8(
 
 // Slightly Optimized RLE Painter
 void Image_buffer8::paint_rle(int xoff, int yoff, const unsigned char* inptr) {
+	if (pixel_scale != 1) {
+		return s_paint_rle(xoff, yoff, inptr, nullptr);
+	}
 	const uint8* in = inptr;
 	int          scanlen;
 	const int    right  = clipx + clipw;
@@ -670,6 +715,9 @@ void Image_buffer8::paint_rle(int xoff, int yoff, const unsigned char* inptr) {
 
 // Slightly Optimized RLE Painter
 void Image_buffer8::paint_rle_remapped(int xoff, int yoff, const unsigned char* inptr, const unsigned char*& trans) {
+	if (pixel_scale != 1) {
+		return s_paint_rle(xoff, yoff, inptr, trans);
+	}
 	const uint8* in = inptr;
 	int          scanlen;
 	const int    right  = clipx + clipw;

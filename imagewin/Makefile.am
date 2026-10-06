@@ -9,6 +9,7 @@ noinst_LTLIBRARIES = libimagewin.la
 libimagewin_la_SOURCES = \
 	ibuf8.cc \
 	ibuf8.h \
+	ibuf8_scaled.cc \
 	imagebuf.cc \
 	imagebuf.h \
 	iwin8.cc \

@@ -31,6 +31,8 @@ Boston, MA  02111-1307, USA.
 #include "ignore_unused_variable_warning.h"
 #include "rect.h"
 
+#include <algorithm>
+#include <climits>
 #include <memory>
 #include <optional>
 
@@ -55,6 +57,52 @@ public:
  *  to set the data.
  */
 class Image_buffer {
+public:
+	/*
+	 *  Hi-res render scale: the bounding box of the writes since the last
+	 *  take(), in logical coordinates (game px, relative to the logical
+	 *  origin, so often negative). The scaled primitives add the clipped
+	 *  logical rectangle of every write; it never holds physical coordinates.
+	 */
+	struct Write_tracker {
+		int x0 = INT_MAX;
+		int y0 = INT_MAX;
+		int x1 = INT_MIN;    // Exclusive.
+		int y1 = INT_MIN;    // Exclusive.
+
+		void add(int x, int y, int w, int h) {
+			if (w <= 0 || h <= 0) {
+				return;
+			}
+			x0 = std::min(x0, x);
+			y0 = std::min(y0, y);
+			x1 = std::max(x1, x + w);
+			y1 = std::max(y1, y + h);
+		}
+
+		bool empty() const {
+			return x0 >= x1 || y0 >= y1;
+		}
+
+		// The box (empty: 0, 0, 0, 0); the tracker is empty afterwards.
+		TileRect take() {
+			const TileRect box = empty() ? TileRect(0, 0, 0, 0) : TileRect(x0, y0, x1 - x0, y1 - y0);
+			reset();
+			return box;
+		}
+
+		void reset() {
+			x0 = y0 = INT_MAX;
+			x1 = y1 = INT_MIN;
+		}
+
+		// Exactly this rectangle, never a union with what was there.
+		void mark_all(int x, int y, int w, int h) {
+			reset();
+			add(x, y, w, h);
+		}
+	};
+
 protected:
 	int            width, height;    // Dimensions (in pixels).
 	int            offset_x, offset_y;
@@ -62,6 +110,14 @@ protected:
 	int            pixel_size;    // # bytes/pixel.
 	unsigned char* bits;          // Allocated image buffer.
 	int            line_width;    // # words/scan-line.
+	// Hi-res render scale: physical pixels per logical (game) pixel on each
+	// axis. It affects the storage only: width, height, the offsets, the clip
+	// and every coordinate argument stay logical, while bits is the physical
+	// address of logical (0, 0) and line_width the physical pitch.
+	int pixel_scale = 1;
+	// Set only on the main buffer when pixel_scale > 1.
+	Write_tracker* tracker = nullptr;
+
 private:
 	int clipx, clipy, clipw, cliph;    // Clip rectangle.
 
@@ -161,6 +217,24 @@ public:
 	unsigned int get_line_width() {
 		return line_width;
 	}
+
+	// Physical pixels per logical pixel (1 unless the buffer is scaled).
+	int get_pixel_scale() const {
+		return pixel_scale;
+	}
+
+	// The tracker that the scaled primitives report their writes to.
+	void set_tracker(Write_tracker* t) {
+		tracker = t;
+	}
+
+	Write_tracker* get_tracker() const {
+		return tracker;
+	}
+
+	// A copy would share bits and delete[] them twice.
+	Image_buffer(const Image_buffer&)            = delete;
+	Image_buffer& operator=(const Image_buffer&) = delete;
 
 	void clear_clip() {    // Reset clip to whole window.
 		clipx = -offset_x;

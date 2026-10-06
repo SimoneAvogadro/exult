@@ -46,6 +46,16 @@ public:
 		this->bits       = bits + guard_band + pitch * guard_band;
 	}
 
+	// Hi-res render scale (ibuf8_scaled.cc). An owned buffer of w x h game px,
+	// each stored as scale x scale physical px: (w * scale) x (h * scale)
+	// bytes, zero-filled, line_width = w * scale.
+	Image_buffer8(unsigned int w, unsigned int h, int scale);
+	// A view, not owned, of w x h game px at the given scale in memory with
+	// the given physical pitch. origin is the first stored byte: the top-left
+	// physical pixel of logical (-off_x, -off_y). The logical extent is
+	// [-off_x, w - off_x) x [-off_y, h - off_y), and the clip is set to it.
+	Image_buffer8(unsigned char* origin, int pitch, int w, int h, int off_x, int off_y, int scale);
+
 	~Image_buffer8() {
 		if (!bits_owned) {
 			bits = nullptr;
@@ -56,6 +66,9 @@ public:
 	 *  Depth-independent methods:
 	 */
 	std::unique_ptr<Image_buffer> create_another(int w, int h) override {
+		if (pixel_scale != 1) {
+			return s_create_another(w, h);
+		}
 		return std::make_unique<Image_buffer8>(w, h);
 	}
 
@@ -97,10 +110,16 @@ public:
 
 	// Get/put a single pixel.
 	unsigned char get_pixel8(int x, int y) override {
+		if (pixel_scale != 1) {
+			return s_get_pixel8(x, y);
+		}
 		return bits[y * line_width + x];
 	}
 
 	void put_pixel8(unsigned char pix, int x, int y) override {
+		if (pixel_scale != 1) {
+			return s_put_pixel8(pix, x, y);
+		}
 		if (x >= clipx && x < clipx + clipw && y >= clipy && y < clipy + cliph) {
 			bits[y * line_width + x] = pix;
 		}
@@ -112,6 +131,48 @@ public:
 	void draw_beveled_box(
 			int x, int y, int w, int h, int depth, uint8 colfill, uint8 coltop, uint8 coltr, uint8 colbottom, uint8 colbl,
 			std::optional<uint8> coltlbr = {}) override;
+
+	/*
+	 *  Hi-res render scale (ibuf8_scaled.cc).
+	 */
+	// Copies src's storage extent, logical [-off_x, w - off_x) x
+	// [-off_y, h - off_y) of src, so that src's logical (0, 0) lands on
+	// (destx, desty), clipped to this buffer's clip. Physical rows (src's own
+	// pitch) between equal scales; across scales each logical pixel is the
+	// top-left physical sample of the source, replicated to this scale.
+	void blit(const Image_buffer& src, int destx, int desty);
+	// Copies pw x ph physical pixels (pitch src_pitch) to the physical
+	// position (px, py) relative to logical (0, 0), clipped to the clip
+	// rectangle times the pixel scale.
+	void put_phys(const unsigned char* src, int pw, int ph, int src_pitch, int px, int py);
+
+private:
+	// The bodies of the primitives at pixel_scale != 1; each primitive calls
+	// its counterpart first thing.
+	void s_copy(int srcx, int srcy, int srcw, int srch, int destx, int desty);
+	void s_get(Image_buffer* dest, int srcx, int srcy);
+	void s_put(Image_buffer* src, int destx, int desty);
+	// The body of blit() and s_put(); op names the caller in the
+	// mixed-scale log line.
+	void s_blit(const Image_buffer& src, int destx, int desty, const char* op);
+	void s_fill_static(int black, int gray, int white);
+	void s_fill8(unsigned char pix);
+	void s_fill8(unsigned char pix, int srcw, int srch, int destx, int desty);
+	void s_fill_hline8(unsigned char pix, int srcw, int destx, int desty);
+	void s_draw_line8(unsigned char val, int startx, int starty, int endx, int endy, const Xform_palette* xform);
+	void s_copy8(const unsigned char* src_pixels, int srcw, int srch, int destx, int desty);
+	void s_copy_hline8(const unsigned char* src_pixels, int srcw, int destx, int desty);
+	void s_copy_hline_translucent8(
+			const unsigned char* src_pixels, int srcw, int destx, int desty, int first_translucent, int last_translucent,
+			const Xform_palette* xforms);
+	void                          s_fill_hline_translucent8(int srcw, int destx, int desty, const Xform_palette& xform);
+	void                          s_fill_translucent8(int srcw, int srch, int destx, int desty, const Xform_palette& xform);
+	void                          s_copy_transparent8(const unsigned char* src_pixels, int srcw, int srch, int destx, int desty);
+	unsigned char                 s_get_pixel8(int x, int y);
+	void                          s_put_pixel8(unsigned char pix, int x, int y);
+	std::unique_ptr<Image_buffer> s_create_another(int w, int h);
+	// paint_rle (trans null) and paint_rle_remapped.
+	void s_paint_rle(int xoff, int yoff, const unsigned char* in, const unsigned char* trans);
 };
 
 #endif

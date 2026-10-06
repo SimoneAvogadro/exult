@@ -99,6 +99,9 @@
     <ClCompile Include="..\..\..\imagewin\ibuf8.cc">
       <Filter>imagewin</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\..\imagewin\ibuf8_scaled.cc">
+      <Filter>imagewin</Filter>
+    </ClCompile>
     <ClCompile Include="..\..\..\imagewin\imagebuf.cc">
       <Filter>imagewin</Filter>
     </ClCompile>

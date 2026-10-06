@@ -462,6 +462,7 @@ ES_GAMEMGR_OBJS:=gamemgr/modmgr.o
 
 ES_IMAGEWIN_OBJS:=\
 	imagewin/ibuf8.o \
+	imagewin/ibuf8_scaled.o \
 	imagewin/imagebuf.o
 
 ES_SHAPES_OBJS:=\
@@ -587,13 +588,13 @@ endif
 # The libgexiv2 is a GLib wrapper for the Exiv2 metadata library, that the Plugin does not need.
 # It exports some std::string symbols from the libstdc++, so the Plugin gets linking or loading errors.
 # => Remove the libgexiv2 from the library list ( Feb 2025 ).
-u7shp$(EXEEXT) : tools/gimp_plugin/u7shp.o $(FILE_OBJS) shapes/vgafile.o imagewin/ibuf8.o imagewin/imagebuf.o
+u7shp$(EXEEXT) : tools/gimp_plugin/u7shp.o $(FILE_OBJS) shapes/vgafile.o imagewin/ibuf8.o imagewin/ibuf8_scaled.o imagewin/imagebuf.o
 	$(CXX) $(LDFLAGS) -o $(@) $+ $(subst -lgexiv2,,$(GIMP_LIBS)) -mwindows
 
 tools/aseprite_plugin/exult_shp.o: tools/aseprite_plugin/exult_shp.cc
 	$(CXX) $(CXXFLAGS) $(CPPFLAGS) -c -o $(@) $<
 
-exult_shp$(EXEEXT): tools/aseprite_plugin/exult_shp.o $(FILE_OBJS) shapes/vgafile.o imagewin/ibuf8.o imagewin/imagebuf.o
+exult_shp$(EXEEXT): tools/aseprite_plugin/exult_shp.o $(FILE_OBJS) shapes/vgafile.o imagewin/ibuf8.o imagewin/ibuf8_scaled.o imagewin/imagebuf.o
 	$(CXX) $(LDFLAGS) -o $@ $+ -lpng -mwindows
 
 install: $(EXEC)

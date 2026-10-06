@@ -192,6 +192,7 @@
 		E700DE221A6E344D006C8BE4 /* BilinearScalerInternal_X1Y12.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E700DDE41A6E3425006C8BE4 /* BilinearScalerInternal_X1Y12.cpp */; };
 		E700DE231A6E344D006C8BE4 /* BilinearScalerInternal_X2Y24.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E700DDE51A6E3425006C8BE4 /* BilinearScalerInternal_X2Y24.cpp */; };
 		E700DE241A6E344D006C8BE4 /* ibuf8.cc in Sources */ = {isa = PBXBuildFile; fileRef = E700DDE71A6E3425006C8BE4 /* ibuf8.cc */; };
+		4855C0D40000000000000001 /* ibuf8_scaled.cc in Sources */ = {isa = PBXBuildFile; fileRef = 4855C0D40000000000000002 /* ibuf8_scaled.cc */; };
 		E700DE261A6E344D006C8BE4 /* imagebuf.cc in Sources */ = {isa = PBXBuildFile; fileRef = E700DDEB1A6E3425006C8BE4 /* imagebuf.cc */; };
 		E700DE271A6E344D006C8BE4 /* imagewin.cc in Sources */ = {isa = PBXBuildFile; fileRef = E700DDED1A6E3425006C8BE4 /* imagewin.cc */; };
 		E700DE281A6E344D006C8BE4 /* iwin8.cc in Sources */ = {isa = PBXBuildFile; fileRef = E700DDEF1A6E3425006C8BE4 /* iwin8.cc */; };
@@ -693,6 +694,7 @@
 		E700DDE51A6E3425006C8BE4 /* BilinearScalerInternal_X2Y24.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = BilinearScalerInternal_X2Y24.cpp; path = ../imagewin/BilinearScalerInternal_X2Y24.cpp; sourceTree = "<group>"; };
 		E700DDE61A6E3425006C8BE4 /* BilinearScalerInternal.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = BilinearScalerInternal.h; path = ../imagewin/BilinearScalerInternal.h; sourceTree = "<group>"; };
 		E700DDE71A6E3425006C8BE4 /* ibuf8.cc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = ibuf8.cc; path = ../imagewin/ibuf8.cc; sourceTree = "<group>"; };
+		4855C0D40000000000000002 /* ibuf8_scaled.cc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = ibuf8_scaled.cc; path = ../imagewin/ibuf8_scaled.cc; sourceTree = "<group>"; };
 		E700DDE81A6E3425006C8BE4 /* ibuf8.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = ibuf8.h; path = ../imagewin/ibuf8.h; sourceTree = "<group>"; };
 		E700DDEB1A6E3425006C8BE4 /* imagebuf.cc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = imagebuf.cc; path = ../imagewin/imagebuf.cc; sourceTree = "<group>"; };
 		E700DDEC1A6E3425006C8BE4 /* imagebuf.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = imagebuf.h; path = ../imagewin/imagebuf.h; sourceTree = "<group>"; };
@@ -1394,6 +1396,7 @@
 				E700DDE61A6E3425006C8BE4 /* BilinearScalerInternal.h */,
 				E700DDE71A6E3425006C8BE4 /* ibuf8.cc */,
 				E700DDE81A6E3425006C8BE4 /* ibuf8.h */,
+				4855C0D40000000000000002 /* ibuf8_scaled.cc */,
 				E700DDEB1A6E3425006C8BE4 /* imagebuf.cc */,
 				E700DDEC1A6E3425006C8BE4 /* imagebuf.h */,
 				E700DDED1A6E3425006C8BE4 /* imagewin.cc */,
@@ -1997,6 +2000,7 @@
 				8A123C3E2F41EA3600155333 /* Dynamic_shape_widget.cc in Sources */,
 				8A123C412F41EA3600155333 /* Dynamic_slider.cc in Sources */,
 				E700DE241A6E344D006C8BE4 /* ibuf8.cc in Sources */,
+				4855C0D40000000000000001 /* ibuf8_scaled.cc in Sources */,
 				8A9A03B029F42948000AF341 /* FluidSynthMidiDriver.cpp in Sources */,
 				E700DD511A6E3121006C8BE4 /* bodyinf.cc in Sources */,
 				E700DCDA1A6E30D8006C8BE4 /* chunkter.cc in Sources */,

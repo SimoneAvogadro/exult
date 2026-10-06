@@ -195,6 +195,7 @@ GUMPS_OBJS:= \
 
 IMAGEWIN_OBJS:=\
 	imagewin/ibuf8.o \
+	imagewin/ibuf8_scaled.o \
 	imagewin/imagebuf.o \
 	imagewin/imagewin.o \
 	imagewin/iwin8.o \
@@ -667,6 +668,7 @@ IPACK_OBJS:=\
 	files/utils.o \
 	files/listfiles.o \
 	imagewin/ibuf8.o \
+	imagewin/ibuf8_scaled.o \
 	imagewin/imagebuf.o \
 	shapes/pngio.o \
 	shapes/vgafile.o \
@@ -730,6 +732,7 @@ EXULT_THUMB_OBJS:=\
 	files/utils.o \
 	files/listfiles.o \
 	imagewin/ibuf8.o \
+	imagewin/ibuf8_scaled.o \
 	imagewin/imagebuf.o \
 	shapes/pngio.o \
 	shapes/vgafile.o \
@@ -798,6 +801,7 @@ head2data.test: head2data$(EXEEXT)
 # listed; FILE_OBJS provides Flex, U7exists and friends for shapes/vgafile.o.
 HIRES_UNIT_OBJS:=\
 	imagewin/ibuf8.o \
+	imagewin/ibuf8_scaled.o \
 	imagewin/imagebuf.o \
 	shapes/pngio.o \
 	shapes/vgafile.o \
