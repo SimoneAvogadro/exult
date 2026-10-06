@@ -31,6 +31,7 @@
 #include "test_support.h"
 
 #include <array>
+#include <cinttypes>
 #include <cstdlib>
 #include <fstream>
 #include <sstream>
@@ -97,7 +98,7 @@ TEST_CASE("hires rules: shared hash vectors (tests/data/hires/hash_vectors.txt)"
 		} else if (kind == "fnv1a64") {
 			const auto data = from_hex(input);
 			char       buf[24];
-			std::snprintf(buf, sizeof(buf), "%016llx", static_cast<unsigned long long>(Hires::fnv1a64(data.data(), data.size())));
+			std::snprintf(buf, sizeof(buf), "%016" PRIx64, Hires::fnv1a64(data.data(), data.size()));
 			CHECK(std::string(buf) == output);
 			counts[1]++;
 		} else if (kind == "get_color8") {
@@ -127,8 +128,7 @@ TEST_CASE("hires rules: shared hash vectors (tests/data/hires/hash_vectors.txt)"
 				tiles[t] = flats[t].data();
 			}
 			char buf[24];
-			std::snprintf(
-					buf, sizeof(buf), "%016llx", static_cast<unsigned long long>(Hires::terrain_key_t1(own.data(), pix.data())));
+			std::snprintf(buf, sizeof(buf), "%016" PRIx64, Hires::terrain_key_t1(own.data(), pix.data()));
 			CHECK(std::string(buf) == output);
 			CHECK(Hires::terrain_key_t1(tiles) == Hires::terrain_key_t1(own.data(), pix.data()));
 			counts[3]++;
