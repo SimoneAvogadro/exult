@@ -232,6 +232,10 @@ SHAPES_OBJS:= \
 	shapes/font.o \
 	shapes/font_map.o \
 	shapes/fontvga.o\
+	shapes/hires_bundle.o \
+	shapes/hires_png.o \
+	shapes/hires_rules.o \
+	shapes/hires_store.o \
 	shapes/items.o \
 	shapes/miscinf.o\
 	shapes/shapeinf.o\
@@ -799,13 +803,22 @@ head2data.test: head2data$(EXEEXT)
 HIRES_UNIT_OBJS:=\
 	imagewin/ibuf8.o \
 	imagewin/imagebuf.o \
+	shapes/hires_bundle.o \
+	shapes/hires_png.o \
+	shapes/hires_rules.o \
+	shapes/hires_store.o \
 	shapes/pngio.o \
 	shapes/vgafile.o \
 	$(FILE_OBJS)
 
 HIRES_UNIT_TEST_OBJS:=\
 	tests/unit/main.o \
+	tests/unit/hires_test_util.o \
 	tests/unit/ibuf_ops.o \
+	tests/unit/test_editor_fixtures.o \
+	tests/unit/test_hires_png.o \
+	tests/unit/test_hires_rules.o \
+	tests/unit/test_hires_store.o \
 	tests/unit/test_ibuf_golden.o \
 	tests/unit/test_rle_writer.o
 

@@ -28,15 +28,21 @@ endif
 
 hires_unit_SOURCES = \
 	unit/main.cc \
+	unit/hires_test_util.cc \
+	unit/hires_test_util.h \
 	unit/ibuf_ops.cc \
 	unit/ibuf_ops.h \
 	unit/rle_writer.h \
+	unit/test_editor_fixtures.cc \
+	unit/test_hires_png.cc \
+	unit/test_hires_rules.cc \
+	unit/test_hires_store.cc \
 	unit/test_ibuf_golden.cc \
 	unit/test_rle_writer.cc \
 	unit/test_support.h
 
-# In dependency order: Shape_frame (vgafile.cc) needs Flex, U7exists and
-# friends from libu7file.
+# In dependency order: Shape_frame (vgafile.cc) and the hi-res store need
+# Flex, U7exists and friends from libu7file; the PNG reader needs libpng.
 hires_unit_LDADD = \
 	$(top_builddir)/shapes/libshapes.la \
 	$(top_builddir)/imagewin/libimagewin.la \
@@ -83,6 +89,7 @@ check-game:
 EXTRA_DIST = \
 	README \
 	doctest.h \
+	data/hires \
 	data/ibuf_golden.txt \
 	game/lib.sh \
 	game/test.cfg.in \

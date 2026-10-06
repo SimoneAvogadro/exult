@@ -1,0 +1,2 @@
+# The flats bundle fixture is binary (DESIGN.md section 5.7).
+*.bundle	binary
