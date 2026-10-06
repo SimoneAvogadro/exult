@@ -78,6 +78,7 @@ GAME_TESTS = \
 	game/override_regions.sh \
 	game/dump_art.sh \
 	game/resize_cycle.sh \
+	game/dev_loop.sh \
 	game/perf.sh
 
 check-game:
@@ -117,6 +118,7 @@ EXTRA_DIST = \
 	game/golden/buildmap0.sha256 \
 	game/golden/buildmap1.sha256 \
 	game/golden/buildmap2.sha256 \
+	game/golden/inspect.json \
 	$(GAME_TESTS)
 
 CLEANFILES = *~

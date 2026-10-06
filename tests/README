@@ -126,6 +126,20 @@ Layout
     resize_cycle.sh  the S cycle force6 -> off -> force3 -> force6 (I12), a
                      terrain edit at S > 1, the pushed resize; fails on a
                      "[hires] mixed-scale" log line
+    dev_loop.sh      the developer loop (hires_dev.cc) with scratch packs
+                     from mkpack_identity.py: dev=1 runs the toggle and
+                     reload actions of the dev keys, then the .reload poll
+                     (no reload without a change; a pack swapped in, then
+                     out, each shown within 2 s of the touch; nothing with
+                     dev mode off) at S = 2 and 6 and in the window's buffer;
+                     keys=1 sends Ctrl-Alt-O, R and I through the game's key
+                     bindings (nothing with cheats off; nothing with dev
+                     mode off; toggle, reload and the inspector's text on
+                     the clipboard with cheats and dev mode on);
+                     inspect=tx:ty for four Britain tiles (flat, RLE fill,
+                     no override, rejected source; a terrain file) at S = 2
+                     and 6 must give golden/inspect.json
+                     (INSPECT_RECORD=1 records it)
     perf.sh          the world paint at S=6 (bench=200, -O2 builds only):
                      p95 <= 2 ms at 320x200, and within 20 % of this host's
                      line in perf_baseline.json; warm paints render no
@@ -134,7 +148,9 @@ Layout
                      view timed, p95 <= 1 ms per cache
     regen_goldens.sh records golden/*.sha256 with the reference build
     regions.txt      the map regions (tile, size, roof level)
-    golden/          buildmap{0,1,2}.sha256: hash lists, never pixels
+    golden/          buildmap{0,1,2}.sha256: hash lists, never pixels;
+                     inspect.json: the inspector's answers (shape, frame and
+                     terrain numbers, T1 keys, pack paths), no pixels
     perf_baseline.json
                      paint p95 per host ("host/case/key": ms)
 
@@ -165,7 +181,7 @@ With overrides=yes the render uses the hi-res art of the config's roots
 (<PATCH>/hires, then hires_path); add it to the line above, with hires_path
 pointing at a pack, to see a pack's art. The scripts' sandboxes use an empty
 hires directory, or a link to GAME_HIRES_PACK (see game/lib.sh). The packs
-that override_regions.sh and perf.sh make are kept with the sandboxes that link
+that override_regions.sh, dev_loop.sh and perf.sh make are kept with the sandboxes that link
 to them (a failure, or KEEP_SANDBOX=1; the scripts print "packs kept: <dir>"),
 so a kept sandbox's exult.cfg can be run again; remove them by hand afterwards.
 
