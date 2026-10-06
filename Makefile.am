@@ -52,6 +52,8 @@ EXULTSOURCES =	\
 	dir.h		\
 	drag.cc		\
 	drag.h		\
+	dump_art.cc	\
+	dump_art.h	\
 	effects.cc	\
 	effects.h	\
 	headers/exceptions.h	\

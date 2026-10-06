@@ -11,6 +11,7 @@ MAIN_OBJS:=actions.o \
 	combat.o \
 	dir.o \
 	drag.o \
+	dump_art.o \
 	effects.o \
 	exult.o \
 	exultmenu.o \

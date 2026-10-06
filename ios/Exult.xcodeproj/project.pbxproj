@@ -110,6 +110,7 @@
 		E700DC941A6E30A7006C8BE4 /* combat.cc in Sources */ = {isa = PBXBuildFile; fileRef = E700DC431A6E30A7006C8BE4 /* combat.cc */; };
 		E700DC961A6E30A7006C8BE4 /* dir.cc in Sources */ = {isa = PBXBuildFile; fileRef = E700DC471A6E30A7006C8BE4 /* dir.cc */; };
 		E700DC971A6E30A7006C8BE4 /* drag.cc in Sources */ = {isa = PBXBuildFile; fileRef = E700DC491A6E30A7006C8BE4 /* drag.cc */; };
+		4855C0D80000000000000001 /* dump_art.cc in Sources */ = {isa = PBXBuildFile; fileRef = 4855C0D80000000000000002 /* dump_art.cc */; };
 		E700DC981A6E30A7006C8BE4 /* effects.cc in Sources */ = {isa = PBXBuildFile; fileRef = E700DC4B1A6E30A7006C8BE4 /* effects.cc */; };
 		E700DC991A6E30A7006C8BE4 /* exult.cc in Sources */ = {isa = PBXBuildFile; fileRef = E700DC4F1A6E30A7006C8BE4 /* exult.cc */; };
 		E700DC9A1A6E30A7006C8BE4 /* exultmenu.cc in Sources */ = {isa = PBXBuildFile; fileRef = E700DC521A6E30A7006C8BE4 /* exultmenu.cc */; };
@@ -523,6 +524,8 @@
 		E700DC481A6E30A7006C8BE4 /* dir.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = dir.h; path = ../dir.h; sourceTree = "<group>"; };
 		E700DC491A6E30A7006C8BE4 /* drag.cc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = drag.cc; path = ../drag.cc; sourceTree = "<group>"; };
 		E700DC4A1A6E30A7006C8BE4 /* drag.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = drag.h; path = ../drag.h; sourceTree = "<group>"; };
+		4855C0D80000000000000002 /* dump_art.cc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = dump_art.cc; path = ../dump_art.cc; sourceTree = "<group>"; };
+		4855C0D80000000000000003 /* dump_art.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = dump_art.h; path = ../dump_art.h; sourceTree = "<group>"; };
 		E700DC4B1A6E30A7006C8BE4 /* effects.cc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = effects.cc; path = ../effects.cc; sourceTree = "<group>"; };
 		E700DC4C1A6E30A7006C8BE4 /* effects.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = effects.h; path = ../effects.h; sourceTree = "<group>"; };
 		E700DC4D1A6E30A7006C8BE4 /* exult_constants.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = exult_constants.h; path = ../exult_constants.h; sourceTree = "<group>"; };
@@ -1170,6 +1173,8 @@
 				E700DC481A6E30A7006C8BE4 /* dir.h */,
 				E700DC491A6E30A7006C8BE4 /* drag.cc */,
 				E700DC4A1A6E30A7006C8BE4 /* drag.h */,
+				4855C0D80000000000000002 /* dump_art.cc */,
+				4855C0D80000000000000003 /* dump_art.h */,
 				E700DC4B1A6E30A7006C8BE4 /* effects.cc */,
 				E700DC4C1A6E30A7006C8BE4 /* effects.h */,
 				E700DC4D1A6E30A7006C8BE4 /* exult_constants.h */,
@@ -2144,6 +2149,7 @@
 				E700DD5D1A6E3121006C8BE4 /* objdollinf.cc in Sources */,
 				E700DE9A1A6E3497006C8BE4 /* Stats_gump.cc in Sources */,
 				E700DC971A6E30A7006C8BE4 /* drag.cc in Sources */,
+				4855C0D80000000000000001 /* dump_art.cc in Sources */,
 				E700DE8F1A6E3497006C8BE4 /* Jawbone_gump.cc in Sources */,
 				E700DCDF1A6E30D8006C8BE4 /* mappatch.cc in Sources */,
 				E700DE331A6E344D006C8BE4 /* scale_point.cc in Sources */,

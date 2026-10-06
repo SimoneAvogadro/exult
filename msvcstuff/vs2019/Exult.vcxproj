@@ -405,6 +405,7 @@ for /f "tokens=* delims=" %%u in ('git ls-remote --get-url') do echo #define GIT
     <ClCompile Include="..\..\conf\XMLEntity.cc" />
     <ClCompile Include="..\..\dir.cc" />
     <ClCompile Include="..\..\drag.cc" />
+    <ClCompile Include="..\..\dump_art.cc" />
     <ClCompile Include="..\..\effects.cc" />
     <ClCompile Include="..\..\exult.cc" />
     <ClCompile Include="..\..\exultmenu.cc" />
@@ -640,6 +641,7 @@ for /f "tokens=* delims=" %%u in ('git ls-remote --get-url') do echo #define GIT
     <ClInclude Include="..\..\conf\XMLEntity.h" />
     <ClInclude Include="..\..\dir.h" />
     <ClInclude Include="..\..\drag.h" />
+    <ClInclude Include="..\..\dump_art.h" />
     <ClInclude Include="..\..\effects.h" />
     <ClInclude Include="..\..\exult.h" />
     <ClInclude Include="..\..\exulticon.h" />

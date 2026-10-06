@@ -46,6 +46,7 @@
 #include "combat_opts.h"
 #include "crc.h"
 #include "drag.h"
+#include "dump_art.h"
 #include "effects.h"
 #include "exult_bg_flx.h"
 #include "exult_flx.h"
@@ -213,6 +214,7 @@ static bool   arg_reset_video  = false;    // Resets the video setings.
 static bool   arg_verify_files = false;    // Verify a game's files.
 static string arg_render_scale;            // Hi-res: session render_scale.
 static string arg_render_test;             // Hi-res: --render-test spec.
+static string arg_dump_art;                // Hi-res: --dump-art directory.
 
 static string arg_installmod  = {};
 static string arg_installdata = {};
@@ -315,6 +317,7 @@ int main(int argc, char* argv[]) {
 	parameters.declare("--installmod", &arg_installmod);
 	parameters.declare("--render-scale", &arg_render_scale, "");
 	parameters.declare("--render-test", &arg_render_test, "");
+	parameters.declare("--dump-art", &arg_dump_art, "");
 #if defined _WIN32
 	bool portable = false;
 	parameters.declare("-p", &portable, true);
@@ -394,6 +397,7 @@ int main(int argc, char* argv[]) {
 		cerr << "--write-xml\tWrite 'patch/exultgame.xml'" << endl << "--reset-video\tResets to the default video settings" << endl;
 		cerr << "--render-scale <off|art|auto|force:N>" << endl << "\t\tHi-res world render scale for this session" << endl;
 		cerr << "--render-test <k=v,...>" << endl << "\t\tHi-res headless region render and oracles (with --bg etc.)" << endl;
+		cerr << "--dump-art <dir>" << endl << "\t\tHi-res art reference set: flats and terrains (with --bg etc.)" << endl;
 
 		exit(1);
 	}
@@ -412,6 +416,11 @@ int main(int argc, char* argv[]) {
 		exit(1);
 	} else if (!arg_render_test.empty() && gameparam == 0) {
 		cerr << "Error: --render-test requires one of --bg, --fov, --si, --ss, "
+				"--sib or --game!"
+			 << endl;
+		exit(1);
+	} else if (!arg_dump_art.empty() && gameparam == 0) {
+		cerr << "Error: --dump-art requires one of --bg, --fov, --si, --ss, "
 				"--sib or --game!"
 			 << endl;
 		exit(1);
@@ -844,7 +853,8 @@ static void Init() {
 	// Load games and mods; also stores system paths:
 	gamemanager = new GameManager();
 
-	if (arg_buildmap < 0 && arg_render_test.empty() && !arg_verify_files && arg_installdata.empty() && arg_installmod.empty()) {
+	if (arg_buildmap < 0 && arg_render_test.empty() && arg_dump_art.empty() && !arg_verify_files && arg_installdata.empty()
+		&& arg_installmod.empty()) {
 		string gr;
 		string gg;
 		string gb;
@@ -1011,6 +1021,9 @@ static void Init() {
 		}
 		if (!arg_render_test.empty()) {
 			exit(Render_test(newgame, arg_render_test));    // Hi-res: render_test.cc.
+		}
+		if (!arg_dump_art.empty()) {
+			exit(Dump_art(newgame, arg_dump_art));    // Hi-res: dump_art.cc.
 		}
 		if (arg_verify_files) {
 			newgame->setup_game_paths();
