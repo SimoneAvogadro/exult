@@ -53,6 +53,30 @@
  *                  render back), each repainting every flats cache of the
  *                  view once, then a repaint that renders none, in this
  *                  process (0)
+ *    dev           1: after each S render, the developer loop (hires_dev.cc):
+ *                  the toggle action off (NN of the reference) and on (the
+ *                  first render), the reload action (the same render, every
+ *                  flats cache of the view painted again), then the .reload
+ *                  poll: no reload without a change; x<S>/flats and
+ *                  flats.next of the first root (x<art_scale> when x<S> has
+ *                  no flats.next) are swapped and the .reload next to them
+ *                  touched, the poll must reload within 2 s and the
+ *                  render must be NN of the reference (flats.next holds an
+ *                  identity pack, the pack itself must differ from NN), then
+ *                  swapped back, touched, the first render again; with dev
+ *                  mode off a touch must not reload. Sets dev=yes in the
+ *                  configuration (0)
+ *    keys          1: at the end, the dev keys as SDL key events through the
+ *                  game's key bindings (keys.cc, defaultkeys.txt) at the
+ *                  window's world scale: with cheats off Ctrl-Alt-O and
+ *                  Ctrl-Alt-R do nothing; with cheats on Ctrl-Alt-O
+ *                  toggles twice, Ctrl-Alt-R reloads, Ctrl-Alt-I puts the
+ *                  inspector's text for the tile under the mouse on the
+ *                  clipboard; with dev mode off (cheats on) none of the
+ *                  three does anything; needs dev=1 (0)
+ *    inspect       tx:ty, may repeat: after the renders, the inspector
+ *                  (Hires::explain_at) for that tile at each S, into
+ *                  inspect.json (no absolute paths) and the digest
  *    passes        all | flats (all)
  *    repaint       N random sub-rect repaints per scale (O6) (0)
  *    present       1: read the window back (one scale, S > 1) (0)
@@ -85,17 +109,22 @@
 
 #include "Audio.h"
 #include "Configuration.h"
+#include "cheat.h"
 #include "chunks.h"
 #include "chunkter.h"
+#include "exult.h"
 #include "exult_constants.h"
 #include "game.h"
 #include "gamemap.h"
 #include "gamerend.h"
 #include "gamewin.h"
+#include "hires_dev.h"
 #include "hires_glue.h"
 #include "ibuf8.h"
 #include "ignore_unused_variable_warning.h"
 #include "iwin8.h"
+#include "keys.h"
+#include "mouse.h"
 #include "palette.h"
 #include "shapeid.h"
 #include "vgafile.h"
@@ -112,6 +141,7 @@
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
+#include <filesystem>
 #include <fstream>
 #include <iostream>
 #include <memory>
@@ -141,6 +171,10 @@ using std::string;
 using std::vector;
 
 namespace {
+	// The .reload acceptance (DESIGN.md §6.7 WP-10): the change shows within
+	// 2 s of the touch (about 0.4 s measured, also in an ASan build).
+	constexpr long long reload_limit_ms = 2000;
+
 	struct Params {
 		int            tx   = -1;
 		int            ty   = -1;
@@ -153,6 +187,8 @@ namespace {
 		int            marker    = -1;       // expect=marker:<idx>; -1: none.
 		bool           identity  = false;    // expect=identity.
 		bool           toggle    = false;
+		bool           dev       = false;
+		bool           keys      = false;
 		bool           partial   = false;    // coverage=partial.
 		bool           flats     = false;
 		int            repaint   = 0;
@@ -170,6 +206,8 @@ namespace {
 		unsigned       seed          = 1;
 		bool           images        = false;
 		string         out;
+
+		vector<std::pair<int, int>> inspect;    // inspect=tx:ty tiles.
 	};
 
 	// Deterministic PRNG for the repaint rects (std::rand is the game's).
@@ -337,8 +375,24 @@ namespace {
 					error("coverage must be full or partial");
 				}
 				p.partial = val == "partial";
+			} else if (key == "dev") {
+				if (!parse_bool(val, p.dev)) {
+					error("dev must be 0 or 1");
+				}
+			} else if (key == "keys") {
+				if (!parse_bool(val, p.keys)) {
+					error("keys must be 0 or 1");
+				}
 			} else if (key == "inspect") {
-				error("inspect needs the hi-res store, which this build does not have");
+				const size_t colon = val.find(':');
+				int          itx   = -1;
+				int          ity   = -1;
+				if (colon == string::npos || !parse_int(val.substr(0, colon), 0, c_num_tiles - 1, itx)
+					|| !parse_int(val.substr(colon + 1), 0, c_num_tiles - 1, ity)) {
+					error("inspect must be tx:ty, each 0.." + std::to_string(c_num_tiles - 1));
+				} else {
+					p.inspect.emplace_back(itx, ity);
+				}
 			} else if (key == "passes") {
 				if (val == "all" || val == "flats") {
 					p.flats = val == "flats";
@@ -429,12 +483,18 @@ namespace {
 			error("format, filter and window need present=1");
 		}
 		if (p.plain
-			&& (p.repaint > 0 || p.present || !p.resize.empty() || p.pushed_resize || p.edit || p.toggle || p.identity
+			&& (p.repaint > 0 || p.present || !p.resize.empty() || p.pushed_resize || p.edit || p.toggle || p.dev || p.identity
 				|| p.marker >= 0)) {
-			error("mode=plain takes no oracle keys (repaint, present, resize, pushed_resize, edit, toggle, expect)");
+			error("mode=plain takes no oracle keys (repaint, present, resize, pushed_resize, edit, toggle, dev, expect)");
 		}
-		if ((p.identity || p.marker >= 0 || p.toggle) && !p.overrides) {
-			error("expect=identity, expect=marker and toggle need overrides=yes");
+		if ((p.identity || p.marker >= 0 || p.toggle || p.dev) && !p.overrides) {
+			error("expect=identity, expect=marker, toggle and dev need overrides=yes");
+		}
+		if (p.keys && !p.dev) {
+			error("keys needs dev=1");
+		}
+		if (p.dev && (p.identity || std::find(p.scales.begin(), p.scales.end(), 1) != p.scales.end())) {
+			error("dev needs scales > 1 and a pack that differs from NN (not expect=identity)");
 		}
 		if (p.partial && !p.identity && p.marker < 0) {
 			error("coverage=partial needs expect=identity or expect=marker");
@@ -1030,6 +1090,279 @@ namespace {
 			check_cache_renders(tag + "_toggle_warm", before, 0);
 		}
 
+		// Polls the .reload trigger with the real clock until the poll reloads
+		// or limit_ms pass: the ms waited, or -1.
+		long long poll_until_reload(int S, uint32 limit_ms, string& summary) {
+			const auto ticks = []() {
+				return static_cast<uint32>(SDL_GetTicks());
+			};
+			const uint32 start = ticks();
+			for (;;) {
+				const uint32 now = ticks();
+				if (Hires::dev_poll(now, S, &summary)) {
+					return now - start;
+				}
+				if (now - start >= limit_ms) {
+					return -1;
+				}
+				SDL_Delay(10);
+			}
+		}
+
+		// Sets the modification time of the trigger to now (creates it).
+		bool touch_reload(const std::filesystem::path& file) {
+			std::ofstream(file, std::ios::app).put('\n');
+			std::error_code ec;
+			std::filesystem::last_write_time(file, std::filesystem::file_time_type::clock::now(), ec);
+			if (ec) {
+				fail("dev: cannot touch " + file.string() + ": " + ec.message());
+				return false;
+			}
+			return true;
+		}
+
+		// Swaps <dir>/flats and <dir>/flats.next.
+		bool swap_flats(const std::filesystem::path& dir) {
+			std::error_code ec;
+			std::filesystem::rename(dir / "flats", dir / "flats.prev", ec);
+			if (!ec) {
+				std::filesystem::rename(dir / "flats.next", dir / "flats", ec);
+			}
+			if (!ec) {
+				std::filesystem::rename(dir / "flats.prev", dir / "flats.next", ec);
+			}
+			if (ec) {
+				fail("dev: cannot swap " + (dir / "flats").string() + " and flats.next: " + ec.message());
+				return false;
+			}
+			return true;
+		}
+
+		/*
+		 *  The developer loop (hires_dev.cc) on an S render 'hi' made with
+		 *  the pack (which differs from NN): the toggle and reload actions,
+		 *  then the .reload poll with a pack swapped in and out.
+		 */
+		void dev_check(const string& tag, Image_buffer8* target, const Extent& hi) {
+			const int    S      = hi.scale;
+			const string first  = digest(hi);
+			const int    caches = static_cast<int>(cell_grid(S).terrains.size());
+			if (!Hires::dev_mode()) {
+				fail(tag + "_dev: dev mode is off (config/video/hires/dev was read before the harness set it)");
+				return;
+			}
+			if (compare_nn(hi, ref_extent).mismatches == 0) {
+				fail(tag + "_dev: the render with the pack equals NN of the reference (dev needs a pack that differs)");
+				return;
+			}
+			// The toggle key's action: off, on.
+			if (Hires::dev_toggle()) {
+				fail(tag + "_dev_toggle: the first toggle left the overrides on");
+			}
+			paint_full(target, hi);
+			check_nn(tag + "_dev_toggle_off", hi);
+			if (!Hires::dev_toggle()) {
+				fail(tag + "_dev_toggle: the second toggle left the overrides off");
+			}
+			paint_full(target, hi);
+			if (digest(hi) != first) {
+				fail(tag + "_dev_toggle_on: the render differs from the first one");
+			}
+			// The reload key's action: a new generation, the same render.
+			uint32_t gen    = Hires::generation();
+			uint32   before = Chunk_terrain::get_hires_renders();
+			record(tag + "_dev_reload", Hires::dev_reload(S));
+			if (Hires::generation() == gen) {
+				fail(tag + "_dev_reload: the generation did not change");
+			}
+			paint_full(target, hi);
+			check_cache_renders(tag + "_dev_reload", before, caches);
+			if (digest(hi) != first) {
+				fail(tag + "_dev_reload: the render after the reload differs from the first one");
+			}
+
+			// The .reload poll.
+			const vector<Hires::Root> roots = Hires::roots();
+			if (roots.empty()) {
+				fail(tag + "_dev: no override root");
+				return;
+			}
+			// x<S> when the pack has a flats.next there, else x<art_scale>
+			// (reduced): both triggers are watched.
+			const std::filesystem::path root = std::filesystem::u8path(roots[0].sys_path);
+			std::filesystem::path       dir  = root / ("x" + std::to_string(S));
+			std::error_code             ec;
+			if (!std::filesystem::is_directory(dir / "flats.next", ec)) {
+				dir = root / ("x" + std::to_string(Hires::art_scale()));
+			}
+			if (!std::filesystem::is_directory(dir / "flats.next", ec)) {
+				fail(tag + "_dev: " + (dir / "flats.next").string() + " is missing");
+				return;
+			}
+			const std::filesystem::path trigger = dir / ".reload";
+			record(tag + "_dev_trigger", dir.filename().string() + "/.reload");
+			string summary;
+			gen = Hires::generation();
+			if (poll_until_reload(S, 600, summary) >= 0 || Hires::generation() != gen) {
+				fail(tag + "_dev_poll: the poll reloaded without a change of .reload");
+			}
+
+			// Swapped in, the render must be NN of the reference; swapped back,
+			// the first render.
+			for (const bool swapped_in : {true, false}) {
+				const string stag = tag + (swapped_in ? "_dev_swapped" : "_dev_restored");
+				if (!swap_flats(dir) || !touch_reload(trigger)) {
+					return;
+				}
+				// Waits past the limit so that the digest has the actual time.
+				const long long waited = poll_until_reload(S, static_cast<uint32>(4 * reload_limit_ms), summary);
+				record_ms("time_" + stag + "_reload_ms", static_cast<double>(waited));
+				if (waited < 0 || waited > reload_limit_ms) {
+					fail(stag + ": the poll did not reload within " + std::to_string(reload_limit_ms) + " ms of the .reload touch ("
+						 + (waited < 0 ? "no reload" : std::to_string(waited) + " ms") + ")");
+					if (waited < 0) {
+						continue;
+					}
+				}
+				record(stag + "_summary", summary);
+				before = Chunk_terrain::get_hires_renders();
+				paint_full(target, hi);
+				check_cache_renders(stag, before, caches);
+				if (swapped_in) {
+					check_nn(stag, hi);
+				} else if (digest(hi) != first) {
+					fail(stag + ": the render with the pack restored differs from the first one");
+				}
+			}
+			// Dev mode off: a touch does nothing.
+			config->set("config/video/hires/dev", "no", false);
+			Hires::reload(S);
+			touch_reload(trigger);
+			gen = Hires::generation();
+			if (Hires::dev_mode() || poll_until_reload(S, 600, summary) >= 0 || Hires::generation() != gen) {
+				fail(tag + "_dev_off: the poll reloaded with dev mode off");
+			}
+			config->set("config/video/hires/dev", "yes", false);
+			Hires::reload(S);
+			paint_full(target, hi);
+			if (digest(hi) != first) {
+				fail(tag + "_dev_off: the render after dev mode on again differs from the first one");
+			}
+		}
+
+		// The inspector for every inspect=tx:ty at each S: inspect.json, one
+		// digest entry each and the text on stdout.
+		void inspect() {
+			std::ofstream out(path("inspect.json"));
+			out << "{\n  \"inspect\": [\n";
+			bool first = true;
+			for (const auto& tile : p.inspect) {
+				for (const int S : p.scales) {
+					const Hires::Inspection info = Hires::explain_at(tile.first, tile.second, S);
+					out << (first ? "" : ",\n") << info.json("    ");
+					first = false;
+					record("inspect_" + std::to_string(info.tx) + "_" + std::to_string(info.ty) + "_s" + std::to_string(S),
+						   info.result);
+					cout << "[render-test] inspect x" << S << ":\n" << info.text();
+				}
+			}
+			out << "\n  ]\n}\n";
+			if (!out.good()) {
+				fail("cannot write " + path("inspect.json"));
+			}
+		}
+
+		/*
+		 *  The dev keys through the key bindings, as the main loop's
+		 *  Handle_event passes them: with cheats off they do nothing; with
+		 *  cheats on Ctrl-Alt-O toggles, Ctrl-Alt-R reloads and Ctrl-Alt-I
+		 *  copies the inspector's text for the tile under the mouse; with
+		 *  dev mode off they do nothing again.
+		 */
+		void key_check() {
+			if (keybinder == nullptr) {
+				fail("keys: no key bindings");
+				return;
+			}
+			const auto press = [](SDL_Keycode key) {
+				SDL_Event ev{};
+				ev.type       = SDL_EVENT_KEY_DOWN;
+				ev.key.type   = SDL_EVENT_KEY_DOWN;
+				ev.key.key    = key;
+				ev.key.mod    = SDL_KMOD_LCTRL | SDL_KMOD_LALT;
+				ev.key.down   = true;
+				const bool on = keybinder->HandleEvent(ev);
+				ev.type       = SDL_EVENT_KEY_UP;
+				ev.key.type   = SDL_EVENT_KEY_UP;
+				ev.key.down   = false;
+				keybinder->HandleEvent(ev);
+				return on;
+			};
+			string cheating;
+			config->value("config/gameplay/cheat", cheating, "no");
+			const bool     enabled = Hires::is_enabled();
+			const uint32_t gen     = Hires::generation();
+			config->set("config/gameplay/cheat", "no", false);
+			cheat.init();
+			press(SDLK_O);
+			press(SDLK_R);
+			if (Hires::is_enabled() != enabled || Hires::generation() != gen) {
+				fail("keys: Ctrl-Alt-O or Ctrl-Alt-R acted with cheats off");
+			}
+			config->set("config/gameplay/cheat", "yes", false);
+			cheat.init();
+			if (!press(SDLK_O) || Hires::is_enabled() == enabled) {
+				fail("keys: Ctrl-Alt-O is not bound or did not toggle the overrides");
+			}
+			press(SDLK_O);
+			if (Hires::is_enabled() != enabled) {
+				fail("keys: a second Ctrl-Alt-O did not toggle the overrides back");
+			}
+			const uint32_t gen2 = Hires::generation();
+			if (!press(SDLK_R) || Hires::generation() == gen2) {
+				fail("keys: Ctrl-Alt-R is not bound or did not reload");
+			}
+			Mouse mouse(gwin);    // The inspector reads the mouse.
+			int   mx = 100;
+			int   my = 60;
+			mouse.move(mx, my);
+			SDL_SetClipboardText("");
+			const bool   bound  = press(SDLK_I);
+			char*        clip   = SDL_GetClipboardText();
+			const string copied = clip != nullptr ? clip : "";
+			SDL_free(clip);
+			const int    tx     = gwin->get_scrolltx() + mouse.get_mousex() / c_tilesize;
+			const int    ty     = gwin->get_scrollty() + mouse.get_mousey() / c_tilesize;
+			const string expect = Hires::explain_at(tx, ty, win->get_world_scale()).text();
+			if (!bound || copied != expect) {
+				fail("keys: Ctrl-Alt-I copied \"" + copied + "\", expected \"" + expect + "\"");
+			}
+			record("keys_inspect", copied.substr(0, copied.find('\n')));
+			// Dev mode off, cheats on: the three keys do nothing.
+			const int S = win->get_world_scale();
+			config->set("config/video/hires/dev", "no", false);
+			Hires::reload(S);
+			const bool     enabled3 = Hires::is_enabled();
+			const uint32_t gen3     = Hires::generation();
+			SDL_SetClipboardText("unchanged");
+			press(SDLK_O);
+			press(SDLK_R);
+			press(SDLK_I);
+			clip                    = SDL_GetClipboardText();
+			const string copied_off = clip != nullptr ? clip : "";
+			SDL_free(clip);
+			if (Hires::dev_mode() || Hires::is_enabled() != enabled3 || Hires::generation() != gen3 || copied_off != "unchanged") {
+				fail("keys: Ctrl-Alt-O, R or I acted with dev mode off");
+			}
+			config->set("config/video/hires/dev", "yes", false);
+			Hires::reload(S);
+			if (!Hires::dev_mode()) {
+				fail("keys: dev mode did not come back on");
+			}
+			config->set("config/gameplay/cheat", cheating, false);
+			cheat.init();
+		}
+
 		// The flats caches rendered at S > 1 since 'before' must be 'expect'
 		// (every cache of the view after a generation change, none when
 		// nothing changed).
@@ -1622,6 +1955,9 @@ namespace {
 			if (!p.filter.empty()) {
 				config->set("config/video/hires/present_filter", p.filter, false);
 			}
+			if (p.dev) {
+				config->set("config/video/hires/dev", "yes", false);    // Before the store reads it.
+			}
 			Image_window::set_render_scale_override(main_mode ? scale_policy(p.scales[0]) : "off");
 			gwin = new Game_window(
 					win_w, win_h, false, game_w, game_h, win_scale, Image_window::point, Image_window::Fit, Image_window::point);
@@ -1699,6 +2035,9 @@ namespace {
 					if (p.toggle) {
 						toggle_check(tag, nullptr, main_extent());
 					}
+					if (p.dev) {
+						dev_check(tag, nullptr, main_extent());
+					}
 					bench(tag, nullptr, main_extent());
 				} else {
 					auto         hi = std::make_unique<Image_buffer8>(p.w, p.h, S);
@@ -1720,6 +2059,9 @@ namespace {
 						}
 						if (p.toggle) {
 							toggle_check(tag, hi.get(), e);
+						}
+						if (p.dev) {
+							dev_check(tag, hi.get(), e);
 						}
 					}
 					bench(tag, hi.get(), e);
@@ -1754,6 +2096,12 @@ namespace {
 				} else {
 					pushed_resize();
 				}
+			}
+			if (!p.inspect.empty()) {
+				inspect();
+			}
+			if (p.keys) {
+				key_check();
 			}
 			record("result", failures.empty() ? "pass" : "fail");
 			std::ofstream out(path("digest.json"));
