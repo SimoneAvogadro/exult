@@ -182,6 +182,7 @@ EXTRA_DIST = \
 	textpack.1 \
 	textpack.txt \
 	x-shapefile.xml \
-	expack.txt
+	expack.txt \
+	hires/mkpack_identity.py
 
 CLEANFILES = *~ exult_u7shapes.thumbnailer
