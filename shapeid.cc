@@ -34,6 +34,7 @@
 #include "fontvga.h"
 #include "game.h"
 #include "gamewin.h"
+#include "hires_glue.h"
 #include "istring.h"
 #include "miscinf.h"
 #include "u7drag.h"
@@ -148,6 +149,7 @@ void Shape_manager::read_shape_info() {
  */
 
 void Shape_manager::load() {
+	Hires::invalidate();    // Game or mod switch: the hi-res store reloads lazily.
 	// Reset all caches, just in case.
 	for (auto& cache : shape_cache) {
 		cache.clear();
@@ -423,6 +425,7 @@ void Shape_manager::reload_shapes(int shape_kind    // Type from u7drag.h.
 	shape_cache[shape_kind].clear();
 	switch (shape_kind) {
 	case U7_SHAPE_SHAPES:
+		Hires::invalidate();    // Flats may have changed (ExultStudio).
 		read_shape_info();
 		// ++++Reread text?
 		break;

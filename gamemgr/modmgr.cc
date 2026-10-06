@@ -57,6 +57,7 @@ void BaseGameInfo::setup_game_paths() {
 	// Make aliases to the current game's paths.
 	clone_system_path("<STATIC>", "<" + path_prefix + "_STATIC>");
 	clone_system_path("<MODS>", "<" + path_prefix + "_MODS>");
+	clone_system_path("<HIRES>", "<" + path_prefix + "_HIRES>");    // Hi-res packs: not mod-specific.
 
 	string mod_path_tag = path_prefix;
 
@@ -616,6 +617,13 @@ ModManager::ModManager(const string& name, const string& menu, bool needtitle, b
 		default_dir = game_path + "/source";
 		config->value(config_path.c_str(), src_dir, default_dir.c_str());
 		add_system_path("<" + path_prefix + "_SOURCE>", src_dir);
+
+		// <hires_path> setting (hi-res override packs): default is "$game_path/hires".
+		string hires_dir;
+		config_path = base_cfg_path + "/hires_path";
+		default_dir = game_path + "/hires";
+		config->value(config_path.c_str(), hires_dir, default_dir.c_str());
+		add_system_path("<" + path_prefix + "_HIRES>", hires_dir);
 
 #ifdef DEBUG_PATHS
 		if (!silent) {

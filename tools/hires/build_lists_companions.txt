@@ -12,3 +12,8 @@
 # DESIGN.md section 6.1: the hooks in ibuf8.cc call the scaled primitives, so ibuf8_scaled.cc (WP-04)
 # is compiled everywhere ibuf8.cc is.
 imagewin/ibuf8.cc    imagewin/ibuf8_scaled.cc
+
+# WP-08: shapeid.cc calls Hires::invalidate() from hires_glue.cc. hires_glue.cc in turn needs
+# shapes/hires_store.cc, hires_bundle.cc, hires_png.cc and hires_rules.cc; those come with the
+# shapes library (shapes/Makefile.am, SHAPES_OBJS in Makefile.common), so they are not pairs here.
+shapeid.cc           hires_glue.cc

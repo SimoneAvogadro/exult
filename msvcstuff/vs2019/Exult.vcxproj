@@ -479,6 +479,7 @@ for /f "tokens=* delims=" %%u in ('git ls-remote --get-url') do echo #define GIT
     <ClCompile Include="..\..\gumps\UIOptions_gump.cc" />
     <ClCompile Include="..\..\gumps\VideoOptions_gump.cc" />
     <ClCompile Include="..\..\gumps\Yesno_gump.cc" />
+    <ClCompile Include="..\..\hires_glue.cc" />
     <ClCompile Include="..\..\imagewin\BilinearScaler.cpp" />
     <ClCompile Include="..\..\imagewin\BilinearScalerInternal_2x.cpp" />
     <ClCompile Include="..\..\imagewin\BilinearScalerInternal_Arb.cpp" />
@@ -541,6 +542,10 @@ for /f "tokens=* delims=" %%u in ('git ls-remote --get-url') do echo #define GIT
     <ClCompile Include="..\..\shapes\font_map.cc" />
     <ClCompile Include="..\..\shapes\fontgen.cc" />
     <ClCompile Include="..\..\shapes\fontvga.cc" />
+    <ClCompile Include="..\..\shapes\hires_bundle.cc" />
+    <ClCompile Include="..\..\shapes\hires_png.cc" />
+    <ClCompile Include="..\..\shapes\hires_rules.cc" />
+    <ClCompile Include="..\..\shapes\hires_store.cc" />
     <ClCompile Include="..\..\shapes\items.cc" />
     <ClCompile Include="..\..\shapes\miscinf.cc" />
     <ClCompile Include="..\..\shapes\pngio.cc" />
@@ -722,6 +727,7 @@ for /f "tokens=* delims=" %%u in ('git ls-remote --get-url') do echo #define GIT
     <ClInclude Include="..\..\headers\ios_state.hpp" />
     <ClInclude Include="..\..\headers\pent_include.h" />
     <ClInclude Include="..\..\headers\span.h" />
+    <ClInclude Include="..\..\hires_glue.h" />
     <ClInclude Include="..\..\imagewin\AffineScaler.h" />
     <ClInclude Include="..\..\imagewin\ArbScaler.h" />
     <ClInclude Include="..\..\imagewin\BilinearScaler.h" />
@@ -790,6 +796,11 @@ for /f "tokens=* delims=" %%u in ('git ls-remote --get-url') do echo #define GIT
     <ClInclude Include="..\..\shapes\font_map.h" />
     <ClInclude Include="..\..\shapes\fontgen.h" />
     <ClInclude Include="..\..\shapes\fontvga.h" />
+    <ClInclude Include="..\..\shapes\hires_bundle.h" />
+    <ClInclude Include="..\..\shapes\hires_png.h" />
+    <ClInclude Include="..\..\shapes\hires_rules.h" />
+    <ClInclude Include="..\..\shapes\hires_store.h" />
+    <ClInclude Include="..\..\shapes\hires_vga.h" />
     <ClInclude Include="..\..\shapes\items.h" />
     <ClInclude Include="..\..\shapes\miscinf.h" />
     <ClInclude Include="..\..\shapes\pngio.h" />
