@@ -224,6 +224,8 @@ int Game_render::paint_map(
 	int cx;
 	int cy;    // Chunk #'s.
 	// Paint all the flat scenery.
+	PerformanceTimer& perf_flats = PerformanceTimer::GetPerfTimer(__func__, " flats");
+	perf_flats.start_phase();
 	for (cy = start_chunky; cy != stop_chunky; cy = INCR_CHUNK(cy)) {
 		const int yoff = Figure_screen_offset(cy, scrollty) - gwin->get_scrollty_lo();
 		for (cx = start_chunkx; cx != stop_chunkx; cx = INCR_CHUNK(cx)) {
@@ -231,7 +233,10 @@ int Game_render::paint_map(
 			paint_chunk_flats(cx, cy, xoff, yoff);
 		}
 	}
+	perf_flats.end_phase();
 	// Now the flat RLE terrain.
+	PerformanceTimer& perf_rles = PerformanceTimer::GetPerfTimer(__func__, " flat RLE");
+	perf_rles.start_phase();
 	for (cy = start_chunky; cy != stop_chunky; cy = INCR_CHUNK(cy)) {
 		const int yoff = Figure_screen_offset(cy, scrollty) - gwin->get_scrollty_lo();
 		for (cx = start_chunkx; cx != stop_chunkx; cx = INCR_CHUNK(cx)) {
@@ -239,6 +244,7 @@ int Game_render::paint_map(
 			paint_chunk_flat_rles(cx, cy, xoff, yoff);
 		}
 	}
+	perf_rles.end_phase();
 	// Draw the chunk grid in Map editor cheat mode.
 	if (cheat.in_map_editor()) {
 		for (cy = start_chunky; cy != stop_chunky; cy = INCR_CHUNK(cy)) {
@@ -251,6 +257,8 @@ int Game_render::paint_map(
 	}
 	// Draw the chunks' objects
 	//   diagonally NE.
+	PerformanceTimer& perf_objects = PerformanceTimer::GetPerfTimer(__func__, " objects");
+	perf_objects.start_phase();
 	const int tmp_stopy = DECR_CHUNK(start_chunky);
 	for (cy = start_chunky; cy != stop_chunky; cy = INCR_CHUNK(cy)) {
 		for (int dx = start_chunkx, dy = cy; dx != stop_chunkx && dy != tmp_stopy; dx = INCR_CHUNK(dx), dy = DECR_CHUNK(dy)) {
@@ -263,8 +271,10 @@ int Game_render::paint_map(
 			light_sources += paint_chunk_objects(dx, dy);
 		}
 	}
+	perf_objects.end_phase();
 	/// Dungeon Blackness (but disable in map editor mode)
 	if (static_cast<int>(gwin->in_dungeon) >= gwin->skip_above_actor && !cheat.in_map_editor()) {
+		auto perftimer = PerformanceTimer::GetScopedPerfTimer(__func__, " blackness");
 		paint_blackness(start_chunkx, start_chunky, stop_chunkx, stop_chunky, gwin->ice_dungeon ? 73 : 0);
 	}
 
@@ -514,6 +524,19 @@ void Game_window::paint_lerped(int factor) {
 }
 
 /*
+ *  Does a chunk painted at (xoff, yoff) lie entirely outside the clip?
+ */
+
+static bool Chunk_misses_clip(Image_buffer8* tgt, int xoff, int yoff) {
+	int clipx;
+	int clipy;
+	int clipw;
+	int cliph;
+	tgt->get_clip(clipx, clipy, clipw, cliph);
+	return xoff >= clipx + clipw || yoff >= clipy + cliph || xoff + c_chunksize <= clipx || yoff + c_chunksize <= clipy;
+}
+
+/*
  *  Paint the flat (non-rle) shapes in a chunk.
  */
 
@@ -523,10 +546,15 @@ void Game_render::paint_chunk_flats(
 ) {
 	Game_window* gwin  = Game_window::get_instance();
 	Map_chunk*   olist = gwin->map->get_chunk(cx, cy);
-	// Paint flat tiles.
-	Image_buffer8* cflats = olist->get_rendered_flats();
+	// Paint flat tiles, cached at the pixel scale of the current target.
+	Image_buffer8* tgt   = gwin->win->get_ib8();
+	const int      scale = tgt->get_pixel_scale();
+	if (scale > 1 && Chunk_misses_clip(tgt, xoff, yoff)) {
+		return;    // Hi-res: do not render an S x cache for nothing.
+	}
+	Image_buffer8* cflats = olist->get_rendered_flats(scale);
 	if (cflats) {
-		gwin->win->copy8(cflats->get_bits(), c_chunksize, c_chunksize, xoff, yoff);
+		tgt->blit(*cflats, xoff, yoff);
 	}
 }
 
