@@ -88,12 +88,36 @@ Layout
                      1280x800 (ARGB and INDEX8, which must really be INDEX8
                      on SDL >= 3.4 and is skipped before), a game area with
                      offset_x 17, passes=flats
+    override_regions.sh
+                     the per-tile override oracles with packs that
+                     tools/hires/mkpack_identity.py makes from the game's
+                     flats in a scratch directory (removed afterwards,
+                     unless a kept sandbox links to it):
+                     O4a, the identity pack (NN_S of every flat) gives NN of
+                     the scale-1 render on every region, also through the
+                     present read-back, the S cycle with a terrain edit, and
+                     the store's reduction from an x6 bundle; O4b, the
+                     marker pack (index 1 at the top-left of every S x S
+                     block) gives the predicted image exactly with
+                     passes=flats and differs from NN with passes=all; the
+                     toggle (I8): overrides on, off (NN), on again in one
+                     process, each rendering every flats cache of the view
+                     once, then a repaint rendering none; per-tile fallback:
+                     a marker pack of half the tiles (--subset even,
+                     coverage=partial) mixes overridden and NN cells in one
+                     cache, predicted exactly. The pack must cover every
+                     flat cell of the view (some but not all with
+                     coverage=partial), and the store must load every flat
+                     of the pack, no reject
     resize_cycle.sh  the S cycle force6 -> off -> force3 -> force6 (I12), a
                      terrain edit at S > 1, the pushed resize; fails on a
                      "[hires] mixed-scale" log line
     perf.sh          the world paint at S=6 (bench=200, -O2 builds only):
                      p95 <= 2 ms at 320x200, and within 20 % of this host's
-                     line in perf_baseline.json
+                     line in perf_baseline.json; warm paints render no
+                     flats cache; cold render_flats with per-tile art
+                     (identity x6 pack): paint_flats of each cache of the
+                     view timed, p95 <= 1 ms per cache
     regen_goldens.sh records golden/*.sha256 with the reference build
     regions.txt      the map regions (tile, size, roof level)
     golden/          buildmap{0,1,2}.sha256: hash lists, never pixels
@@ -122,6 +146,14 @@ ref_1x.png, hi_<tag>.png and diff_<tag>.png into its sandbox, which is then kept
 game's art: never commit them. For a look at a region at S=6:
 
   exult -c <cfg> --bg --render-test "tx=800,ty=1330,w=320,h=200,scales=6,mode=plain,out=<dir>"
+
+With overrides=yes the render uses the hi-res art of the config's roots
+(<PATCH>/hires, then hires_path); add it to the line above, with hires_path
+pointing at a pack, to see a pack's art. The scripts' sandboxes use an empty
+hires directory, or a link to GAME_HIRES_PACK (see game/lib.sh). The packs
+that override_regions.sh and perf.sh make are kept with the sandboxes that link
+to them (a failure, or KEEP_SANDBOX=1; the scripts print "packs kept: <dir>"),
+so a kept sandbox's exult.cfg can be run again; remove them by hand afterwards.
 
 perf.sh --record writes this host's line into perf_baseline.json.
 

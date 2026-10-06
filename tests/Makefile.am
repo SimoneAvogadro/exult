@@ -75,6 +75,7 @@ GAME_TESTS = \
 	game/smoke.sh \
 	game/buildmap_golden.sh \
 	game/render_regions.sh \
+	game/override_regions.sh \
 	game/resize_cycle.sh \
 	game/perf.sh
 

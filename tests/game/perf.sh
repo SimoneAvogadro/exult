@@ -5,7 +5,13 @@
 # present numbers are for comparison between runs only). Gates:
 #   * paint p95 of the 320x200 view at S=6 <= PERF_GATE_MS (2.0 ms);
 #   * every paint p95 at most 20 % (and 0.05 ms, the timer noise) above this host's line in
-#     perf_baseline.json, when there is one.
+#     perf_baseline.json, when there is one;
+#   * cold render_flats with per-tile art (an identity x6 pack from tools/hires/mkpack_identity.py,
+#     in a scratch directory): the p95 of one flats cache's paint_flats with its overrides, over
+#     every cache of the 320x200 view at S=6 timed 50 times, <= PERF_FLATS_GATE_MS (1.0 ms); the
+#     digest key is bench_s6_render_flats_p95_ms. The render test also fails a warm paint that
+#     renders a flats cache, and a cold paint (an overrides toggle changes Hires::generation())
+#     that does not render every cache of the view.
 # A failing gate is measured once more before it counts (timing noise). Only -O2 (or -O3) builds
 # without sanitizers are measured; others are skipped (77), as is a run without U7_BG_STATIC.
 # Usage: [U7_BG_STATIC=...] perf.sh [build-dir]
@@ -85,6 +91,43 @@ while IFS='|' read -r name spec; do
 		fail=1
 	fi
 done <<< "$cases"
+
+# Cold render_flats with per-tile art.
+flats_gate=${PERF_FLATS_GATE_MS:-1.0}
+mkpack="$game_tests_srcdir/../tools/hires/mkpack_identity.py"
+game_make_packs
+packs=$GAME_PACKS
+if ! [ -f "$mkpack" ]; then
+	echo "note: perf flats320x200 skipped: $mkpack not found" >&2
+elif ! python3 "$mkpack" "$U7_BG_STATIC" "$packs/identity" --scales 6 > /dev/null; then
+	echo "FAIL: perf flats: mkpack_identity.py" >&2
+	fail=1
+else
+	GAME_HIRES_PACK=$packs/identity
+	ok=0
+	for attempt in 1 2; do
+		if ! game_render_test perf-flats "tx=800,ty=1330,w=320,h=200,lift=16,seed=1,scales=6,overrides=yes,expect=identity,bench=50"; then
+			echo "(sandbox kept: $GAME_SANDBOX)" >&2
+			game_keep_pack
+			break
+		fi
+		per_chunk=$(value "$GAME_SANDBOX/out/digest.json" bench_s6_render_flats_p95_ms)
+		caches=$(sed -n 's/^ *"bench_s6_caches": "\([0-9]*\)".*/\1/p' "$GAME_SANDBOX/out/digest.json")
+		cold=$(value "$GAME_SANDBOX/out/digest.json" bench_s6_cold_paint_p95_ms)
+		echo "perf flats320x200: cold paint p95 $cold ms, render_flats with overrides p95 $per_chunk ms per cache ($caches caches) (attempt $attempt, $host)"
+		game_cleanup > /dev/null
+		if [ -n "$per_chunk" ] && awk -v v="$per_chunk" -v g="$flats_gate" 'BEGIN { exit !(v <= g) }'; then
+			ok=1
+			break
+		fi
+		echo "perf: flats320x200: render_flats p95 ${per_chunk:-?} ms > $flats_gate ms" >&2
+	done
+	unset GAME_HIRES_PACK
+	if [ $ok = 0 ]; then
+		echo "FAIL: perf flats320x200" >&2
+		fail=1
+	fi
+fi
 
 if [ $record = 1 ] && [ $fail = 0 ]; then
 	# One line per host, case and value; other hosts' lines are kept.

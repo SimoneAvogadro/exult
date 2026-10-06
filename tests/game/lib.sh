@@ -9,6 +9,8 @@
 #                    ASLR off and LeakSanitizer off. An explicit value is used as it is.
 #   HIRES_TEST_TMP   where the sandboxes are created; default: "tmp" next to the build tree.
 #   GAME_TIMEOUT     seconds before an exult run is killed (default 1800).
+#   GAME_HIRES_PACK  a pack root (absolute path) that new sandboxes use as their <HIRES> root:
+#                    the sandbox's hires directory becomes a link to it. Empty: an empty root.
 #   KEEP_SANDBOX=1   keep the sandbox of a passing run (it holds EA-derived images: never commit).
 #
 # The game data stays untouched: the config (test.cfg.in) points every writable path (game,
@@ -71,7 +73,12 @@ game_make_sandbox() {
 	local tmp=${HIRES_TEST_TMP:-$(dirname "$GAME_BUILD")/tmp}
 	mkdir -p "$tmp" || exit 2
 	GAME_SANDBOX=$(mktemp -d "$tmp/test-$name.XXXXXX") || exit 2
-	mkdir -p "$GAME_SANDBOX"/{game,patch,mods,source,saves,gamedat,hires,home} || exit 2
+	mkdir -p "$GAME_SANDBOX"/{game,patch,mods,source,saves,gamedat,home} || exit 2
+	if [ -n "${GAME_HIRES_PACK:-}" ]; then
+		ln -s "$GAME_HIRES_PACK" "$GAME_SANDBOX/hires" || exit 2
+	else
+		mkdir "$GAME_SANDBOX/hires" || exit 2
+	fi
 	ln -s "$GAME_BUILD/exult" "$GAME_SANDBOX/exult" || exit 2
 	ln -s "$GAME_BUILD/data" "$GAME_SANDBOX/data" || exit 2
 	sed -e "s|@SANDBOX@|$GAME_SANDBOX|g" -e "s|@BG_STATIC@|$U7_BG_STATIC|g" \
@@ -131,6 +138,33 @@ game_render_test() {
 	return 0
 }
 
+# A sandbox that links to GAME_HIRES_PACK is kept: keep the packs too.
+game_keep_pack() {
+	if [ -n "${GAME_HIRES_PACK:-}" ]; then
+		GAME_KEEP_PACKS=1
+	fi
+}
+
+# game_make_packs: creates the scratch directory GAME_PACKS for packs made from the game's art
+# (GAME_HIRES_PACK points into it). It is removed when the script exits, unless a sandbox that
+# links into it was kept (a failing game_check_render sets GAME_KEEP_PACKS=1; scripts that keep
+# sandboxes otherwise set it too) or KEEP_SANDBOX=1, so a kept sandbox can be run again.
+game_make_packs() {
+	local tmp=${HIRES_TEST_TMP:-$(dirname "$GAME_BUILD")/tmp}
+	mkdir -p "$tmp" || exit 2
+	GAME_PACKS=$(mktemp -d "$tmp/packs.XXXXXX") || exit 2
+	GAME_KEEP_PACKS=0
+	trap game_remove_packs EXIT
+}
+
+game_remove_packs() {
+	if [ "${GAME_KEEP_PACKS:-0}" = 1 ] || [ "${KEEP_SANDBOX:-0}" = 1 ]; then
+		echo "packs kept: $GAME_PACKS (kept sandboxes link to them; derived from the game's art: never commit)" >&2
+	else
+		rm -rf "$GAME_PACKS"
+	fi
+}
+
 # The reproducible part of a digest.json: everything but the timings.
 game_digest_stable() {
 	grep -vE '"(time|bench)_' "$1"
@@ -138,7 +172,8 @@ game_digest_stable() {
 
 # game_check_render <name> <spec>: game_render_test, made twice (once in an ASan build, whose heap
 # order follows the environment) with equal digests apart from the timings (determinism, I10).
-# Counts into game_pass and game_fail.
+# When GAME_RUN_CHECK names a command, it runs after each passing run (GAME_SANDBOX is set) and
+# must succeed too. Counts into game_pass and game_fail.
 game_pass=0
 game_fail=0
 game_check_render() {
@@ -151,8 +186,9 @@ game_check_render() {
 		runs=1
 	fi
 	for run in $(seq 1 $runs); do
-		if ! game_render_test "$name" "$spec"; then
+		if ! game_render_test "$name" "$spec" || { [ -n "${GAME_RUN_CHECK:-}" ] && ! $GAME_RUN_CHECK; }; then
 			echo "FAIL: $name (run $run): $spec (sandbox kept: $GAME_SANDBOX)" >&2
+			game_keep_pack
 			game_fail=$((game_fail + 1))
 			return 1
 		fi
@@ -162,6 +198,7 @@ game_check_render() {
 		elif [ "$digest" != "$first" ]; then
 			echo "FAIL: $name: the digests of run 1 and run $run differ (sandbox kept: $GAME_SANDBOX):" >&2
 			diff <(echo "$first") <(echo "$digest") | head -10 >&2
+			game_keep_pack
 			game_fail=$((game_fail + 1))
 			return 1
 		fi
