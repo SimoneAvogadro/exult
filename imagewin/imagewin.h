@@ -30,6 +30,8 @@ Boston, MA  02111-1307, USA.
 #include "common_types.h"
 #include "ignore_unused_variable_warning.h"
 #include "imagebuf.h"
+#include "world_present.h"
+#include "world_scale.h"
 
 #include <map>
 #include <memory>
@@ -405,6 +407,35 @@ protected:
 	SDL_Surface* inter_surface;    // Post scaled/pre stretch surface  (960x600) - can be null if there is no stretching being dome
 	SDL_Surface* draw_surface;     // Pre scaled surface               (320x200) - Never null
 
+	// Hi-res render scale (DESIGN.md section 3.2). At world_scale > 1 the
+	// main buffer stores S x S physical pixels per game pixel in an S x
+	// draw_surface, World_presenter shows it, and screen_texture,
+	// screen_texture_a, inter_surface scaling and UpdateRect are not used.
+	int                         world_scale         = 1;        // S_eff; 1 = the upstream pipeline.
+	bool                        world_scaled_failed = false;    // Latched by a failed S > 1 setup.
+	bool                        world_full_pending  = false;    // The next upload must cover the whole texture.
+	bool                        world_rebuild       = false;    // Device lost: rebuild the surfaces.
+	bool                        world_rebuilt       = false;    // Rebuilt: the owner repaints.
+	World_filter_override       world_filter_force  = World_filter_override::Auto;
+	World_filter_choice         world_filter_logged;    // The last filter written to the log.
+	World_presenter             presenter;
+	Image_buffer::Write_tracker world_writes;
+	unsigned int                surface_request_w = 0;    // The last create_surface() size.
+	unsigned int                surface_request_h = 0;
+	static std::string          render_scale_override;    // --render-scale.
+
+	// Sets up draw_surface and the presenter at S > 1 (create_scale_surfaces
+	// hook). Returns false, with world_scale 1, for the upstream path.
+	bool create_world_scaled_surfaces(int w, int h);
+	// The main buffer's fields for the current world scale; runs at the end
+	// of every create_surface() (invariant I12).
+	// Also remembers the requested size for rebuild_surfaces().
+	void wire_main_buffer_scale(unsigned int w, unsigned int h);
+	// show() at S > 1: upload what the tracker saw, then present.
+	void show_world_scaled(int x, int y, int w, int h);
+	// Clear, the world texture, the layers, and (unless for a screenshot) present.
+	void present_world_frame(bool for_screenshot);
+
 	// Layers composited on top of the main image (see class Layer).
 	std::vector<std::unique_ptr<Layer>> layers;
 	// Scaling layers can need upto 3 dst32 surfaces. Layer dst32 Surfaces aren't persistent and shared between all layers as needed
@@ -602,6 +633,35 @@ public:
 	int get_scaler() {    // Returns 1 or 2.
 		return scaler;
 	}
+
+	// Hi-res render scale: physical pixels per game pixel of the main buffer.
+	int get_world_scale() const {
+		return world_scale;
+	}
+
+	// The render_scale setting changed: allow S > 1 again after a failure.
+	void hires_config_changed() {
+		world_scaled_failed = false;
+	}
+
+	// Session override of config/video/hires/render_scale (--render-scale);
+	// empty to use the configuration.
+	static void set_render_scale_override(const std::string& policy) {
+		render_scale_override = policy;
+	}
+
+	// True once after show() rebuilt the surfaces for a lost render device
+	// at S > 1; the owner then repaints (Game_window::rebuild_window_if_requested).
+	// The picture and the palette are kept unless the rebuild fell back to S=1.
+	bool take_rebuild_request() {
+		const bool rebuilt = world_rebuilt;
+		world_rebuilt      = false;
+		return rebuilt;
+	}
+
+	// Creates the window's surfaces again with the same parameters, the
+	// picture and the palette.
+	void rebuild_surfaces();
 
 	bool is_palettized() {    // Does the window have a palette?
 		return uses_palette;
@@ -805,6 +865,9 @@ public:
 	// whether or not we should do guardband painting
 	// Criteria is using a scaler other than point and there is a guardband
 	bool ShouldPaintIntoGuardband() {
+		if (world_scale > 1) {    // No guard band painting in a scaled buffer.
+			return false;
+		}
 		// A full-screen scene layer buffer has no guard band, so use the plain
 		// (point-scaler style) path with no guard band expansion.
 		if (scene_mode) {

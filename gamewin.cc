@@ -1070,12 +1070,26 @@ bool Game_window::rotatecolours() {
 			last_rotate += rot_speed;
 		}
 		// Non palettized needs explicit blit.
-		if (!win->is_palettized()) {
+		if (!win->is_palettized() || win->get_world_scale() > 1) {    // Hi-res: so does a scaled world.
 			set_painted();
 		}
 		return true;
 	}
 	return false;
+}
+
+/*
+ *  Hi-res: repaint after Image_window::show() rebuilt the window surfaces
+ *  for a lost render device.
+ */
+
+void Game_window::rebuild_window_if_requested() {
+	if (!win->take_rebuild_request()) {
+		return;
+	}
+	pal->apply(false);
+	Shape_frame::set_to_render(win->get_ib8());
+	set_all_dirty();
 }
 
 /*

@@ -44,6 +44,8 @@ Boston, MA  02111-1307, USA.
 #include "perf.h"
 
 #include <algorithm>
+#include <cassert>
+#include <cmath>
 #include <cstdlib>
 #include <iostream>
 #include <string>
@@ -599,6 +601,7 @@ void Image_window::create_surface(unsigned int w, unsigned int h) {
 	ibuf->bits     = static_cast<unsigned char*>(draw_surface->pixels) - get_start_x() - get_start_y() * ibuf->line_width;
 	// Scaler guardband is in effect
 	ibuf->bits += guard_band + ibuf->line_width * guard_band;
+	wire_main_buffer_scale(w, h);    // Hi-res: the scaled layout, pixel scale, tracker.
 }
 
 /*
@@ -704,6 +707,9 @@ bool Image_window::create_scale_surfaces(int w, int h, int bpp) {
 	SDL_RenderClear(screen_renderer);
 	SDL_SetRenderTarget(screen_renderer, nullptr);
 	SDL_RenderPresent(screen_renderer);
+	if (create_world_scaled_surfaces(w, h)) {    // Hi-res: S > 1 is set up entirely there.
+		return true;
+	}
 	int    sbpp;
 	Uint32 sRmask;
 	Uint32 sGmask;
@@ -851,6 +857,8 @@ void Image_window::free_surface() {
 	inter_surface    = nullptr;
 	draw_surface     = nullptr;
 	main_ibuf->bits  = nullptr;    // Not ibuf: a pushed buffer stays valid.
+	presenter.destroy();           // Hi-res: before the renderer frees its textures.
+	world_scale = 1;
 	free_layer_textures();
 	if (screen_renderer != nullptr) {
 		SDL_DestroyRenderer(screen_renderer);
@@ -933,6 +941,9 @@ void Image_window::show(int x, int y, int w, int h) {
 	// call EndPaintIntoGuardBand just in case. It is safe to call it when not
 	// needed
 	EndPaintIntoGuardBand();
+	if (world_scale > 1) {    // Hi-res: every show at S > 1, scene and pushed targets too.
+		return show_world_scaled(x, y, w, h);
+	}
 
 	int srcx = 0;
 	int srcy = 0;
@@ -1262,7 +1273,7 @@ void Image_window::EndPaintIntoGuardBand() {
 void Image_window::FillGuardband() {
 	// In scene mode drawing goes to a full-screen scene layer buffer that has no
 	// guard band; the game window's guard band must not be filled from it.
-	if (scene_mode) {
+	if (scene_mode || world_scale > 1) {    // Hi-res: a scaled buffer has no guard band to fill.
 		return;
 	}
 	auto pixels = static_cast<uint8*>(draw_surface->pixels) + guard_band + guard_band * draw_surface->pitch;
@@ -2204,6 +2215,9 @@ void Image_window::composite_layers() {
 }
 
 void Image_window::UpdateRect(SDL_FRect* dirtyRect, SDL_FRect* fullRect, bool for_screenshot) {
+	if (world_scale > 1) {    // Hi-res: screen_texture does not exist (screenshot).
+		return present_world_frame(for_screenshot);
+	}
 	auto perfcounter = PerformanceTimer::GetScopedPerfTimer(__func__);
 
 	{
@@ -2296,6 +2310,288 @@ int Image_window::VideoModeOK(int width, int height, bool fullscreen, int bpp) {
 }
 
 SDL_DisplayMode Image_window::desktop_displaymode;
+
+/*
+ *  Hi-res render scale (DESIGN.md section 3.2): the world is painted into the
+ *  main buffer at S physical pixels per game pixel and presented by
+ *  World_presenter. Nothing here runs while world_scale is 1.
+ */
+
+std::string Image_window::render_scale_override;
+
+namespace {
+	// config/video/hires/... and the session override.
+	struct World_settings {
+		World_scale_request     request;
+		int                     s_art         = 6;
+		double                  max_world_mpx = 40;
+		World_presenter::Format format        = World_presenter::Format::Index8;
+		World_filter_override   filter        = World_filter_override::Auto;
+	};
+
+	World_settings read_world_settings(const std::string& override_policy) {
+		World_settings settings;
+		std::string    policy;
+		config->value("config/video/hires/render_scale", policy, "off");
+		if (!override_policy.empty()) {
+			policy = override_policy;
+		}
+		if (!parse_world_policy(policy, settings.request)) {
+			cerr << "[hires] render_scale '" << policy << "' is not off, art, auto or force:N (N = 2..8); using off" << endl;
+			settings.request = World_scale_request();
+		}
+		config->value("config/video/hires/art_scale", settings.s_art, 6);
+		if (settings.s_art < 1 || settings.s_art > 8) {
+			cerr << "[hires] art_scale " << settings.s_art << " is out of range; using 6" << endl;
+			settings.s_art = 6;
+		}
+		std::string mpx;
+		config->value("config/video/hires/max_world_mpx", mpx, "40");
+		char*        end   = nullptr;
+		const double value = std::strtod(mpx.c_str(), &end);
+		if (end != mpx.c_str() && value > 0) {
+			settings.max_world_mpx = value;
+		} else {
+			cerr << "[hires] max_world_mpx '" << mpx << "' is not a positive number; using 40" << endl;
+		}
+		std::string format;
+		config->value("config/video/hires/present_format", format, "auto");
+		if (format == "argb") {
+			settings.format = World_presenter::Format::Argb;
+		} else if (format != "auto" && format != "index8") {
+			cerr << "[hires] present_format '" << format << "' is not auto, argb or index8; using auto" << endl;
+		}
+		std::string filter;
+		config->value("config/video/hires/present_filter", filter, "auto");
+		if (!parse_world_filter_override(filter, settings.filter)) {
+			cerr << "[hires] present_filter '" << filter << "' is not auto, nearest, linear or pixelart; using auto" << endl;
+		}
+		return settings;
+	}
+
+	// The fill modes that stretch game pixels to 1:1.2.
+	double fill_aspect_y(Image_window::FillMode mode) {
+		if (mode == Image_window::AspectCorrectFit) {
+			return 1.2;
+		}
+		if (mode >= Image_window::Centre && mode < (1 << 16) && (mode & 1) != 0) {
+			return 1.2;
+		}
+		return 1.0;
+	}
+
+	// EXULT_HIRES_FULL_UPLOAD=1 uploads the whole world every frame.
+	bool full_upload_forced() {
+		static const bool forced = [] {
+			const char* value = SDL_getenv("EXULT_HIRES_FULL_UPLOAD");
+			return value != nullptr && std::string(value) == "1";
+		}();
+		return forced;
+	}
+}    // namespace
+
+bool Image_window::create_world_scaled_surfaces(int w, int h) {
+	world_scale = 1;
+	if (world_scaled_failed) {
+		return false;    // Latched until hires_config_changed().
+	}
+	const World_settings settings = read_world_settings(render_scale_override);
+	if (settings.request.policy == World_policy::Off) {
+		return false;
+	}
+	// The full area in game px: the draw surface the upstream code creates.
+	World_scale_in in;
+	in.policy        = settings.request.policy;
+	in.force_n       = settings.request.force_n;
+	in.full_w        = inter_width / scale;
+	in.full_h        = inter_height / scale;
+	in.aspect_y      = fill_aspect_y(fill_mode);
+	in.s_art         = settings.s_art;
+	in.max_world_mpx = settings.max_world_mpx;
+	in.max_tex       = static_cast<int>(
+            SDL_GetNumberProperty(SDL_GetRendererProperties(screen_renderer), SDL_PROP_RENDERER_MAX_TEXTURE_SIZE_NUMBER, 0));
+	// The letterbox rect in output pixels, read with the window as the target.
+	SDL_SetRenderTarget(screen_renderer, nullptr);
+	SDL_FRect letterbox{0, 0, 0, 0};
+	SDL_GetRenderLogicalPresentationRect(screen_renderer, &letterbox);
+	in.out_w = static_cast<int>(std::lround(letterbox.w));
+	in.out_h = static_cast<int>(std::lround(letterbox.h));
+	if (in.out_w < 1 || in.out_h < 1) {
+		SDL_GetCurrentRenderOutputSize(screen_renderer, &in.out_w, &in.out_h);
+	}
+	const int S = compute_world_scale(in);
+	cout << "[hires] render_scale " << world_policy_name(in.policy);
+	if (in.policy == World_policy::Force) {
+		cout << ':' << in.force_n;
+	}
+	cout << ": world scale S=" << S << " (full " << in.full_w << 'x' << in.full_h << ", output " << in.out_w << 'x' << in.out_h
+		 << ", art x" << in.s_art << ", max texture " << (in.max_tex > 0 ? in.max_tex : world_default_max_texture) << ", budget "
+		 << in.max_world_mpx << " Mpx)" << endl;
+	if (S <= 1) {
+		return false;
+	}
+	const int phys_w = in.full_w * S;
+	const int phys_h = in.full_h * S;
+	// The S x 8-bit draw surface, guard band included (physical, unscaled).
+	draw_surface = SDL_CreateSurface(phys_w + 2 * guard_band, phys_h + 2 * guard_band, SDL_PIXELFORMAT_INDEX8);
+	if (draw_surface == nullptr || !SDL_CreateSurfacePalette(draw_surface)
+		|| !presenter.create(screen_renderer, draw_surface, phys_w, phys_h, settings.format)) {
+		// Release only what this function created: the renderer and the
+		// window stay for the upstream path (never free_surface() here).
+		cerr << "[hires] the S=" << S << " world surfaces could not be created (" << SDL_GetError()
+			 << "); falling back to S=1 until render_scale changes" << endl;
+		if (draw_surface != nullptr) {
+			SDL_DestroySurface(draw_surface);
+			draw_surface = nullptr;
+		}
+		presenter.destroy();
+		world_scaled_failed = true;
+		return false;
+	}
+	inter_surface       = draw_surface;
+	paletted_surface    = draw_surface;
+	world_filter_force  = settings.filter;
+	world_filter_logged = World_filter_choice();
+	world_full_pending  = true;
+	world_rebuild       = false;
+	world_scale         = S;
+	cout << "[hires] world texture " << phys_w << 'x' << phys_h << ' '
+		 << (presenter.format() == World_presenter::Format::Index8 ? "INDEX8" : "ARGB8888") << " on renderer '"
+		 << SDL_GetRendererName(screen_renderer) << "'" << endl;
+
+	// As the upstream path does for the full-screen layers.
+	set_ui_layer_config(UiLayerFullScreenBilinear, w, h, NoScaler, Fill, bilinear, true);
+	set_ui_layer_config(UiLayerFullScreenPoint, w, h, NoScaler, Fill, point, true);
+	return true;
+}
+
+void Image_window::wire_main_buffer_scale(unsigned int w, unsigned int h) {
+	surface_request_w = w;
+	surface_request_h = h;
+	if (world_scale > 1) {
+		// Logical sizes and offsets; physical bits and pitch (invariant I1).
+		const int S           = world_scale;
+		main_ibuf->width      = (draw_surface->w - 2 * guard_band) / S;
+		main_ibuf->height     = (draw_surface->h - 2 * guard_band) / S;
+		main_ibuf->line_width = draw_surface->pitch;
+		main_ibuf->offset_x   = (main_ibuf->width - get_game_width()) / 2;
+		main_ibuf->offset_y   = (main_ibuf->height - get_game_height()) / 2;
+		const ptrdiff_t pitch = draw_surface->pitch;
+		main_ibuf->bits       = static_cast<unsigned char*>(draw_surface->pixels) + guard_band * (pitch + 1)
+						  + main_ibuf->offset_y * S * pitch + main_ibuf->offset_x * S;
+	}
+	// On every path (S > 1, S = 1 and after a fail-soft fallback): a stale
+	// scale on a 1x surface would write S^2 times past it.
+	main_ibuf->pixel_scale = world_scale;
+	main_ibuf->set_tracker(world_scale > 1 ? &world_writes : nullptr);
+	world_writes.mark_all(-main_ibuf->offset_x, -main_ibuf->offset_y, main_ibuf->width, main_ibuf->height);
+	guardband_paint_active = false;
+	// Invariant I12: the main buffer describes draw_surface.
+	assert(draw_surface->w == main_ibuf->width * world_scale + 2 * guard_band
+		   && draw_surface->h == main_ibuf->height * world_scale + 2 * guard_band);
+}
+
+void Image_window::show_world_scaled(int x, int y, int w, int h) {
+	// The requested rect carries no information (Game_window::show() asks for
+	// the whole window); the write tracker says what changed.
+	ignore_unused_variable_warning(x, y, w, h);
+	auto perftimer = PerformanceTimer::GetScopedPerfTimer(__func__);
+
+	const World_presenter::Resets resets = presenter.consume_resets();
+	if (resets.device && !resets.lost) {
+		// The textures are gone, the layers' too (composite_layers()
+		// recreates those lazily).
+		free_layer_textures();
+		if (presenter.recreate_textures()) {
+			world_full_pending = true;
+		} else {
+			world_rebuild = true;
+		}
+	}
+	if (resets.lost || world_rebuild) {
+		// Rebuild here, not in the main loop: modal gumps, menus and the
+		// intro show the window without returning to it (DESIGN.md 3.2.5).
+		world_rebuild = false;
+		rebuild_surfaces();
+		if (world_scale == 1) {
+			show(x, y, w, h);    // The I11 fallback: the upstream path.
+			return;
+		}
+	}
+	if (resets.targets) {
+		world_full_pending = true;    // The resolve and halving targets are drawn every frame anyway.
+	}
+	// A pushed target leaves the world as it was; a scene draws no world.
+	if (!scene_mode && (ibuf == main_ibuf || world_full_pending)) {
+		const bool     full = world_full_pending || full_upload_forced();
+		const TileRect rect = world_writes.take();
+		const auto     phys = tracked_to_phys(
+                rect.x, rect.y, rect.w, rect.h, main_ibuf->offset_x, main_ibuf->offset_y, world_scale, main_ibuf->width,
+                main_ibuf->height);
+		auto perftimer_u = PerformanceTimer::GetScopedPerfTimer(__func__, " upload");
+		presenter.upload(draw_surface, guard_band, phys, full);
+		world_full_pending = false;
+	}
+	present_world_frame(false);
+}
+
+void Image_window::present_world_frame(bool for_screenshot) {
+	// Clear first, as UpdateRect does: the bars around the world are black.
+	presenter.clear_window();
+	if (!scene_mode) {
+		presenter.draw(world_filter_force);
+		const World_presenter::Stats& stats = presenter.stats();
+		if (stats.filter.filter != world_filter_logged.filter || stats.filter.halvings != world_filter_logged.halvings) {
+			world_filter_logged = stats.filter;
+			cout << "[hires] present filter " << world_filter_name(stats.filter.filter);
+			if (stats.filter.filter == World_filter::Halving) {
+				cout << " x" << stats.filter.halvings;
+			}
+			cout << " (letterbox " << stats.l_w << 'x' << stats.l_h << ", world texture " << presenter.texture_width() << 'x'
+				 << presenter.texture_height() << ')' << endl;
+		}
+	}
+	composite_layers();
+	if (!for_screenshot) {
+		auto perfcounter_srp = PerformanceTimer::GetScopedPerfTimer(__func__, " SDL_RenderPresent");
+		if (!SDL_RenderPresent(screen_renderer)) {
+			const char* err = SDL_GetError();
+			std::cerr << "SDL_RenderPresent failed: " << (err ? err : "") << std::endl;
+			SDL_ClearError();
+		}
+	}
+}
+
+void Image_window::rebuild_surfaces() {
+	cout << "[hires] rebuilding the window surfaces" << endl;
+	// The surfaces are in system memory and outlive the renderer: keep the
+	// picture and the palette, so a loop that does not repaint (a menu, a
+	// modal gump) shows the same frame again.
+	std::vector<SDL_Color>     colors;
+	std::vector<unsigned char> pixels;
+	const int                  old_w     = draw_surface->w;
+	const int                  old_h     = draw_surface->h;
+	const int                  old_pitch = draw_surface->pitch;
+	if (const SDL_Palette* palette = SDL_GetSurfacePalette(draw_surface)) {
+		colors.assign(palette->colors, palette->colors + palette->ncolors);
+	}
+	const auto* bits = static_cast<const unsigned char*>(draw_surface->pixels);
+	pixels.assign(bits, bits + static_cast<size_t>(old_pitch) * old_h);
+	free_surface();
+	create_surface(surface_request_w, surface_request_h);
+	for (SDL_Surface* surface : {paletted_surface, draw_surface}) {
+		SDL_Palette* palette = surface != nullptr ? SDL_GetSurfacePalette(surface) : nullptr;
+		if (palette != nullptr && !colors.empty()) {
+			SDL_SetPaletteColors(palette, colors.data(), 0, std::min(palette->ncolors, static_cast<int>(colors.size())));
+		}
+	}
+	// Same layout unless the I11 fallback dropped to S=1.
+	if (draw_surface->w == old_w && draw_surface->h == old_h && draw_surface->pitch == old_pitch) {
+		std::copy(pixels.begin(), pixels.end(), static_cast<unsigned char*>(draw_surface->pixels));
+	}
+	world_full_pending = true;
+	world_rebuilt      = true;
+}
 
 Image_window::Layer::~Layer() {
 	if (texture) {

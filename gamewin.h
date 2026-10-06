@@ -264,6 +264,10 @@ public:
 			unsigned int neww, unsigned int newh, bool newfs, unsigned int newgw, unsigned int newgh, unsigned int newsc,
 			unsigned int newsclr, Image_window::FillMode newfill, unsigned int newfillsclr);
 
+	// Hi-res: Image_window rebuilt its surfaces after a lost render device
+	// at S > 1; repaint everything (DESIGN.md section 3.2.5).
+	void rebuild_window_if_requested();
+
 	void get_focus();    // Get/lose focus.
 	void lose_focus();
 

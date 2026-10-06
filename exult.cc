@@ -210,6 +210,7 @@ static bool   arg_edit_mode    = false;    // Start up ExultStudio.
 static bool   arg_write_xml    = false;    // Write out game's config. as XML.
 static bool   arg_reset_video  = false;    // Resets the video setings.
 static bool   arg_verify_files = false;    // Verify a game's files.
+static string arg_render_scale;            // Hi-res: session render_scale.
 
 static string arg_installmod  = {};
 static string arg_installdata = {};
@@ -310,6 +311,7 @@ int main(int argc, char* argv[]) {
 	parameters.declare("--verify-files", &arg_verify_files, true);
 	parameters.declare("--installdata", &arg_installdata);
 	parameters.declare("--installmod", &arg_installmod);
+	parameters.declare("--render-scale", &arg_render_scale, "");
 #if defined _WIN32
 	bool portable = false;
 	parameters.declare("-p", &portable, true);
@@ -387,6 +389,7 @@ int main(int argc, char* argv[]) {
 			 << endl;
 #endif
 		cerr << "--write-xml\tWrite 'patch/exultgame.xml'" << endl << "--reset-video\tResets to the default video settings" << endl;
+		cerr << "--render-scale <off|art|auto|force:N>" << endl << "\t\tHi-res world render scale for this session" << endl;
 
 		exit(1);
 	}
@@ -423,6 +426,15 @@ int main(int argc, char* argv[]) {
 	}
 #endif
 
+	if (!arg_render_scale.empty()) {
+		World_scale_request request;
+		if (!parse_world_policy(arg_render_scale, request)) {
+			cerr << "Error: --render-scale must be off, art, auto or force:N (N = 2..8)!" << endl;
+			exit(1);
+		}
+		Image_window::set_render_scale_override(arg_render_scale);
+	}
+
 	if (arg_mapnum >= 0 && arg_buildmap < 0) {
 		cerr << "Error: '--mapnum' requires '--buildmap'!" << endl;
 		exit(1);
@@ -451,6 +463,7 @@ int main(int argc, char* argv[]) {
 
 	if (showversion) {
 		getVersionInfo(cerr);
+		cerr << World_presenter::capabilities() << endl;
 		return 0;
 	}
 
@@ -1515,6 +1528,7 @@ static void Handle_events() {
 			Mouse::mouse_update = true;
 		}
 		Mouse::mouse()->show();    // Re-display mouse.
+		gwin->rebuild_window_if_requested();    // Hi-res: after a lost render device.
 		gwin->rotatecolours();
 
 		if (!gwin->show() &&          // Blit to screen if necessary.
@@ -2879,6 +2893,7 @@ void BuildGameMap(BaseGameInfo* game, int mapnum) {
 		sclr  = Image_window::point;
 		Image_window8::set_gamma(1, 1, 1);
 		const Image_window::FillMode fillmode = Image_window::Fit;
+		Image_window::set_render_scale_override("off");    // Hi-res: the map is always 1x.
 
 		// string    fullscreenstr;      // Check config. for fullscreen mode.
 		// config->value("config/video/fullscreen",fullscreenstr,"no");
