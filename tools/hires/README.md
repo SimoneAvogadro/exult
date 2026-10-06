@@ -22,6 +22,7 @@ Input: the BG `STATIC` dir (`--static`, else `$U7_BG_STATIC`, else the ext4 cach
 | A1 context | `mkctx.py --apron 16 [--png]` | `art_work/ctx/a16` (terrain windows with real-neighbour aprons, macro sheets, self-wrap; instance maps; T1 keys) |
 | A2 route 3 | `route3.py --variant xbrz\|hybrid\|mixed [--ctx DIR]` | `art_work/raw/r3-<variant>/tiles.npz` + `tiles.json` |
 | B1 route 2 | `<venv_cu130>/bin/python route2.py [--consensus mode\|medoid]` | `art_work/raw/r2-4x-nxbrz-<consensus>/` |
+| B2 route 1 (pilot) | `/home/simonea/ultima7_exult/venv-gpu/bin/python route1.py gen --windows W --settings base:denoise:cn:seed[,...] [--vae-tiling] [--macro SHAPES]`, then `route1.py report --setting S1=soft_d0.50_c0.60 --post bc\|lp3` | `art_work/phase_b_pilot/{runs,sheets,packs,report_<post>.json}`: SDXL + xinsir tile ControlNet on 12x crops of the a16 windows, colour lock, snap, per-key pick, mini packs (see `docs-hires/art/phase_b_pilot.md`) |
 | A3 pack | `mkpack.py CANDIDATES NAME [--edge nn3] [--bundle]` | `packs/NAME/{pack.txt,x6/flats/SSSS/SSSS_FF.png+.json,x6/.reload}` |
 | check | `hirescheck.py packs/NAME [--strict] [--restamp] [--json F]` | engine rules N1 F1 F2 F3 F4 P0 P4 G1 G2 R1 B0, offline P2 E1 |
 | QA | `hiresqa.py packs/NAME [--baseline OTHER]` | `art_work/qa/NAME/{report.json,report.md,per_tile.json,sheets/,previews/}` |
