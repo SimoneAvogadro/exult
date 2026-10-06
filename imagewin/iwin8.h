@@ -71,6 +71,11 @@ public:
 		return ib8;
 	}
 
+	// The window's own buffer, whatever target is pushed (--render-test).
+	Image_buffer8* get_main_ib8() const {
+		return static_cast<Image_buffer8*>(main_ibuf);
+	}
+
 	// Set palette.
 	void set_palette(const unsigned char* rgbs, int maxval, int brightness = 100) override;
 

@@ -34,6 +34,14 @@ class Game_render {
 	int bbox_palindex = -1;
 
 public:
+	// --render-test passes=flats: paint_map stops after the flats.
+	enum Test_passes {
+		Pass_all,
+		Pass_flats
+	};
+
+	Test_passes test_passes = Pass_all;
+
 	void paint_terrain_only(int start_chunkx, int start_chunky, int stop_chunkx, int stop_chunky);
 	// Render the map & objects.
 	int paint_map(int x, int y, int w, int h);

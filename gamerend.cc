@@ -234,6 +234,9 @@ int Game_render::paint_map(
 		}
 	}
 	perf_flats.end_phase();
+	if (test_passes == Pass_flats) {    // Hi-res: --render-test passes=flats.
+		return light_sources;
+	}
 	// Now the flat RLE terrain.
 	PerformanceTimer& perf_rles = PerformanceTimer::GetPerfTimer(__func__, " flat RLE");
 	perf_rles.start_phase();

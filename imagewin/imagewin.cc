@@ -2523,16 +2523,39 @@ void Image_window::show_world_scaled(int x, int y, int w, int h) {
 	}
 	// A pushed target leaves the world as it was; a scene draws no world.
 	if (!scene_mode && (ibuf == main_ibuf || world_full_pending)) {
-		const bool     full = world_full_pending || full_upload_forced();
-		const TileRect rect = world_writes.take();
-		const auto     phys = tracked_to_phys(
-                rect.x, rect.y, rect.w, rect.h, main_ibuf->offset_x, main_ibuf->offset_y, world_scale, main_ibuf->width,
-                main_ibuf->height);
 		auto perftimer_u = PerformanceTimer::GetScopedPerfTimer(__func__, " upload");
-		presenter.upload(draw_surface, guard_band, phys, full);
-		world_full_pending = false;
+		upload_world();
 	}
 	present_world_frame(false);
+}
+
+void Image_window::upload_world() {
+	if (world_scale <= 1) {
+		return;
+	}
+	const bool     full = world_full_pending || full_upload_forced();
+	const TileRect rect = world_writes.take();
+	const auto     phys = tracked_to_phys(
+            rect.x, rect.y, rect.w, rect.h, main_ibuf->offset_x, main_ibuf->offset_y, world_scale, main_ibuf->width,
+            main_ibuf->height);
+	presenter.upload(draw_surface, guard_band, phys, full);
+	world_full_pending = false;
+}
+
+SDL_Surface* Image_window::read_back_world() {
+	if (world_scale <= 1 || scene_mode) {
+		return nullptr;
+	}
+	upload_world();
+	present_world_frame(true);
+	SDL_Surface* frame = SDL_RenderReadPixels(screen_renderer, nullptr);
+	if (frame == nullptr) {
+		cerr << "[hires] SDL_RenderReadPixels failed: " << SDL_GetError() << endl;
+		return nullptr;
+	}
+	SDL_Surface* argb = SDL_ConvertSurface(frame, SDL_PIXELFORMAT_ARGB8888);
+	SDL_DestroySurface(frame);
+	return argb;
 }
 
 void Image_window::present_world_frame(bool for_screenshot) {

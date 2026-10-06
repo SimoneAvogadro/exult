@@ -561,6 +561,11 @@ public:
 	Image_buffer8* push_render_target(Image_buffer8* buf);
 	void           pop_render_target(Image_buffer8* prev);
 
+	// The window's own buffer, whatever target is pushed (--render-test).
+	Image_buffer8* get_main_render_target() const {
+		return win->get_main_ib8();
+	}
+
 	inline Time_queue* get_tqueue() const {
 		return tqueue;
 	}
@@ -768,6 +773,9 @@ public:
 
 	// Paint scene at given tile.
 	void paint_map_at_tile(int x, int y, int w, int h, int toptx, int topty, int skip_above = 31);
+	// --render-test (render_test.cc): as paint_map_at_tile, but covering only
+	// the chunks of the clip rect as a dirty repaint does unless whole_view.
+	void render_test_paint(int x, int y, int w, int h, int toptx, int topty, int skip_above, bool whole_view);
 	// Paint area of image.
 	void paint(int x, int y, int w, int h);
 

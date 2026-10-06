@@ -663,6 +663,22 @@ public:
 	// picture and the palette.
 	void rebuild_surfaces();
 
+	// --render-test: at S > 1, uploads the world writes since the last
+	// upload to the world texture (show() does this first).
+	void upload_world();
+	// --render-test: at S > 1, uploads the world and draws the frame as
+	// show() does, without presenting it, and reads the window back.
+	// Returns ARGB8888 pixels the caller destroys, or null.
+	SDL_Surface* read_back_world();
+	// --render-test: the world texture's format ("index8" or "argb"; "none"
+	// at S=1 or without a world texture).
+	const char* world_present_format() const {
+		if (world_scale <= 1 || !presenter.is_created()) {
+			return "none";
+		}
+		return presenter.format() == World_presenter::Format::Index8 ? "index8" : "argb";
+	}
+
 	bool is_palettized() {    // Does the window have a palette?
 		return uses_palette;
 	}
