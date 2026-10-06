@@ -186,11 +186,9 @@ unique_ptr<unsigned char[]> Image_window8::mini_screenshot() {
 		return nullptr;
 	}
 
-	auto                 buf    = make_unique<Uint8[]>(96 * 60);
-	const int            w      = 3 * 96;
-	const int            h      = 3 * 60;
-	const unsigned char* pixels = ibuf->get_bits();
-	const int            pitch  = ibuf->get_line_width();
+	auto      buf = make_unique<Uint8[]>(96 * 60);
+	const int w   = 3 * 96;
+	const int h   = 3 * 60;
 
 	for (int y = 0; y < h; y += 3) {
 		for (int x = 0; x < w; x += 3) {
@@ -200,7 +198,8 @@ unique_ptr<unsigned char[]> Image_window8::mini_screenshot() {
 			int b = 0;
 			for (i = 0; i < 3; i++) {
 				for (int j = 0; j < 3; j++) {
-					const int pix = pixels[pitch * (j + y + (get_game_height() - h) / 2) + i + x + (get_game_width() - w) / 2];
+					// get_pixel8: the top-left sample of a scaled buffer.
+					const int pix = ibuf->get_pixel8(i + x + (get_game_width() - w) / 2, j + y + (get_game_height() - h) / 2);
 					r += colors[3 * pix + 0];
 					g += colors[3 * pix + 1];
 					b += colors[3 * pix + 2];

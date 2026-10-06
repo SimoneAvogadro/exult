@@ -51,6 +51,7 @@
 #include "txtscroll.h"
 
 #include <array>
+#include <cassert>
 #include <cstring>
 #include <optional>
 #include <string>
@@ -691,6 +692,8 @@ class SDL_SurfaceOwner {
 
 public:
 	SDL_SurfaceOwner(Image_buffer* src, SDL_Surface* draw) {
+		// The surface pairs the logical size with the physical pitch.
+		assert(src->get_pixel_scale() == 1);
 		const SDL_PixelFormatDetails* draw_format = SDL_GetPixelFormatDetails(draw->format);
 		surf                                      = SDL_CreateSurfaceFrom(
                 src->get_width(), src->get_height(),
