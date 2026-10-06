@@ -13,7 +13,10 @@ libimagewin_la_SOURCES = \
 	imagebuf.cc \
 	imagebuf.h \
 	iwin8.cc \
-	iwin8.h
+	iwin8.h \
+	world_present.cc \
+	world_present.h \
+	world_scale.h
 
 if BUILD_EXULT
 libimagewin_la_SOURCES += \

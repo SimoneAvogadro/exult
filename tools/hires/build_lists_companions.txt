@@ -12,3 +12,4 @@
 # DESIGN.md section 6.1: the hooks in ibuf8.cc call the scaled primitives, so ibuf8_scaled.cc (WP-04)
 # is compiled everywhere ibuf8.cc is.
 imagewin/ibuf8.cc    imagewin/ibuf8_scaled.cc
+imagewin/imagewin.cc imagewin/world_present.cc

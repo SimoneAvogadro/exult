@@ -33,8 +33,17 @@ Layout
                      (scans of any width, malformed runs on demand)
     test_rle_writer.cc
                      its self-test against Shape_frame::encode_rle and paint_rle
+    test_world_scale.cc
+                     the scale policy (render_scale off/art/auto/force:N and
+                     its caps), the present filter ladder and tracked_to_phys
+                     (imagewin/world_scale.h)
   present/         hires_present: data-free present tests (offscreen video
                    driver, software renderer; exit code 77 = skipped)
+    test_present.cc  the read-back harness and World_presenter: 1:1 exact,
+                     palette ticks, partial and clamped uploads, the 2x2 box,
+                     the halving chain, palette alpha 0, letterbox bars, a
+                     resize after create and the reset events (ARGB; INDEX8
+                     too with SDL 3.4 or newer)
   data/
     ibuf_golden.txt  digests recorded on unmodified upstream imagewin/ibuf8.cc
   game/            game-data scripts for "make check-game"

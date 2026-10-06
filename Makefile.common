@@ -198,6 +198,7 @@ IMAGEWIN_OBJS:=\
 	imagewin/ibuf8_scaled.o \
 	imagewin/imagebuf.o \
 	imagewin/imagewin.o \
+	imagewin/world_present.o \
 	imagewin/iwin8.o \
 	imagewin/save_screenshot.o \
 	imagewin/scale_2x.o \
@@ -814,9 +815,11 @@ HIRES_UNIT_TEST_OBJS:=\
 	tests/unit/test_ibuf_golden.o \
 	tests/unit/test_ibuf_scaled.o \
 	tests/unit/test_pngio.o \
-	tests/unit/test_rle_writer.o
+	tests/unit/test_rle_writer.o \
+	tests/unit/test_world_scale.o
 
-HIRES_PRESENT_OBJS:=
+HIRES_PRESENT_OBJS:=\
+	imagewin/world_present.o
 
 HIRES_PRESENT_TEST_OBJS:=\
 	tests/present/test_present.o

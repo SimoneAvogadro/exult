@@ -489,6 +489,7 @@ for /f "tokens=* delims=" %%u in ('git ls-remote --get-url') do echo #define GIT
     <ClCompile Include="..\..\imagewin\imagebuf.cc" />
     <ClCompile Include="..\..\imagewin\imagewin.cc" />
     <ClCompile Include="..\..\imagewin\iwin8.cc" />
+    <ClCompile Include="..\..\imagewin\world_present.cc" />
     <ClCompile Include="..\..\imagewin\PointScaler.cpp" />
     <ClCompile Include="..\..\imagewin\save_screenshot.cc" />
     <ClCompile Include="..\..\imagewin\scale_2x.cc" />
@@ -730,6 +731,8 @@ for /f "tokens=* delims=" %%u in ('git ls-remote --get-url') do echo #define GIT
     <ClInclude Include="..\..\imagewin\ibuf8.h" />
     <ClInclude Include="..\..\imagewin\imagebuf.h" />
     <ClInclude Include="..\..\imagewin\imagewin.h" />
+    <ClInclude Include="..\..\imagewin\world_present.h" />
+    <ClInclude Include="..\..\imagewin\world_scale.h" />
     <ClInclude Include="..\..\imagewin\iwin8.h" />
     <ClInclude Include="..\..\imagewin\manip.h" />
     <ClInclude Include="..\..\imagewin\PointScaler.h" />

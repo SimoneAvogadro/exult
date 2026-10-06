@@ -36,7 +36,8 @@ hires_unit_SOURCES = \
 	unit/test_ibuf_scaled.cc \
 	unit/test_pngio.cc \
 	unit/test_rle_writer.cc \
-	unit/test_support.h
+	unit/test_support.h \
+	unit/test_world_scale.cc
 
 # In dependency order: Shape_frame (vgafile.cc) needs Flex, U7exists and
 # friends from libu7file.

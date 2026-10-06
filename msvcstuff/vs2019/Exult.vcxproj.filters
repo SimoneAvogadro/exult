@@ -554,6 +554,9 @@
     <ClCompile Include="..\..\imagewin\iwin8.cc">
       <Filter>imagewin</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\imagewin\world_present.cc">
+      <Filter>imagewin</Filter>
+    </ClCompile>
     <ClCompile Include="..\..\imagewin\PointScaler.cpp">
       <Filter>imagewin</Filter>
     </ClCompile>
@@ -1217,6 +1220,12 @@
       <Filter>imagewin</Filter>
     </ClInclude>
     <ClInclude Include="..\..\imagewin\imagewin.h">
+      <Filter>imagewin</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\imagewin\world_present.h">
+      <Filter>imagewin</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\imagewin\world_scale.h">
       <Filter>imagewin</Filter>
     </ClInclude>
     <ClInclude Include="..\..\imagewin\iwin8.h">
