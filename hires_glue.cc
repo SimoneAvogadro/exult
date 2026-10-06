@@ -32,6 +32,7 @@
 #include "shapeid.h"
 #include "utils.h"
 
+#include <algorithm>
 #include <filesystem>
 #include <functional>
 #include <iostream>
@@ -115,33 +116,71 @@ namespace {
 		return set;
 	}
 
-	std::string entry_text(const Hires::Entry_info* e, const char* kind) {
-		if (e == nullptr) {
-			return "NN (no override)";
+	// path as "<root label>/<path in the root>" when it lies in one of the
+	// roots (the bundle entry "#SSSS_FF" suffix included), else path.
+	std::string root_relative(const std::string& path) {
+		for (const auto& root : Hires::roots()) {
+			std::string prefix = root.sys_path;
+			while (prefix.size() > 1 && (prefix.back() == '/' || prefix.back() == '\\')) {
+				prefix.pop_back();
+			}
+			if (path.size() > prefix.size() && path.compare(0, prefix.size(), prefix) == 0
+				&& (path[prefix.size()] == '/' || path[prefix.size()] == '\\')) {
+				std::string rest = path.substr(prefix.size() + 1);
+				std::replace(rest.begin(), rest.end(), '\\', '/');
+				return root.label + "/" + rest;
+			}
 		}
-		if (e->state == Hires::Entry_state::rejected) {
-			return std::string("NN (rejected: ") + Hires::rule_name(e->rule) + " " + e->detail + ") " + e->path;
-		}
-		std::string s = std::string(kind) + " " + e->path;
-		if (e->reduced) {
-			s += " (reduced from x" + std::to_string(glue_config.art_scale) + ")";
-		}
-		if (e->rule == Hires::Rule::p4_cycling) {
-			s += " (P4 reject on the last decode: " + e->detail + ")";
-		}
-		return s;
+		return path;
 	}
 
-	std::string explain(int scale, const std::function<std::string(const Hires::Store&)>& what) {
-		Hires::Store_set& set = stores();
+	Hires::Explanation entry_explanation(const Hires::Entry_info* e, const char* kind) {
+		Hires::Explanation x;
+		if (e == nullptr) {
+			x.result = "NN";
+			x.reason = "no override";
+			return x;
+		}
+		x.path        = e->path;
+		x.where       = root_relative(e->path);
+		x.reduced     = e->reduced;
+		x.from_bundle = e->from_bundle;
+		if (e->state == Hires::Entry_state::rejected) {
+			x.result = "NN";
+			x.reason = std::string("rejected: ") + Hires::rule_name(e->rule);
+			if (!e->detail.empty()) {
+				x.reason += " " + e->detail;
+			}
+			return x;
+		}
+		x.result = kind;
+		if (e->state == Hires::Entry_state::indexed) {
+			x.reason = "not decoded yet";
+		}
+		if (e->rule == Hires::Rule::p4_cycling) {
+			x.reason = "P4 reject on the last decode: " + e->detail;
+		}
+		return x;
+	}
+
+	Hires::Explanation explain(int scale, const std::function<Hires::Explanation(const Hires::Store&)>& what) {
+		Hires::Store_set&  set = stores();
+		Hires::Explanation x;
+		x.result = "NN";
 		if (scale < 2) {
-			return "NN (scale 1)";
+			x.reason = "scale 1";
+			return x;
 		}
 		if (!set.enabled()) {
-			return "NN (overrides disabled)";
+			x.reason = "overrides disabled";
+			return x;
 		}
 		const Hires::Store* store = set.store(scale);
-		return store != nullptr ? what(*store) : "NN (overrides failed at this scale, see the log)";
+		if (store == nullptr) {
+			x.reason = "overrides failed at this scale, see the log";
+			return x;
+		}
+		return what(*store);
 	}
 }    // namespace
 
@@ -237,15 +276,36 @@ namespace Hires {
 		return sman != nullptr ? flat_from_vga(sman->get_shapes(), shape, frame) : nullptr;
 	}
 
-	std::string explain_flat(int shape, int frame, int scale) {
+	bool dev_mode() {
+		stores();    // Reads the configuration on the first call.
+		return glue_config.dev;
+	}
+
+	int art_scale() {
+		stores();
+		return glue_config.art_scale;
+	}
+
+	std::string Explanation::text() const {
+		if (result == "NN") {
+			return "NN (" + reason + ")" + (where.empty() ? "" : " " + where);
+		}
+		std::string notes = reason;
+		if (reduced) {
+			notes += std::string(notes.empty() ? "" : "; ") + "reduced from x" + std::to_string(glue_config.art_scale);
+		}
+		return result + " " + where + (notes.empty() ? "" : " (" + notes + ")");
+	}
+
+	Explanation explain_flat(int shape, int frame, int scale) {
 		return explain(scale, [shape, frame](const Store& store) {
-			return entry_text(store.explain_flat(shape, frame & 31), "TILE");
+			return entry_explanation(store.explain_flat(shape, frame & 31), "TILE");
 		});
 	}
 
-	std::string explain_terrain(uint64_t key, int scale) {
+	Explanation explain_terrain(uint64_t key, int scale) {
 		return explain(scale, [key](const Store& store) {
-			return entry_text(store.explain_terrain(key), "TERRAIN");
+			return entry_explanation(store.explain_terrain(key), "TERRAIN");
 		});
 	}
 }    // namespace Hires

@@ -7,7 +7,8 @@
  *  Configuration (config/video/hires/..., section 4.1):
  *    overrides  yes | no   initial state of set_enabled (default yes)
  *    art_scale  1-16       S_art, the scale of the pack folders (default 6)
- *    dev        no | yes   verbose [hires] log (all findings, info included)
+ *    dev        no | yes   developer loop (hires_dev.cc) and the verbose
+ *                          [hires] log (all findings, info included)
  *  Roots, in precedence order: <PATCH>/hires, then <HIRES>
  *  (config/disk/game/<game>/hires_path, default $game_path/hires; not
  *  mod-specific), each only when the tag is defined and the folder exists.
@@ -93,9 +94,30 @@ namespace Hires {
 	// The source provider: the effective shapes.vga flat of (shape, frame).
 	const uint8_t* source_flat(int shape, int frame);
 
-	// For the inspector (WP-10): one line about a flat or terrain key at a scale.
-	std::string explain_flat(int shape, int frame, int scale);
-	std::string explain_terrain(uint64_t key, int scale);
+	// config/video/hires/dev (read with the configuration, again on reload()).
+	bool dev_mode();
+	// config/video/hires/art_scale: S_art, the scale of the pack folders.
+	int art_scale();
+
+	// What the store answers for a flat or a terrain key at a scale (the
+	// inspector, hires_dev.cc).
+	struct Explanation {
+		std::string result;    // "TILE", "TERRAIN" or "NN".
+		// NN: why ("no override", "overrides disabled", "scale 1", "overrides
+		// failed at this scale, ...", "rejected: <rule> <detail>"); otherwise
+		// a note ("not decoded yet", a P4 reject of a terrain) or empty.
+		std::string reason;
+		std::string path;                   // The file or bundle entry (absolute), or empty.
+		std::string where;                  // path as "<root label>/<path in the root>", or empty.
+		bool        reduced     = false;    // Reduced from x<art_scale>.
+		bool        from_bundle = false;
+
+		// One line: "TILE <where>", "NN (rejected: P4 ...) <where>", ...
+		std::string text() const;
+	};
+
+	Explanation explain_flat(int shape, int frame, int scale);
+	Explanation explain_terrain(uint64_t key, int scale);
 }    // namespace Hires
 
 #endif
