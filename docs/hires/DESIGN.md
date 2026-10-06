@@ -6,6 +6,15 @@ safety, present/SDL, tests/build). Section 12 lists all 40 findings and what was
 Revision 2.1 (2026-10-04): WP-00 corrected the sanitizer and build-lane commands (§6.1, §6.4, §6.5,
 §7.1) after building the lanes and reviewing them, and its third review round made the buildmap
 harness independent of the lane (§6.4); §12.1 lists the changes.
+Revision 2.2 (2026-10-05): after the WP-03 review, `find_flat_source` takes two callables (§3.4), the
+`SDL_SurfaceOwner` assert moves to WP-04 while `create_buffer_1x` stays in WP-03 (§3.1, §9), and P11 is
+called neutral for paletted output only (G5, D-26); §12.2 lists the changes.
+Revision 2.3 (2026-10-06): after the WP-06 review, the flats-cache clip skip applies at S>1 only (§3.3),
+the cache trims its LRU queue at S>1 and the generation check moves to WP-09 (§3.4), and the S-cycle
+oracle also checks for mixed-scale blits and a terrain edit (§6, §9 WP-07); §12.3 lists the changes.
+Revision 2.4 (2026-10-06): after the WP-11 review, §4.2 gives the exact `--dump-art` formats, the canonical-terrain
+rule and the output-directory policy (with `manifest.txt`), and the T1/fill parity check is in the tree; §12.4
+lists the changes.
 Repo: `/home/simonea/ultima7_exult/exult-hires`, fork base = upstream master `8b6ab6b43`.
 Every `file:line` anchor refers to that commit. The lead architect re-checked the anchors in code; the
 analysis documents in `docs-hires/analysis/` back the other measured facts.
@@ -49,7 +58,7 @@ Terminology:
 * **G2.** Frames without an override are pixel-identical to today's point ×S (NN).
 * **G3.** Terrain flats can be overridden per tile, per group and per terrain with indexed 6x art, checked at load; anything missing or rejected falls back to NN.
 * **G4.** Presentation at any window size: exact at integer ratios, filtered when downscaling, never fatal (fail-soft to S=1).
-* **G5.** S=1 output is **byte-identical to upstream + P3** (§11 D-02); the feature is off by default in code. The fork's other prerequisite commits (main-buffer wiring, P11 palette alpha, the `Import_png8` leak) do not change output, and O0 proves that.
+* **G5.** S=1 output is **byte-identical to upstream + P3** (§11 D-02); the feature is off by default in code. The fork's other prerequisite commits (main-buffer wiring, P11 palette alpha, the `Import_png8` leak) do not change paletted output, and O0 proves that. P11 can change true-colour screenshots where the display format has an alpha channel (§12.2).
 * **G6.** Automated tests: SDL-free unit tests and a data-free present test in `make check`, plus headless golden and oracle runs on real BG data here; the unit tests also run on Windows.
 * **G7.** A Windows build (MSYS2 UCRT64) for the user's PC, measured on D3D11, D3D12 and Vulkan.
 * **G8.** A complete 6x BG flat pack that passes the QA gates (Phase A), and a pipeline to replace families with AI art (Phase B).
@@ -210,7 +219,7 @@ copy happens only between equal scales, and it always uses each buffer's own `li
 * `gamemap.cc:1706` reads a local 1x buffer (§3.4);
 * `iwin8.cc:190-191` (`mini_screenshot`) uses `ib8->get_pixel8(X,Y)` in place of the raw read. That is identical at S=1 and a top-left sample at S>1;
 * `vgafile.cc:124` (reflect) uses a scale-1 buffer. Unchanged.
-* `bggame.cc:690-700` (`SDL_SurfaceOwner` wraps `get_bits()` with logical w/h and the physical pitch). It is safe only for scale-1 buffers. Today that holds only because `Scene_view` pushes an S=1 scene layer; if `create_layer` fails (`imagewin.cc:1575-1586`), the intro paints into the S>1 main buffer. Fix: a new `Image_window::create_buffer_1x(w,h)` (map B6), used by the `SDL_SurfaceOwner` sources at `bggame.cc:1278-1280` and `1453-1455` and by `playfli.cc:116`. `SDL_SurfaceOwner` asserts `get_pixel_scale() == 1`.
+* `bggame.cc:690-700` (`SDL_SurfaceOwner` wraps `get_bits()` with logical w/h and the physical pitch). It is safe only for scale-1 buffers. Today that holds only because `Scene_view` pushes an S=1 scene layer; if `create_layer` fails (`imagewin.cc:1575-1586`), the intro paints into the S>1 main buffer. Fix: a new `Image_window::create_buffer_1x(w,h)` (map B6), used by the `SDL_SurfaceOwner` sources at `bggame.cc:1278-1280` and `1453-1455` and by `playfli.cc:116` (done in WP-03). `SDL_SurfaceOwner` asserts `get_pixel_scale() == 1` (WP-04, which adds `get_pixel_scale()`; §12.2).
 * `Newfile_gump.cc:214` (`create_buffer` + `get`, later `put`) is a same-scale round trip, so it is correct at any S. The static scratch buffer in `Notebook_gump.cc:501-516` keeps the scale it was created with across S changes. It is only a discard target for `push_render_target`, which is self-consistent at any scale, so it stays unchanged. The other `create_buffer` callers (`mouse.cc:177`, `shapeid.cc:646`, the `bggame.cc` backups) are same-scale `get`/`put` round trips.
 
 ### 3.2 Window, present and downscale path (`imagewin/`)
@@ -485,7 +494,7 @@ use `inter_width/scale`, which equals `full_w`, so mouse mapping is unchanged (m
 | `gamewin.cc:541-550` `push/pop_render_target` | No logic change: S travels with the buffer. Add `Image_buffer8* get_main_render_target()` for the harness. |
 | `gamewin.cc:916-937` `Game_window::resized` | The toast at 930 appends `" x%d"` with `win->get_world_scale()` when it is > 1. Flats caches detect a scale mismatch per terrain on access, so no flush is needed. A new `request_window_rebuild()` sets a flag; the main loop and `show_world_scaled` act on it by calling `resized()` with the current parameters (device-lost path, §3.2.5). |
 | `gamerend.cc:192-291` `paint_map` | (a) Perf scopes per pass (flats, flat RLE, objects, blackness) via the existing `PerformanceTimer` (`perf.h:91-118`). (b) A test-only `Game_render::test_passes` mask (default: all). When it is `PASS_FLATS`, return right after the flats loop (ends at line 233). Only `--render-test passes=flats` sets it. |
-| `gamerend.cc:520-531` `paint_chunk_flats` | `Image_buffer8* tgt = gwin->get_win()->get_ib8(); if (auto* c = olist->get_rendered_flats(tgt->get_pixel_scale())) tgt->blit(*c, xoff, yoff);`. Chunks whose 128x128 game-px rect misses the clip are skipped before the cache is touched. Because the scale comes from the **current target**, the in-process A/B harness works through `push_render_target`. |
+| `gamerend.cc:520-531` `paint_chunk_flats` | `Image_buffer8* tgt = gwin->get_win()->get_ib8(); if (auto* c = olist->get_rendered_flats(tgt->get_pixel_scale())) tgt->blit(*c, xoff, yoff);`. At S>1 only, chunks whose 128x128 game-px rect misses the clip are skipped before the cache is touched; S=1 keeps upstream's call sequence, so the frame-load (heap) order stays the same (I2, §12.3 W6-2). Because the scale comes from the **current target**, the in-process A/B harness works through `push_render_target`. |
 | `gamerend.cc:328-414` `paint` | No change. The guard band is off at S>1; the border fill goes through the scaled `fill8`. |
 | `gamewin.cc:1641-1735` `view_*`, `effects.cc:1829-1873` earthquake | No change. They reach the clipped scaled `copy`. |
 | `exult.cc:2857-2912` `BuildGameMap` | `config->set("config/video/hires/render_scale", "off", false)` before the window is created. |
@@ -498,12 +507,22 @@ use `inter_width/scale`, which equals `full_w`, so mouse mapping is unchanged (m
 ```cpp
 enum class Tile_kind : uint8_t { None, Flat, Flat_void /*12/0*/, Rle };
 // Index (0..255, row-major) of the tile whose flat frame is painted at (tx,ty), or -1.
-template <class KindFn> int find_flat_source(int tx, int ty, KindFn kind_of);
+// is_void(t): tile t's ShapeID is 12/0 (ID only, no frame load); kind_of(t): loads the frame.
+template <class Is_void_fn, class Kind_fn>
+int find_flat_source(int tx, int ty, Is_void_fn is_void, Kind_fn kind_of);
 ```
 
 It is a byte-for-byte port of `paint_tile`'s selection (`objs/chunkter.cc:86-133`), **including the
 quirks**: the `tiley + y > 0` bound (P1) and the missing 12/0 skip in the full-chunk scan (P2).
 `test_flat_source` pins both, so a later upstream merge of P1/P2 becomes a deliberate test update.
+
+**Two callables, not one (WP-03, §12.2).** In the engine `kind_of` must call `get_shape()`, which
+allocates on first use, and heap order decides ambiguous overlaps in the buildmap (WP-00 finding 2).
+The old loop skipped 12/0 among the neighbours by its ID, before loading that frame. With a single
+`kind_of`, reporting `Flat_void` would load a frame the old loop never loaded. So `is_void` reads the
+ID only, and `kind_of` runs exactly where the old loop called `get_shape()`: the tile itself, then
+the in-bounds non-void neighbours, then the whole chunk up to the first flat. `test_flat_source`
+pins that call order too. `Flat_void` stays in the enum for `kind_of` and the `--dump-art` kind byte.
 
 **Composition** (`Chunk_terrain`, `objs/chunkter.h:36-101`, `chunkter.cc:248-268`):
 
@@ -513,7 +532,7 @@ void Chunk_terrain::paint_flats(Image_buffer8& dst, bool overrides) {
     const int S = dst.get_pixel_scale();
     if (S > 1 && overrides && Hires::terrain(t1_key(), S, dst)) return;   // per-terrain (WP-17); checks dst dims
     for (int ty = 0; ty < 16; ++ty) for (int tx = 0; tx < 16; ++tx) {
-        const int src = find_flat_source(tx, ty, kind_of_tile);  if (src < 0) continue;
+        const int src = find_flat_source(tx, ty, is_void, kind_of);  if (src < 0) continue;
         const ShapeID& sid = shapes[src];  const Shape_frame* f = sid.get_shape();
         const Hires::Tile_view hi = (S > 1 && overrides)
                 ? Hires::flat(sid.get_shapenum(), sid.get_framenum() & 31, S) : Hires::Tile_view{};
@@ -534,10 +553,11 @@ own_pixels)` (§5.2) from the terrain's own tiles. It never uses terrain numbers
 flag, because `swap/insert/delete_terrain` renumber terrains (`gamemap.cc:1271-1468`).
 
 **Cache** (`chunkter.h:43, 95-101`):
-* `get_rendered_flats(int scale = 1)` re-renders when `rendered_flats->get_pixel_scale() != scale` or `rendered_gen != Hires::generation()`.
+* `get_rendered_flats(int scale = 1)` re-renders when `rendered_flats->get_pixel_scale() != scale` or `rendered_gen != Hires::generation()`. WP-06 implements the scale check only (member `rendered_scale`); `rendered_gen` and the generation check come with the store in WP-09 (§12.3 W6-4).
 * `render_flats(scale)` allocates `Image_buffer8(128, 128, scale)` (value-initialised) and calls `paint_flats(*rendered_flats, true)`.
 * `Map_chunk::get_rendered_flats` (`objs/chunks.h:228-230`) forwards the scale.
 * `commit_edits` re-renders at the cache's current scale.
+* A cache of another scale is replaced in place (the terrain keeps its queue slot). At S>1, every new or replaced cache first trims the LRU queue down to `Figure_queue_size()` (`trim_render_queue`, which stops before the terrain being rendered). Upstream evicts only one entry per new cache, so after the view shrinks the queue would keep the largest count it ever reached, with S² larger entries. At S=1 upstream's single eviction is unchanged (I2) (§12.3 W6-1).
 * `Figure_queue_size` (`chunkter.cc:234-242`) returns `max(100, (cw+3)·(ch+3))` from the current game area. That is the formula the original author left in comments. It changes performance only, never pixels, and fixes the thrash above 100 chunks. At S=6 the working set is 30 entries (17.7 MB) at 320x200 and 60 (35 MB) at 860x300; the cache may grow to 100 entries (59 MB) and only exceeds that for views whose working set is larger, which the pixel budget keeps rare.
 
 **Other consumers.**
@@ -711,22 +731,53 @@ Outputs:
 
 Exit 0 means pass, 1 means fail. The sequence follows gap_7 §5: gamma 1, `Game_window` at scale 1, `create_game`, `init_files(false)`, `srand(seed)`, static map, palette 0. A/B goes through `push_render_target` with `Image_buffer8(w,h)` and `Image_buffer8(w,h,S)`.
 
-**`--dump-art <dir>`** (M1 subset: flats and terrain; M2 extends it to every `Vga_file`):
+**`--dump-art <dir>`** (M1 subset: flats and terrain; M2 extends it to every `Vga_file`). As implemented in
+WP-11 (`dump_art.cc`; the formats below are normative for readers such as WP-12's `u7hires/ref.py`, §12.4):
 
 ```
-<dir>/ref.txt              game, mod, engine git rev, palette CRC32, "png=raw-index,no-rotation", "terrain_key=T1", "crc=C1"
-<dir>/palette/pal0.gpl     GIMP/Aseprite palette (8-bit, v*255/63); pal0.act (768 B); classes.txt (index → static|cycle:E0-E7|…|reserved)
+<dir>/ref.txt              key=value lines after "#" comments, written last (a dump without it is incomplete):
+                           format=exult-dump-art/1, game=BG|SI|DEVEL|NONE (as pack.txt names it),
+                           game_variant=FOV|SS|SIB|none, game_title, mod (empty: none), engine_version,
+                           engine_rev (git revision of the binary), palette_crc32, png=raw-index,no-rotation,
+                           terrain_key=T1, crc=C1, template_scale=6, shapes, flats, flats_used_on_map, terrains,
+                           terrains_used, terrain_keys, maps (comma list), bad_terrain_refs,
+                           patch_shapes|patch_palettes|patch_u7chunks|patch_u7map=yes|no (input from <PATCH>)
+<dir>/palette/pal0.gpl     GIMP/Aseprite palette, 8 bit = min(255, v*255/63), one line "R G B<TAB>xx class" per index
+<dir>/palette/pal0.act     768 B RGB
+<dir>/palette/classes.txt  "xx class", xx = index in hex; class = static | cycle:E0-E7 | cycle:E8-EF | cycle:F0-F3 |
+                           cycle:F4-F7 | cycle:F8-FB | cycle:FC-FE | reserved (0xff)
 <dir>/flats/SSSS_FF.png    1x raw-index flats, PLTE = pal0, tEXt Exult-Src-CRC32
-<dir>/flats.txt            shape frame crc32 map_uses cycle_px used_on_map
-<dir>/templates/x6/flats/SSSS/SSSS_FF.png   NN×6 templates with guard (= the identity pack; modder starting point)
-<dir>/terrain/<t1>.png     1x 128² flat layer painted by the engine (paint_flats, overrides off): AI context
-<dir>/terrain.txt          tnum t1 uses own_cells rle_cells missing_cells duplicate_of
-<dir>/terrain_tiles.bin    "U7HR" v1; per terrain 256×{own shape u16, frame u8, kind u8} + 256×{effective source u16,u8,u8}
-<dir>/terrain_map.bin      "U7HR" v1; per map 192×192 u16 terrain numbers
+<dir>/flats.txt            shape frame crc32 map_uses cycle_px used_on_map ("#" header lines)
+<dir>/templates/x6/flats/SSSS/SSSS_FF.png   NN×6 templates with guard + Exult-Origin=identity (= the identity pack;
+                           modder starting point: copy it out of the dump before editing, see below)
+<dir>/templates/pack.txt   game, scale=6, palette_crc32, edge=none, route=identity, title: templates/ is a pack root
+<dir>/terrain/<t1>.png     1x 128² flat layer of the key's canonical terrain, painted by the engine (paint_flats,
+                           overrides off, P3 zeros): AI context; tEXt Exult-Terrain-Key
+<dir>/terrain.txt          tnum t1 uses own_cells rle_cells missing_cells duplicate_of same_layer, for every terrain
+<dir>/terrain_tiles.bin    header type 1, record 2048 B per terrain: 256×{own shape u16, raw frame u8, kind u8}
+                           then 256×{effective source shape u16, frame & 31 u8, source tile u8} (ffff ff ff = none)
+<dir>/terrain_map.bin      header type 2, record 73,732 B per map: {map number u32, 192×192 u16 terrain numbers,
+                           cy outer, cx inner}
+<dir>/manifest.txt         "crc32 size path" of every file above but ref.txt and itself
 ```
+
+* **Binary header** (16 B, little-endian): `"U7HR"`, version u16 = 1, type u16 (1 = terrain_tiles, 2 = terrain_map),
+  record size u32, record count u32; file size = 16 + size × count. Kind: 0 None, 1 Flat, 2 Flat_void, 3 Rle
+  (`Tile_kind`, §3.4).
+* **Maps:** map 0 plus every further `mapNN` (`<STATIC>` or `<PATCH>`) that `Find_next_map` finds. `uses`,
+  `map_uses` and `used_on_map` count all maps.
+* **Canonical terrain of a T1 key:** the first used terrain with that key, else the first one. Its layer is
+  `terrain/<t1>.png`; every other terrain of the key has `duplicate_of` = that terrain and `same_layer` = 1 when its
+  1x layer (fill included) is equal, else 0 (§8.4 B2 skips the differing ones). The canonical row has `- -`.
+* **Output directory policy.** Created when missing. A non-empty directory must hold an earlier dump (`ref.txt` with
+  `format=exult-dump-art/1`); a new dump then replaces the dump's entries wholesale and leaves anything else alone.
+  It refuses (exit code 2, nothing written) when an entry holds a file that the earlier `manifest.txt` does not list
+  or whose size or CRC changed (an edited or added template), when the earlier dump has no manifest, and when the
+  directory lies inside `<STATIC>`. Exit code 1: I/O failure.
 
 The dump makes **the engine the single source of truth** for art inputs (fill, keys, CRCs). The Python
-re-implementation of `paint_tile` in `u7art.py` survives only as a parity cross-check.
+re-implementation of `paint_tile` in `u7art.py` survives only as a parity cross-check; `tests/game/dump_art_check.py`
+carries standard-library ports of the kinds, the fill and T1 and checks every dump against them (§12.4).
 
 ---
 
@@ -925,11 +976,11 @@ creates `<game_path>/patch` in the user's install); audio is off and gamma is 1.
 | Present | `present=1`, S=6 at 1:1, ARGB and INDEX8 | read-back == `LUT(NN(ref))`; `screen_to_game` on a 16×16 grid equals the S=1 mapping |
 | Present, non-1:1 | `present=1,window=1280x800` (r = 0.667, LINEAR), ARGB and INDEX8 | read-back within ±1 of a CPU bilinear reference of `LUT(NN(ref))`; ARGB == INDEX8 ± 1 |
 | Offsets | `game=320x200` in a 355x200 full area (`offset_x = 17`), with and without `present=1` | O2 equality, plus a present read-back that is exact at 1:1 (tests `tracked_to_phys`) |
-| S cycle (I12) | `resize_cycle.sh`: `resize=force6:off:force3:force6`, under ASan | every step renders NN-equal; no ASan report; the I12 assert holds |
+| S cycle (I12) | `resize_cycle.sh`: `resize=force6:off:force3:force6`, under ASan, plus one terrain edit at S>1 (`set_flat` + `commit_edits`, then a frame compared NN against S=1) | every step renders NN-equal; no ASan report; the I12 assert holds; no `[hires] mixed-scale` line in the log (a stale-scale flats cache shows up there, §12.3 W6-3) |
 | Pushed resize | `pushed_resize=1`, under ASan | the pushed layer's `bits` are unchanged; I12 holds; no ASan report |
 | Toggle | `overrides=yes` then `no` in one process | the second render equals O2 (I8) |
 | Determinism | each script runs twice | identical digests |
-| Dump | `--dump-art` twice | identical trees; flat CRCs equal `u7art.py` for all 3,885 flats; T1 keys equal the Python port |
+| Dump | `--dump-art` twice (`dump_art.sh`) | identical trees; flat CRCs equal `u7art.py` for all 3,885 flats; T1 keys, the fill and the terrain layers equal the Python ports (`dump_art_check.py`, standard library, §12.4); a re-dump never deletes an added or edited file |
 | Perf | `bench=200` at -O2 | world paint 320x200 S=6 p95 ≤ 2.0 ms; cold `render_flats` with per-tile art ≤ 1 ms; failure if more than 20 % worse than `perf_baseline.json` (per host) |
 
 **Regions** (`tests/game/regions.txt`, chosen in WP-07 from the superchunk renders): open grass; coast
@@ -1192,12 +1243,12 @@ developer works sequentially.
 | WP-00 [D] | Fork and build matrix | – | `hires` and `upstream-fixes` branches; `build-o2`, `build-asan` (with `TEST_WRAPPER`/`EXULT_WRAPPER` = `env ASAN_OPTIONS=… UBSAN_OPTIONS=halt_on_error=1… setarch x86_64 -R timeout …`, UBSan fatal), `build-upstream` worktree built with `make -j16` (+P3 once WP-03 lands); SDL 3.2.14 into `deps/prefix-3.2` and `build-sdl32`; record reference buildmap SHA-256 lists | §6.7 WP-00 | 1 |
 | WP-01 [D] | Test infrastructure | WP-00 | vendor doctest; `tests/` tree; `Makefile.am`/`configure.ac` (`TEST_WRAPPER`)/`Makefile.common` targets linking the convenience libraries (§6.1); `rle_writer.h`; **record `ibuf_golden.txt` on unmodified ibuf8.cc**; `test.cfg.in`; pinned `requirements.txt` + pytest bootstrap; `check_build_lists.py`; `ci.sh` skeleton with timeouts | `make check` green on upstream code (§6.7) | 1.75 |
 | WP-02 | Windows GPU probe | – | run `bench_win.exe` on the 5070 Ti (§7.2 step 6); JSON report | INDEX8 exact on D3D11/12/Vulkan | 0.25 |
-| WP-03 [D: first three items] | Prerequisite commits | WP-01 | **P3** zero-fill (`chunkter.cc:259`); **main-buffer wiring**: `create_surface` under an RAII `ibuf` guard, `main_ibuf` in `free_surface` and `~Image_window` (`imagewin.cc:518-578, 811-842`); **P11** palette alpha 255 (`iwin8.cc:102-107, 154-159`); `Import_png8` failure leak (`pngio.cc:80-84`, 107, 137-138); `create_buffer_1x` + `SDL_SurfaceOwner` assert; `find_flat_source` + `paint_flats` refactor; `write_minimap` 1x local buffer; `Figure_queue_size`; P1/P2/P5 commits with tests on `upstream-fixes` only | `test_flat_source`; buildmap == build-upstream | 1.75 |
+| WP-03 [D: first three items] | Prerequisite commits | WP-01 | **P3** zero-fill (`chunkter.cc:259`); **main-buffer wiring**: `create_surface` under an RAII `ibuf` guard, `main_ibuf` in `free_surface` and `~Image_window` (`imagewin.cc:518-578, 811-842`); **P11** palette alpha 255 (`iwin8.cc:102-107, 154-159`); `Import_png8` failure leak (`pngio.cc:80-84`, 107, 137-138); `create_buffer_1x` (its `SDL_SurfaceOwner` assert is in WP-04); `find_flat_source` + `paint_flats` refactor; `write_minimap` 1x local buffer; `Figure_queue_size`; P1/P2/P5 commits with tests on `upstream-fixes` only | `test_flat_source`; buildmap == build-upstream | 1.75 |
 | **M1a: scaled world (NN)** | | | | | |
-| WP-04 [D] | Scaled `Image_buffer8` | WP-01, WP-03 | `pixel_scale`, ctors, hooks + `ibuf8_scaled.cc` (17 primitives), clipped `copy`, heap RLE row buffer with run clamping, mixed-scale get/put and storage-extent `blit`, `put_phys` (dest + source clip), `create_another`, `Write_tracker` (`mark_all` = reset + assign), raw-reader audit, `mini_screenshot` via `get_pixel8` | `test_ibuf_scaled` (O1 + `tracker_complete` + S>1-only cases); golden unchanged; ASan clean | 4.75 |
+| WP-04 [D] | Scaled `Image_buffer8` | WP-01, WP-03 | `pixel_scale`, ctors, hooks + `ibuf8_scaled.cc` (17 primitives), clipped `copy`, heap RLE row buffer with run clamping, mixed-scale get/put and storage-extent `blit`, `put_phys` (dest + source clip), `create_another`, `Write_tracker` (`mark_all` = reset + assign), raw-reader audit, `SDL_SurfaceOwner` assert `get_pixel_scale() == 1` (moved from WP-03, §12.2), `mini_screenshot` via `get_pixel8` | `test_ibuf_scaled` (O1 + `tracker_complete` + S>1-only cases); golden unchanged; ASan clean | 4.75 |
 | WP-05 [D] | Scale policy and present path | WP-04 | `world_scale.h` (policy, per-frame filter ladder with `pixelart_ok` and k ≤ 6, `tracked_to_phys`); `world_present.{h,cc}` (ARGB with LUT alpha 0xFF, explicit blend and scale modes, lazy `world_rgb`/halving targets, upload clamp, event watch for resets and device loss); `create_world_scaled_surfaces` with a release-own-only failure path and the latch; unconditional `pixel_scale`/tracker wiring + I12 assert; the `show()` hook and `show_world_scaled` (clear first; scene and pushed semantics); guard-band early-outs; screenshot hook; `rotatecolours`; config keys and `--render-scale` | §6.7 WP-05 | 5 |
 | WP-06 [D] | World integration | WP-05 | `get_rendered_flats(scale)`; `paint_chunk_flats` → `blit` + clip skip; BuildGameMap forces off; resize toast; perf scopes per pass | **first visible demo**; buildmap golden unchanged | 0.75 |
-| WP-07 | `--render-test` and goldens | WP-06 | harness (§4.2) with `window=`, `game=`, `resize=`, `pushed_resize=`; `passes=flats`, present read-back, bench + `perf_baseline.json`, region list, `buildmap_golden.sh`, `render_regions.sh`, `resize_cycle.sh`, `regen_goldens.sh` | **M1a gate**: O2, O6, O7, present (1:1 and non-1:1), offsets, S cycle and pushed resize under ASan, determinism; paint p95 ≤ 2 ms at -O2 | 3.5 |
+| WP-07 | `--render-test` and goldens | WP-06 | harness (§4.2) with `window=`, `game=`, `resize=`, `pushed_resize=`; `passes=flats`, present read-back, bench + `perf_baseline.json`, region list, `buildmap_golden.sh`, `render_regions.sh`, `resize_cycle.sh` (with the terrain-edit step and the mixed-scale log check, §12.3 W6-3), `regen_goldens.sh` | **M1a gate**: O2, O6, O7, present (1:1 and non-1:1), offsets, S cycle and pushed resize under ASan, determinism; paint p95 ≤ 2 ms at -O2 | 3.5 |
 | **M1b: tile overrides, dev loop, phase-A art** | | | | | |
 | WP-08 | Hi-res store | WP-01 | `hires_png` (expected dims, IHDR check before allocation, user limits, POD-only `setjmp` frame), `hires_rules` (shared P4), `hires_bundle`, `hires_store` (`Tile_view`, sized `terrain()`, `bad_alloc` boundary); `hires_glue` (config, `<HIRES>` tag in `modmgr.cc`, palette 0 with `Get_color8` clamp, bound-checked provider, invalidation at `shapeid.cc:150/420`); build registration | `test_hires_*` (incl. bundle), `test_editor_fixtures` | 4 |
 | WP-09 | Per-tile composition | WP-07, WP-08, WP-11 | `Hires::flat` in `paint_flats`, generation checks, reduction path; `mkpack_identity.py` (identity and marker from the templates) | O4a (tiles), O4b, toggle → **M1b engine gate** | 1.5 |
@@ -1210,7 +1261,7 @@ developer works sequentially.
 | WP-15 | Windows build and measurements | WP-09, WP-14 | MSYS2 setup (§7.2); vcxproj/filters/xcode registration; unit and present exes; renderer matrix; **decision rules** below; the user's real editor fixtures | §6.7 WP-15 | 2.5 |
 | WP-16 | Performance pass | WP-07 | `memset` runs in scaled RLE; row-batched translucency; `fast_paths` test | perf gates; O1 green | 1.5 |
 | WP-17 | Per-terrain overrides | WP-09, WP-11 | T1 key cache in `Chunk_terrain`; `Store::terrain` decode into the cache; reduction; `mkpack_identity.py --terrain` | O4a (terrain), precedence | 2 |
-| WP-18 | Upstream PR series and docs | WP-15 | PRs: tests infra; P3; main-buffer wiring (`main_ibuf` in `create_surface`/`free_surface`/destructor); P11 palette alpha; `Import_png8` leak; `pixel_scale` (no-op at 1, with O1); present path (off by default); flat store. Separately P1, P2, P5. Docs: `docs/hires.md` (user guide, §1.4 list, configs), `docs/hires_modding.md` (Aseprite/GIMP palette setup with `pal0.gpl`, naming, rules, live loop) | each PR builds and passes `make check` alone | 1.5 |
+| WP-18 | Upstream PR series and docs | WP-15 | PRs: tests infra; P3; main-buffer wiring (`main_ibuf` in `create_surface`/`free_surface`/destructor); P11 palette alpha; `Import_png8` leak; `pixel_scale` (no-op at 1, with O1); present path (off by default); flat store. Separately P1, P2, P5. The PR texts follow §12.2 (P11 wording; the infra commit cherry-picked to `upstream-fixes` still cites this document). Docs: `docs/hires.md` (user guide, §1.4 list, configs), `docs/hires_modding.md` (Aseprite/GIMP palette setup with `pal0.gpl`, naming, rules, live loop) | each PR builds and passes `make check` alone | 1.5 |
 | **Phase B art (parallel, after M1b)** | | | | | |
 | WP-19 | Route 2 (NXbrz, WSL CUDA) | WP-13 | §8.4 B1 | gates; family comparison | 2 |
 | WP-20 | Per-terrain art (top 200) | WP-17, WP-19 | §8.4 B2 | chunk-border C2 | 3 |
@@ -1303,7 +1354,7 @@ Totals:
 | D-23 | doctest linking the **libtool convenience libraries** (`libshapes`, `libimagewin`, `libu7file`) as `ipack` does, with explicit object lists in `Makefile.common`; a data-free present test; hash-list goldens with `make regen-goldens` | revision 1: wrapper TUs that `#include` the sources; committing PNG goldens | A convenience archive contributes only the members a program references (`tools/ipack` links `libimagewin.la` today without the engine), so revision 1's reason for the wrapper TUs ("cannot link without the engine") was wrong. Its wrapper plan also could not link: `Shape_frame(pixels,…)` lives in `vgafile.cc`, which needs `libu7file`. EA pixels must stay out of the repo; explicit regeneration keeps goldens honest. |
 | D-24 | **`main_ibuf` owns every main-buffer field write** (`create_surface` under an RAII guard, `free_surface`, destructor); `pixel_scale` and tracker set unconditionally; I12 asserted | revision 1: save/restore of `ibuf` inside `create_surface` only, S>1-only wiring | `resized()` and `toggle_fullscreen()` call `free_surface()` outside `create_surface`, which nulled a pushed buffer's bits. A switch from S=6 to S=1 left `pixel_scale = 6` on a 1x surface, a heap overflow on the first `fill8` (review blocker). |
 | D-25 | Fail-soft releases only what the hi-res setup created and **latches** the failure; it never calls `free_surface()` | revision 1: an unspecified "free" | `free_surface()` destroys the renderer that the upstream fallback needs. Without a latch, the point-scaler retry re-enters S>1 and ends at the fatal throw. |
-| D-26 | **P11** palette alpha 255 (upstreamable, output-neutral); presenter textures with explicit blend NONE and explicit scale modes; LUT alpha 0xFF; RGB-only palette compare | relying on SDL defaults | SDL defaults ARGB textures to BLEND and all textures to LINEAR, and `colors2[].a` is indeterminate. A probe showed the INDEX8 resolve turning every pixel black on the user's default 860x300 profile. |
+| D-26 | **P11** palette alpha 255 (upstreamable; neutral for paletted output, §12.2); presenter textures with explicit blend NONE and explicit scale modes; LUT alpha 0xFF; RGB-only palette compare | relying on SDL defaults | SDL defaults ARGB textures to BLEND and all textures to LINEAR, and `colors2[].a` is indeterminate. A probe showed the INDEX8 resolve turning every pixel black on the user's default 860x300 profile. |
 | D-27 | Filter chosen **per frame** from a fresh L (window target only), with a skip on an empty L, k ≤ 6, lazily sized targets, PIXELART only on shader renderers, and a clear before every draw | revision 1: chosen at surface creation; PIXELART whenever SDL ≥ 3.4 | L changes asynchronously and reads 0x0 under a texture target (an endless halving loop); software and D3D9 turn PIXELART into non-integer NEAREST; the backbuffer is undefined after a present. |
 | D-28 | Render resets and device loss through `SDL_AddEventWatch` flags, consumed in `show_world_scaled` | revision 1: cases in `Handle_event` | About 14 loops besides the main loop drain SDL events (modal gumps, menus, intro); upstream already uses an event watch for device events for this reason. |
 | D-29 | One P4 definition (in-tile, edge-clamped neighbourhood) shared by engine, validator, QA and generator; route 3 restricts cycling to it; generated art in independent bundle entries; B1 gate = aggregate ≥ 97 % + per-tile floor 85 %, flags below 97 % | revision 1: three cycling definitions; B1 ≥ 97 % per tile; strict per-shape groups for generated art | Measured on route 3: 20.2 % of frames below 97 % per tile, 25 cycling frames outside the parent range, and one P4 reject that a strict group would have turned into a whole-shape drop. |
@@ -1389,6 +1440,44 @@ folded into the sections in the last column. The details and measurements are in
 | W0-5 | minor | `env.sh` was described as optional for a configure recheck, and lanes built at the same time race on the shared source tree | **Fixed.** `env.sh` is required for every step; one tree at a time | §7.1 |
 | W0-6 | minor | `u7art.py` expected a 19-byte v2 `u7chunks` header; the engine's is 10 bytes (`gamemap.cc:85-96`) | **Fixed** in WP-00 (one line). BG's `u7chunks` is v1, so no BG output changes | §9 (WP-12) |
 | W0-7 | minor | W0-4's "same config text" could not hold between a hi-res lane and `build-upstream`: WP-00's harness wrote the lane's build directory into the config (`data_path`) and into argv[0], and it passed the caller's whole environment through, which SDL3 copies onto the heap | **Fixed** (test rule, WP-00 round 3). The harness links `exult` and `data` into the sandbox and runs `exult` under `env -i` with a fixed environment; WP-07's `buildmap_golden.sh` does the same. The `build-upstream` lists, regenerated with it, did not change | §6.4 |
+
+### 12.2 WP-03 corrections (revision 2.2)
+
+The independent review of WP-03 found three minor issues; none affects S=1 today. The corrections are
+folded into the sections in the last column. The details are in `docs-hires/impl/WP-03.md` §12.
+
+| ID | Sev. | Finding (short) | Disposition | Where |
+|---|---|---|---|---|
+| W3-1 | minor | §9 put `create_buffer_1x` and the `SDL_SurfaceOwner` assert into WP-03. WP-03 deferred both and recorded that only in its own notes, so the fix of the S>1 hole of §3.1 (`SDL_SurfaceOwner` pairs logical w/h with the physical pitch) could be lost before WP-05/06 turn S>1 on | **Fixed.** `create_buffer_1x` is in WP-03 (series item 08), and the three call sites use it. It is byte-identical at S=1: both functions build `Image_buffer8(w, h)`. The assert needs `get_pixel_scale()`, so it moves to the WP-04 row | §3.1, §9 |
+| W3-2 | minor | §3.4 specified `find_flat_source(tx, ty, kind_of)`; WP-03 implemented `find_flat_source(tx, ty, is_void, kind_of)` and recorded the deviation only in its notes | **Fixed** (the spec follows the code). Two callables keep the old loop's frame-load order, which is heap order | §3.4 |
+| W3-3 | minor | "P11 is output-neutral" holds for paletted output only. True-colour screenshots read the renderer back, and where the display format has an alpha channel SDL copies the palette alpha into 8-to-32-bit blits (`Map1toN`), so P11 can change them. O0 (`--buildmap`) runs the paletted path only | **Fixed** (wording). G5 and D-26 now say "paletted output". The `hires` P11 message is reworded (`tmp/wp03/series/07-p11-palette-alpha.msg`), and the WP-18 PR text uses it. The local `upstream-ref` commit `1af9f9987` keeps the old text | G5, D-26, §9 (WP-18) |
+| W3-4 | minor | On `upstream-fixes` (local, unpublished), `tests/README` and a comment in `test_flat_source.cc` still described the two quirks after P1 and P2. The cherry-picked test infrastructure, both its files and the message of `3fea1fd2d`, cites `docs/hires/DESIGN.md`, which that branch does not have | **Fixed in the files** by two follow-up commits prepared for `upstream-fixes` (`tmp/wp03/series-uf/`). The infra commit's message can change only when WP-18 rewrites the branch into the PR series; WP-18 also folds the follow-ups into P1/P2 and the infra commit | §9 (WP-18) |
+
+### 12.3 WP-06 corrections (revision 2.3)
+
+The independent review of WP-06 found three minor issues; none changes pixels or the S=1 path. The
+corrections are folded into the sections in the last column. The details are in
+`docs-hires/impl/WP-06.md` §2 and §6.
+
+| ID | Sev. | Finding (short) | Disposition | Where |
+|---|---|---|---|---|
+| W6-1 | minor | The flats cache evicts at most one entry per new cache, so its entry count never drops after the view shrinks; a scale change replaced caches in place without any eviction. After a 1920x1080 view at S=4 (216 entries), a 320x200 view at S=6 could hold about 127 MB instead of §3.4's 59 MB | **Fixed.** At S>1, `render_flats` trims the queue to `Figure_queue_size()` (new `Chunk_terrain::trim_render_queue`) before allocating a new cache and on the replace-in-place path. S=1 keeps upstream's single eviction (I2) | §3.4 |
+| W6-2 | minor | The code skips off-clip chunks in `paint_chunk_flats` at S>1 only (S=1 keeps upstream's frame-load and heap order, WP-00 finding 2), but §3.3 described the skip without a scale condition; the deviation was recorded only in the WP-06 notes | **Fixed** (the spec follows the code) | §3.3 |
+| W6-3 | minor | No test in the tree covers the scale-keyed cache (replace in place, `commit_edits` at S>1); a lost `rendered_scale` update would pass `make check` and the S=1 goldens | **Moved to WP-07.** `Chunk_terrain` needs `Game_window` and the shape files, so it cannot link into the SDL-free `hires_unit`. The S-cycle oracle also fails on a `[hires] mixed-scale` log line and gets a terrain-edit step at S>1. WP-06 ran the trim and replace paths once under ASan with temporary instrumentation | §6, §9 (WP-07) |
+| W6-4 | minor | (Recorded with W6-2.) `get_rendered_flats` does not check `Hires::generation()`: the store is not on `hires` yet | **Deferred to WP-09**, which merges the store and adds `rendered_gen` next to `rendered_scale` | §3.4 |
+
+### 12.4 WP-11 corrections (revision 2.4)
+
+The independent review of WP-11 found four minor issues; none changes pixels or the S=1 path. The
+corrections are folded into the sections in the last column. The details are in
+`docs-hires/impl/WP-11.md` §4 and §7.
+
+| ID | Sev. | Finding (short) | Disposition | Where |
+|---|---|---|---|---|
+| W11-1 | minor | The acceptance item "T1 parity with Python" and the fill parity had no test in the tree; only a scratch script that imports `u7hires` from the unmerged `hires-art` branch covered them | **Fixed.** `dump_art_check.py` (run by `dump_art.sh`, so by `make check-game`) now has standard-library ports of the tile kinds, `find_flat_source` and the T1 key, and checks the effective-source half of `terrain_tiles.bin`, every `terrain.txt` column, the canonical choice, `same_layer`, the pixels of every `terrain/<t1>.png` and `flats.txt`'s usage columns. Negative controls (one altered T1, source byte, layer pixel, `same_layer`, `map_uses`) each fail | §4.2, §6.4 |
+| W11-2 | minor | The code fixed on-disk formats the spec left open, some differently from its text (a `u32` map number in front of each `terrain_map.bin` record, the 16-byte `U7HR` header, `terrain.txt`'s `same_layer`, `classes.txt` in hex, extra `ref.txt` keys, `game=BG` + `game_variant`), recorded only in the WP notes | **Fixed** (the spec follows the code) | §4.2 |
+| W11-3 | minor | A dump into an earlier dump ran `remove_all` on its entries, so files a modder added to or edited in `templates/` were deleted without a warning | **Fixed.** The dump writes `manifest.txt` (CRC and size of every file); a new dump into it refuses (exit code 2, names up to ten files) while an entry holds an unlisted or changed file, or when the manifest is missing. `ref.txt` and the templates' `pack.txt` title say to copy the templates out before editing. `dump_art.sh` covers an added and a changed template | §4.2 |
+| W11-4 | minor | `art_ref/bg/ref.txt` names `engine_rev` = the `HEAD` before WP-11, because the binary was built from the uncommitted tree and the git revision has no dirty marker | **Deferred to the WP-11 commit step:** after the commit, rebuild `build-o2` and regenerate `art_ref/bg` (delete it first: the earlier dump has no manifest). A dirty marker would change upstream's `gitinfo.h` rule, which the fork keeps as it is | §4.2 |
 
 ---
 
