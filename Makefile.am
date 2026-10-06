@@ -78,6 +78,8 @@ EXULTSOURCES =	\
 	gamewin.h	\
 	headers/gamma.h	\
 	hash_utils.h	\
+	hires_dev.cc	\
+	hires_dev.h	\
 	hires_glue.cc	\
 	hires_glue.h	\
 	headers/ignore_unused_variable_warning.h	\

@@ -290,6 +290,7 @@
 		E738C8611A71DEA1003A950D /* touchui.cc in Sources */ = {isa = PBXBuildFile; fileRef = E738C85F1A71DEA1003A950D /* touchui.cc */; };
 		FDB8BFC60E5A0F6A00980157 /* CoreGraphics.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = FDB8BFC50E5A0F6A00980157 /* CoreGraphics.framework */; };
 		B59DA0369E5E295F94310978 /* hires_glue.cc in Sources */ = {isa = PBXBuildFile; fileRef = D844736DB3BDA8E658B082B2 /* hires_glue.cc */; };
+		AE1D0A100000000000000001 /* hires_dev.cc in Sources */ = {isa = PBXBuildFile; fileRef = AE1D0A100000000000000002 /* hires_dev.cc */; };
 		98DB70C73434DA2DA73289C6 /* hires_bundle.cc in Sources */ = {isa = PBXBuildFile; fileRef = FBAE7FE7B4DF0ADF56E45305 /* hires_bundle.cc */; };
 		92B4264B4E772AF380DB1CF9 /* hires_png.cc in Sources */ = {isa = PBXBuildFile; fileRef = 414F77F396750A2169BD1E06 /* hires_png.cc */; };
 		1AA7D2514B40DB92B195296D /* hires_rules.cc in Sources */ = {isa = PBXBuildFile; fileRef = 9401DEC293892D94BC8863CF /* hires_rules.cc */; };
@@ -898,6 +899,8 @@
 		FD77A0840E26BDB800F39101 /* AudioToolbox.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AudioToolbox.framework; path = System/Library/Frameworks/AudioToolbox.framework; sourceTree = SDKROOT; };
 		FDB8BFC50E5A0F6A00980157 /* CoreGraphics.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreGraphics.framework; path = System/Library/Frameworks/CoreGraphics.framework; sourceTree = SDKROOT; };
 		FE4F4F1A887E52F238D70180 /* lightinf.cc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = lightinf.cc; sourceTree = "<group>"; };
+		AE1D0A100000000000000002 /* hires_dev.cc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = hires_dev.cc; path = ../hires_dev.cc; sourceTree = "<group>"; };
+		AE1D0A100000000000000003 /* hires_dev.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = hires_dev.h; path = ../hires_dev.h; sourceTree = "<group>"; };
 		D844736DB3BDA8E658B082B2 /* hires_glue.cc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = hires_glue.cc; path = ../hires_glue.cc; sourceTree = "<group>"; };
 		F146CF99F9DB5B5B38B8533E /* hires_glue.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = hires_glue.h; path = ../hires_glue.h; sourceTree = "<group>"; };
 		FBAE7FE7B4DF0ADF56E45305 /* hires_bundle.cc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = hires_bundle.cc; path = ../shapes/hires_bundle.cc; sourceTree = "<group>"; };
@@ -1197,6 +1200,8 @@
 				E700E0271A6E4067006C8BE4 /* gamewin.cc */,
 				E700E0281A6E4067006C8BE4 /* gamewin.h */,
 				E700DC611A6E30A7006C8BE4 /* hash_utils.h */,
+				AE1D0A100000000000000002 /* hires_dev.cc */,
+				AE1D0A100000000000000003 /* hires_dev.h */,
 				D844736DB3BDA8E658B082B2 /* hires_glue.cc */,
 				F146CF99F9DB5B5B38B8533E /* hires_glue.h */,
 				E700DC621A6E30A7006C8BE4 /* istring.cc */,
@@ -2161,6 +2166,7 @@
 				E700DD8B1A6E3161006C8BE4 /* crc.cc in Sources */,
 				E700DCAD1A6E30A7006C8BE4 /* schedule.cc in Sources */,
 				E700DC981A6E30A7006C8BE4 /* effects.cc in Sources */,
+				AE1D0A100000000000000001 /* hires_dev.cc in Sources */,
 				B59DA0369E5E295F94310978 /* hires_glue.cc in Sources */,
 				E700DCA11A6E30A7006C8BE4 /* istring.cc in Sources */,
 				E700DC291A6E2CE7006C8BE4 /* WavAudioSample.cc in Sources */,

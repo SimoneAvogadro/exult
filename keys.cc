@@ -40,6 +40,7 @@
 #include "exult.h"
 #include "game.h"
 #include "gamewin.h"
+#include "hires_dev.h"
 #include "items.h"
 #include "keyactions.h"
 #include "keys.h"
@@ -188,6 +189,9 @@ const struct Action {
 		{             "REPAINT",            ActionRepaint,           nullptr, 0x855,    Action::dont_show,         NONE,  true,  true,  true, false},
 		{       "TOGGLE_BBOXES",       ActionToggleBBoxes,           nullptr, 0x856, Action::mapedit_keys,         NONE, false,  true,  true, false},
 		{       "PERF_METRICS",         ActionPerfMetrics,           nullptr, 0x856, Action::dont_show,            NONE, false,  true,  true, false},
+		{        "HIRES_TOGGLE",        ActionHiresToggle,           nullptr, 0x859,   Action::cheat_keys,         NONE,  true,  true,  true, false},
+		{        "HIRES_RELOAD",        ActionHiresReload,           nullptr, 0x85A,   Action::cheat_keys,         NONE,  true,  true,  true, false},
+		{       "HIRES_INSPECT",       ActionHiresInspect,           nullptr, 0x85B,   Action::cheat_keys,         NONE,  true,  true,  true, false},
 		{                    "",                  nullptr,           nullptr,     0,    Action::dont_show,         NONE, true,  true,  true, false}  //  terminator
 		// clang-format on
 };

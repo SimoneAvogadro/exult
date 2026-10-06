@@ -18,3 +18,7 @@ imagewin/imagewin.cc imagewin/world_present.cc
 # shapes/hires_store.cc, hires_bundle.cc, hires_png.cc and hires_rules.cc; those come with the
 # shapes library (shapes/Makefile.am, SHAPES_OBJS in Makefile.common), so they are not pairs here.
 shapeid.cc           hires_glue.cc
+
+# WP-10: keys.cc binds the dev key actions of hires_dev.cc (exult.cc calls its .reload poll too,
+# but exult.cc also names the program in rules that list no sources, so keys.cc stands for both).
+keys.cc              hires_dev.cc

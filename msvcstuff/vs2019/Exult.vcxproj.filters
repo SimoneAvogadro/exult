@@ -230,6 +230,9 @@
     <ClCompile Include="..\..\gamewin.cc">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\hires_dev.cc">
+      <Filter>Source Files</Filter>
+    </ClCompile>
     <ClCompile Include="..\..\hires_glue.cc">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -878,6 +881,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="..\..\hash_utils.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\hires_dev.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="..\..\hires_glue.h">

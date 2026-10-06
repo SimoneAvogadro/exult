@@ -480,6 +480,7 @@ for /f "tokens=* delims=" %%u in ('git ls-remote --get-url') do echo #define GIT
     <ClCompile Include="..\..\gumps\UIOptions_gump.cc" />
     <ClCompile Include="..\..\gumps\VideoOptions_gump.cc" />
     <ClCompile Include="..\..\gumps\Yesno_gump.cc" />
+    <ClCompile Include="..\..\hires_dev.cc" />
     <ClCompile Include="..\..\hires_glue.cc" />
     <ClCompile Include="..\..\imagewin\BilinearScaler.cpp" />
     <ClCompile Include="..\..\imagewin\BilinearScalerInternal_2x.cpp" />
@@ -732,6 +733,7 @@ for /f "tokens=* delims=" %%u in ('git ls-remote --get-url') do echo #define GIT
     <ClInclude Include="..\..\headers\ios_state.hpp" />
     <ClInclude Include="..\..\headers\pent_include.h" />
     <ClInclude Include="..\..\headers\span.h" />
+    <ClInclude Include="..\..\hires_dev.h" />
     <ClInclude Include="..\..\hires_glue.h" />
     <ClInclude Include="..\..\imagewin\AffineScaler.h" />
     <ClInclude Include="..\..\imagewin\ArbScaler.h" />

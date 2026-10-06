@@ -119,6 +119,11 @@ Ctrl-Alt-G	grab_actor
 Ctrl-Alt-P	pick_pocket
 Ctrl-N		npc_numbers
 
+# Hi-res developer keys (config/video/hires/dev=yes)
+Ctrl-Alt-O	hires_toggle
+Ctrl-Alt-R	hires_reload
+Ctrl-Alt-I	hires_inspect
+
 1	inventory	0	# Show inventory for Avatar
 2	inventory	1	# Show inventory for character 2
 3	inventory	2	# Show inventory for character 3

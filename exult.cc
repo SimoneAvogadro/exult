@@ -60,6 +60,7 @@
 #include "gamemgr/modmgr.h"
 #include "gamewin.h"
 #include "gump_utils.h"
+#include "hires_dev.h"
 #include "ignore_unused_variable_warning.h"
 #include "istring.h"
 #include "items.h"
@@ -1423,6 +1424,7 @@ static void Handle_events() {
 		while (!quitting_time && SDL_PollEvent(&event)) {
 			Handle_event(event);
 		}
+		Hires_dev_poll(ticks);    // Hi-res: the dev .reload poll (hires_dev.cc).
 
 		// Animate unless dormant.
 		if (gwin->have_focus() && !dragging) {

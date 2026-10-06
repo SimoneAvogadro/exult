@@ -706,6 +706,12 @@
 0x857:Toggle egg area display
 #CLEAR_SELECTED
 0x858: Clear selection
+#HIRES_TOGGLE
+0x859:Toggle hi-res overrides
+#HIRES_RELOAD
+0x85a:Reload hi-res overrides
+#HIRES_INSPECT
+0x85b:Inspect hi-res tile
 
 
 #Shape Browser Help

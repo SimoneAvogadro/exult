@@ -21,6 +21,7 @@ MAIN_OBJS:=actions.o \
 	gamemap.o \
 	gamerend.o \
 	gamewin.o \
+	hires_dev.o \
 	hires_glue.o \
 	istring.o \
 	keys.o \
