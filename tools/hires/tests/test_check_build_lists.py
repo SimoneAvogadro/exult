@@ -284,6 +284,17 @@ def test_companion_in_every_project_target_and_makefile_mingw_rule(repo):
     assert result.returncode == 0, result.stdout + result.stderr
 
 
+def test_companion_not_needed_in_the_first_file_own_dependency_rule(repo):
+    (repo / "companions.txt").write_text(PAIR)
+    add_scaled(repo)
+    # The rule of the object itself names its source, as "shapeid.o : shapeid.cc ..." does.
+    with open(repo / "Makefile.common", "a") as makefile:
+        makefile.write("imagewin/ibuf8.o : imagewin/ibuf8.cc imagewin/ibuf8.h\n")
+    result = run(repo, "--strict")
+    assert result.returncode == 0, result.stdout + result.stderr
+    assert "1 companion pairs (0 inactive), 0 missing companions" in result.stdout
+
+
 def test_companion_whose_first_file_is_listed_nowhere(repo):
     (repo / "companions.txt").write_text("imagewin/gone.cc  imagewin/gone_scaled.cc\n")
     result = run(repo)
