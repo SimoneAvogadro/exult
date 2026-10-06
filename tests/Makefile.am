@@ -66,7 +66,11 @@ LOG_COMPILER = $(TEST_WRAPPER)
 
 # Game-data tests (DESIGN.md section 6.4), run one after another.
 GAME_TESTS = \
-	game/smoke.sh
+	game/smoke.sh \
+	game/buildmap_golden.sh \
+	game/render_regions.sh \
+	game/resize_cycle.sh \
+	game/perf.sh
 
 check-game:
 	@pass=0; skip=0; fail=0; \
@@ -82,7 +86,14 @@ check-game:
 	echo "check-game: $$pass passed, $$skip skipped, $$fail failed"; \
 	test $$fail -eq 0
 
-.PHONY: check-game
+# Records game/golden/*.sha256 with the reference build (upstream + P3):
+#   make regen-goldens U7_BG_STATIC=... UPSTREAM_BUILD=/path/to/build-upstream
+# Commit the new lists with the cause in the message.
+regen-goldens:
+	@test -n '$(UPSTREAM_BUILD)' || { echo "regen-goldens: set UPSTREAM_BUILD to the build of upstream + P3" >&2; exit 2; }
+	HIRES_TESTS_SRCDIR='$(abs_srcdir)' bash '$(srcdir)'/game/regen_goldens.sh '$(UPSTREAM_BUILD)'
+
+.PHONY: check-game regen-goldens
 
 EXTRA_DIST = \
 	README \
@@ -90,6 +101,12 @@ EXTRA_DIST = \
 	data/ibuf_golden.txt \
 	game/lib.sh \
 	game/test.cfg.in \
+	game/regions.txt \
+	game/regen_goldens.sh \
+	game/perf_baseline.json \
+	game/golden/buildmap0.sha256 \
+	game/golden/buildmap1.sha256 \
+	game/golden/buildmap2.sha256 \
 	$(GAME_TESTS)
 
 CLEANFILES = *~

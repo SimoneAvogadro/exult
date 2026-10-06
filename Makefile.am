@@ -360,7 +360,10 @@ $(srcdir)/.git/config:
 check-game: all
 	cd tests && $(MAKE) $(AM_MAKEFLAGS) check-game
 
-.PHONY: check-game
+regen-goldens:
+	cd tests && $(MAKE) $(AM_MAKEFLAGS) regen-goldens
+
+.PHONY: check-game regen-goldens
 
 BUILT_SOURCES=gitinfo.h
 

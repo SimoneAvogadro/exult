@@ -53,9 +53,13 @@ game_require_build() {
 		echo "ERROR: no exult or data/exult.flx in $GAME_BUILD" >&2
 		exit 2
 	fi
-	if [ -z "${EXULT_WRAPPER:-}" ] && grep -q __asan_init "$GAME_BUILD/exult"; then
-		EXULT_WRAPPER=$game_asan_wrapper
-		echo "note: $GAME_BUILD/exult is an ASan build, EXULT_WRAPPER=$EXULT_WRAPPER" >&2
+	GAME_ASAN=0
+	if grep -q __asan_init "$GAME_BUILD/exult"; then
+		GAME_ASAN=1
+		if [ -z "${EXULT_WRAPPER:-}" ]; then
+			EXULT_WRAPPER=$game_asan_wrapper
+			echo "note: $GAME_BUILD/exult is an ASan build, EXULT_WRAPPER=$EXULT_WRAPPER" >&2
+		fi
 	fi
 }
 
@@ -93,6 +97,78 @@ game_check_log() {
 		echo "FAIL: sanitizer report in $1" >&2
 		return 1
 	fi
+	return 0
+}
+
+# Fails when the log shows a flats cache blitted into a target of another scale (a stale-scale
+# cache, DESIGN.md section 12.3 W6-3) or a hi-res fall-back to S=1.
+game_check_hires_log() {
+	if grep -qE '\[hires\] (mixed-scale|the S=[0-9]+ world surfaces could not be created)' "$1"; then
+		echo "FAIL: [hires] mixed-scale or fall-back line in $1:" >&2
+		grep -E '\[hires\] (mixed-scale|the S=)' "$1" | head -5 >&2
+		return 1
+	fi
+	return 0
+}
+
+# Runs "exult --bg --render-test <spec>,out=<sandbox>/out" in a new sandbox named $1 (render_scale
+# off in the config: the spec sets the scale) and checks the exit code and the log. Sets
+# GAME_SANDBOX; the digest is $GAME_SANDBOX/out/digest.json. Returns 0 on a pass.
+game_render_test() {
+	local name=$1
+	local spec=$2
+	game_make_sandbox "$name"
+	mkdir -p "$GAME_SANDBOX/out" || exit 2
+	game_run_exult --bg --render-test "$spec,out=$GAME_SANDBOX/out"
+	local rc=$?
+	if [ $rc -ne 0 ]; then
+		echo "FAIL: --render-test \"$spec\": exit code $rc (log: $GAME_SANDBOX/run.log)" >&2
+		grep -E '^\[render-test\] FAIL|^--render-test:|Sanitizer|runtime error' "$GAME_SANDBOX/run.log" | head -10 >&2
+		return 1
+	fi
+	game_check_log "$GAME_SANDBOX/run.log" || return 1
+	game_check_hires_log "$GAME_SANDBOX/run.log" || return 1
+	return 0
+}
+
+# The reproducible part of a digest.json: everything but the timings.
+game_digest_stable() {
+	grep -vE '"(time|bench)_' "$1"
+}
+
+# game_check_render <name> <spec>: game_render_test, made twice (once in an ASan build, whose heap
+# order follows the environment) with equal digests apart from the timings (determinism, I10).
+# Counts into game_pass and game_fail.
+game_pass=0
+game_fail=0
+game_check_render() {
+	local name=$1
+	local spec=$2
+	local runs=2
+	local first=""
+	local run digest
+	if [ "${GAME_ASAN:-0}" = 1 ]; then
+		runs=1
+	fi
+	for run in $(seq 1 $runs); do
+		if ! game_render_test "$name" "$spec"; then
+			echo "FAIL: $name (run $run): $spec (sandbox kept: $GAME_SANDBOX)" >&2
+			game_fail=$((game_fail + 1))
+			return 1
+		fi
+		digest=$(game_digest_stable "$GAME_SANDBOX/out/digest.json")
+		if [ "$run" = 1 ]; then
+			first=$digest
+		elif [ "$digest" != "$first" ]; then
+			echo "FAIL: $name: the digests of run 1 and run $run differ (sandbox kept: $GAME_SANDBOX):" >&2
+			diff <(echo "$first") <(echo "$digest") | head -10 >&2
+			game_fail=$((game_fail + 1))
+			return 1
+		fi
+		game_cleanup > /dev/null
+	done
+	echo "ok: $name ($runs runs): $spec"
+	game_pass=$((game_pass + 1))
 	return 0
 }
 

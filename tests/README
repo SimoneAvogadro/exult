@@ -48,8 +48,32 @@ Layout
     ibuf_golden.txt  digests recorded on unmodified upstream imagewin/ibuf8.cc
   game/            game-data scripts for "make check-game"
     test.cfg.in      config template; lib.sh fills it in per sandbox
-    lib.sh           shared helpers (skip rule, sandbox, run, log check)
+    lib.sh           shared helpers (skip rule, sandbox, run, log checks,
+                     --render-test runs made twice with equal digests)
     smoke.sh         exult --buildmap 0 from a sandbox
+    buildmap_golden.sh
+                     oracle O0: --buildmap 0, 1 and 2 with render_scale=art
+                     give the SHA-256 lists in golden/ (skipped in ASan builds)
+    render_regions.sh
+                     --render-test on the regions of regions.txt at S = 2, 3
+                     and 6: NN of the scale-1 render (O2), sub-rect repaints
+                     that change neither render (O6), the mini screenshot
+                     (O7; not the light count, which needs a main actor and
+                     the ireg objects); the present read-back at 1:1 and
+                     1280x800 (ARGB and INDEX8, which must really be INDEX8
+                     on SDL >= 3.4 and is skipped before), a game area with
+                     offset_x 17, passes=flats
+    resize_cycle.sh  the S cycle force6 -> off -> force3 -> force6 (I12), a
+                     terrain edit at S > 1, the pushed resize; fails on a
+                     "[hires] mixed-scale" log line
+    perf.sh          the world paint at S=6 (bench=200, -O2 builds only):
+                     p95 <= 2 ms at 320x200, and within 20 % of this host's
+                     line in perf_baseline.json
+    regen_goldens.sh records golden/*.sha256 with the reference build
+    regions.txt      the map regions (tile, size, roof level)
+    golden/          buildmap{0,1,2}.sha256: hash lists, never pixels
+    perf_baseline.json
+                     paint p95 per host ("host/case/key": ms)
 
 Running
 -------
@@ -60,6 +84,21 @@ Autotools (any build tree):
   make check-game     runs game/*.sh; set U7_BG_STATIC to the "static"
                       directory of a Black Gate installation, otherwise every
                       script is skipped (exit code 77)
+  make regen-goldens UPSTREAM_BUILD=<build of upstream + P3>
+                      records game/golden/*.sha256 again (U7_BG_STATIC too);
+                      commit the lists with the cause in the message
+
+The game scripts run "exult --render-test" (render_test.cc; the keys are
+listed at the top of that file and in DESIGN.md section 4.2). A run writes
+digest.json (FNV-1a-64 of every render, the mini screenshot digest, the
+present texture formats, timings) and, on a failure, the indexed images
+ref_1x.png, hi_<tag>.png and diff_<tag>.png into its sandbox, which is then kept
+(KEEP_SANDBOX=1 keeps passing ones too). These images are derived from the
+game's art: never commit them. For a look at a region at S=6:
+
+  exult -c <cfg> --bg --render-test "tx=800,ty=1330,w=320,h=200,scales=6,mode=plain,out=<dir>"
+
+perf.sh --record writes this host's line into perf_baseline.json.
 
 make check runs the tests with SDL_VIDEO_DRIVER=offscreen,
 SDL_RENDER_DRIVER=software and SDL_AUDIO_DRIVER=dummy. The configure variable

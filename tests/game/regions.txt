@@ -1,0 +1,25 @@
+# tests/game/regions.txt - Black Gate map regions for render_regions.sh (DESIGN.md section 6.4).
+#
+# One region per line: name tx ty w h lift. tx, ty: the top-left tile; w, h: the size in game px
+# (8 px per tile); lift: skip_above as in --buildmap (16 all roofs, 10 no level-2 roofs, 5 none).
+# The regions were chosen from the 144 superchunk renders of --buildmap; a superchunk is
+# 256 x 256 tiles, chunk (cx, cy) covers tiles 16 cx .. 16 cx + 15.
+
+# Open grass with scrub and a few trees (superchunk 6,3).
+grass      1700  820  640  400  16
+# Sand coast with shallow-water edges and open sea: cycling water indices (superchunk 4,6).
+coast      1040 1560  640  400  16
+# Dense forest: large RLE trees, translucent shadows (superchunk 2,2).
+forest      600  660  640  400  16
+# Britain town streets, at the three roof levels (superchunk 3,5).
+britain16   800 1330  640  400  16
+britain10   800 1330  640  400  10
+britain5    800 1330  640  400   5
+# Mountains and a cave mouth with black void (superchunk 3,3).
+mountains   860  840  640  400  16
+# Crosses the superchunk borders at tile x 1024 and tile y 1280 (superchunks 3,4 to 4,5).
+border     1004 1270  640  400  16
+# Wraps around the world at both edges (tiles 3060..3071 then 0..67, 3050..3071 then 0..27).
+wrap       3060 3050  640  400  16
+# Terrains 1843 and 1844, whose cells name the missing flat 48/8 (the cells that P3 zero-fills).
+p3cells    2100 1510  320  400  16
