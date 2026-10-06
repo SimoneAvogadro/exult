@@ -29,13 +29,16 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
 #include "flat_source.h"
 #include "gamewin.h"
-#include "ignore_unused_variable_warning.h"
+#include "hires_glue.h"
 
 #include <algorithm>
 #include <cstring>
+#include <iostream>
 
 Chunk_terrain* Chunk_terrain::render_queue = nullptr;
 int            Chunk_terrain::queue_size   = 0;
+
+uint32 Chunk_terrain::hires_renders = 0;    // Hi-res.
 
 /*
  *  Insert at start of render queue.  It may already be there, but it's
@@ -83,6 +86,35 @@ void Chunk_terrain::remove_from_queue() {
 }
 
 /*
+ *  Hi-res: paint the override of flat 'id' into cell (tilex, tiley) of dst,
+ *  at dst's pixel scale (> 1).
+ *
+ *  Output: false when there is none (overrides off, no art, or the store
+ *  failed); the caller then paints the 1x flat (NN).
+ */
+
+static bool Paint_hires_flat(Image_buffer8& dst, const ShapeID& id, int tilex, int tiley) {
+	const int              side = c_tilesize * dst.get_pixel_scale();
+	const Hires::Tile_view hi   = Hires::flat(id.get_shapenum(), id.get_framenum() & 31, dst.get_pixel_scale());
+	if (hi.px == nullptr) {
+		return false;
+	}
+	// A view of another scale is a bug (a store that outlived a resize):
+	// never read past it, log it once and fall back to NN (I11).
+	if (hi.side != side) {
+		static bool logged = false;
+		if (!logged) {
+			logged = true;
+			std::cerr << "[hires] flat " << id.get_shapenum() << ':' << id.get_framenum() << " has a " << hi.side
+					  << " px view at scale " << dst.get_pixel_scale() << "; painting the 1x flat" << std::endl;
+		}
+		return false;
+	}
+	dst.put_phys(hi.px, side, side, side, tilex * side, tiley * side);
+	return true;
+}
+
+/*
  *  Paint the flats of the chunk (c_chunksize x c_chunksize) into a buffer.
  *  Flat tiles paint themselves.  We still want to draw a flat tile under RLE
  *  shapes to fix black gaps in the ice caves: the original didn't clear its
@@ -95,10 +127,32 @@ void Chunk_terrain::paint_flats(
 		Image_buffer8& dst,
 		bool           overrides    // Allow hi-res art (false: minimap).
 ) {
-	ignore_unused_variable_warning(overrides);
 	// Cells that get no flat are not painted: clear them, so they never show
 	// uninitialised memory or the previous render.
 	dst.fill8(0);
+	const int scale = dst.get_pixel_scale();
+	for (int tiley = 0; tiley < c_tiles_per_chunk; tiley++) {
+		for (int tilex = 0; tilex < c_tiles_per_chunk; tilex++) {
+			const int src = get_flat_source(tilex, tiley);
+			if (src >= 0) {
+				Shape_frame* shape = shapes[src].get_shape();
+				if (scale > 1 && overrides && Paint_hires_flat(dst, shapes[src], tilex, tiley)) {
+					continue;    // Hi-res: the source flat's override.
+				}
+				dst.copy8(shape->get_data(), c_tilesize, c_tilesize, tilex * c_tilesize, tiley * c_tilesize);
+			}
+		}
+	}
+}
+
+/*
+ *  Find the tile whose flat is painted at (tilex, tiley): the tile itself,
+ *  or for an RLE tile a nearby flat (see find_flat_source()).
+ *
+ *  Output: Index (row-major, 0-255) of that tile, or -1 for none.
+ */
+
+int Chunk_terrain::get_flat_source(int tilex, int tiley) {
 	// The palette cycling void tile.
 	const auto is_void = [this](int t) {
 		return shapes[t].get_shapenum() == 12 && shapes[t].get_framenum() == 0;
@@ -114,15 +168,7 @@ void Chunk_terrain::paint_flats(
 		}
 		return is_void(t) ? Tile_kind::Flat_void : Tile_kind::Flat;
 	};
-	for (int tiley = 0; tiley < c_tiles_per_chunk; tiley++) {
-		for (int tilex = 0; tilex < c_tiles_per_chunk; tilex++) {
-			const int src = find_flat_source(tilex, tiley, is_void, kind_of);
-			if (src >= 0) {
-				Shape_frame* shape = shapes[src].get_shape();
-				dst.copy8(shape->get_data(), c_tilesize, c_tilesize, tilex * c_tilesize, tiley * c_tilesize);
-			}
-		}
-	}
+	return find_flat_source(tilex, tiley, is_void, kind_of);
 }
 
 /*
@@ -280,6 +326,10 @@ Image_buffer8* Chunk_terrain::render_flats(int scale) {
 		rendered_flats = new Image_buffer8(c_chunksize, c_chunksize, scale);
 	}
 	rendered_scale = scale;
+	if (scale > 1) {
+		rendered_gen = Hires::generation();    // Hi-res: the overrides painted.
+		hires_renders++;
+	}
 	paint_flats(*rendered_flats, true);
 	return rendered_flats;
 }
@@ -291,6 +341,15 @@ Image_buffer8* Chunk_terrain::render_flats(int scale) {
 void Chunk_terrain::free_rendered_flats() {
 	delete rendered_flats;
 	rendered_flats = nullptr;
+}
+
+/*
+ *  Hi-res: the cache (at a scale > 1) holds the overrides the store serves
+ *  now.  A toggle, reload or game switch changes Hires::generation().
+ */
+
+bool Chunk_terrain::hires_flats_current() const {
+	return rendered_gen == Hires::generation();
 }
 
 /*

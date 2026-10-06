@@ -42,10 +42,12 @@ class Chunk_terrain : public Game_singletons {
 	bool           modified;          // Changed (by map-editor).
 	Image_buffer8* rendered_flats;    // Flats rendered for entire chunk.
 	int            rendered_scale = 1;    // Its pixel scale.
+	uint32         rendered_gen   = 0;    // Hires::generation() it was painted at (scale > 1).
 	// Most-recently used circular queue
 	//   for rendered_flats:
 	static Chunk_terrain* render_queue;
 	static int            queue_size;
+	static uint32         hires_renders;    // Hi-res: render_flats calls at a scale > 1.
 	Chunk_terrain *       render_queue_next, *render_queue_prev;
 	//   Kept only for nearby chunks.
 	void insert_in_queue();    // Queue methods.
@@ -54,6 +56,8 @@ class Chunk_terrain : public Game_singletons {
 	// Create rendered_flats at the given pixel scale.
 	Image_buffer8* render_flats(int scale = 1);
 	void           free_rendered_flats();
+	// Hi-res: the cache was painted with the current overrides.
+	bool hires_flats_current() const;
 
 public:
 	// Create from 16x16x2 data:
@@ -100,8 +104,20 @@ public:
 			// Move to front of queue.
 			insert_in_queue();
 		}
-		return rendered_flats && rendered_scale == scale ? rendered_flats : render_flats(scale);
+		// Hi-res: at a scale > 1, also the overrides it was painted with.
+		const bool current = rendered_flats && rendered_scale == scale && (scale == 1 || hires_flats_current());
+		return current ? rendered_flats : render_flats(scale);
 	}
+
+	// Hi-res: the number of render_flats calls at a scale > 1 so far
+	//   (the render test's check of the cache).
+	static uint32 get_hires_renders() {
+		return hires_renders;
+	}
+
+	// Index (row-major, 0-255) of the tile whose flat is painted at
+	//   (tilex, tiley), or -1; see find_flat_source().  Loads frames.
+	int get_flat_source(int tilex, int tiley);
 
 	// Paint the flats (c_chunksize x c_chunksize) into dst.
 	void paint_flats(Image_buffer8& dst, bool overrides);
