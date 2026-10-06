@@ -910,6 +910,17 @@ int Game_window::get_unused_npc() {
 }
 
 /*
+ *  Hi-res: append the world render scale S (" x6") to a message when S > 1.
+ */
+
+static void Append_world_scale(char* msg, size_t size, int world_scale) {
+	if (world_scale > 1) {
+		const size_t len = std::strlen(msg);
+		snprintf(msg + len, size - len, " x%d", world_scale);
+	}
+}
+
+/*
  *  Resize event occurred.
  */
 
@@ -928,6 +939,7 @@ void Game_window::resized(
 	if (!gump_man->gump_mode()) {
 		char msg[80];
 		snprintf(msg, sizeof(msg), "%ux%ux%u", neww, newh, newsc);
+		Append_world_scale(msg, sizeof(msg), win->get_world_scale());
 		effects->center_text(msg);
 	}
 	if (g_shortcutBar) {
