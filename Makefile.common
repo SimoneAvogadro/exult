@@ -244,6 +244,7 @@ SHAPES_OBJS:= \
 	shapes/hires_store.o \
 	shapes/items.o \
 	shapes/miscinf.o\
+	shapes/pngio.o \
 	shapes/shapeinf.o\
 	shapes/shapevga.o \
 	shapes/u7drag.o \
