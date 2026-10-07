@@ -1,0 +1,131 @@
+# tag=g320 game=320x200 full=320x200 off=0,0 N=200
+SCENE g320 start tile=1079,2214,0 in_dungeon=0 chunks=20 objs=704 flatrle=28 lights=4 rle_calls=115 remap=0 px_flat=64000 px_rle=59528 px_xlu=2187 px_fill=591 xlu_calls=340 copy8=9
+PAINT g320 start S=1 mode=0 mean=0.3088 med=0.1349 p90=0.1687 min=0.1215 max=8.3855 | map=0.3076 flats=0.0021 flatrle=0.0223 objs=0.2831 black=0.0001 eff=0.0001 border=0.0001 gumps=0.0001 lights=0.0006
+DIRTYALL g320 start mean=0.2218 med=0.1329 p90=0.1569
+STRIP g320 start mean=0.0222 med=0.0207 p90=0.0272
+SHIFTCOPY g320 start mean=0.0008 med=0.0008 p90=0.0008
+NPCRECT g320 start mean=0.0250 med=0.0233 p90=0.0282
+LERP g320 start mean=0.1355 med=0.1318 p90=0.1502
+SHOW g320 start mean=0.7736 med=0.7562 p90=0.7982
+PAINT g320 start S=2 mode=1 mean=0.3969 med=0.3900 p90=0.4297 min=0.3679 max=0.6693 | map=0.3958 flats=0.1176 flatrle=0.0032 objs=0.2748 black=0.0001 eff=0.0001 border=0.0001 gumps=0.0001 lights=0.0006 cold=0.846 cacheMB=0.00 entries=0
+PAINT g320 start S=2 mode=2 mean=0.2548 med=0.2511 p90=0.2671 min=0.2112 max=0.5799 | map=0.2538 flats=0.0055 flatrle=0.0028 objs=0.2454 black=0.0001 eff=0.0001 border=0.0001 gumps=0.0001 lights=0.0005 cold=2.910 cacheMB=1.32 entries=91
+PAINT g320 start S=3 mode=1 mean=0.5178 med=0.5120 p90=0.5407 min=0.4841 max=0.6625 | map=0.5166 flats=0.1510 flatrle=0.0033 objs=0.3621 black=0.0001 eff=0.0001 border=0.0001 gumps=0.0001 lights=0.0006 cold=0.539 cacheMB=0.00 entries=0
+PAINT g320 start S=3 mode=2 mean=0.3954 med=0.3943 p90=0.4076 min=0.3614 max=0.4617 | map=0.3941 flats=0.0123 flatrle=0.0032 objs=0.3784 black=0.0001 eff=0.0001 border=0.0001 gumps=0.0001 lights=0.0007 cold=5.565 cacheMB=2.93 entries=91
+PAINT g320 start S=4 mode=1 mean=0.6329 med=0.6313 p90=0.6564 min=0.6033 max=0.6826 | map=0.6317 flats=0.1900 flatrle=0.0035 objs=0.4378 black=0.0001 eff=0.0000 border=0.0001 gumps=0.0001 lights=0.0006 cold=0.968 cacheMB=0.00 entries=0
+PAINT g320 start S=4 mode=2 mean=0.6158 med=0.5665 p90=0.8471 min=0.5433 max=1.0046 | map=0.6145 flats=0.0246 flatrle=0.0081 objs=0.5817 black=0.0001 eff=0.0001 border=0.0001 gumps=0.0001 lights=0.0006 cold=9.466 cacheMB=5.18 entries=91
+PAINT g320 start S=6 mode=1 mean=0.9245 med=0.8947 p90=1.0479 min=0.8483 max=1.4544 | map=0.9232 flats=0.2861 flatrle=0.0043 objs=0.6326 black=0.0001 eff=0.0001 border=0.0001 gumps=0.0001 lights=0.0007 cold=0.979 cacheMB=0.00 entries=0
+PAINT g320 start S=6 mode=2 mean=1.1055 med=0.9990 p90=1.2318 min=0.9760 max=4.3025 | map=1.1042 flats=0.0472 flatrle=0.0046 objs=1.0521 black=0.0001 eff=0.0001 border=0.0001 gumps=0.0001 lights=0.0007 cold=19.081 cacheMB=11.58 entries=91
+SCENE g320 brit_st tile=860,1380,0 in_dungeon=0 chunks=20 objs=661 flatrle=11 lights=8 rle_calls=111 remap=0 px_flat=64000 px_rle=71712 px_xlu=2512 px_fill=129 xlu_calls=384 copy8=9
+PAINT g320 brit_st S=1 mode=0 mean=0.3314 med=0.1303 p90=0.1706 min=0.1149 max=8.4207 | map=0.3304 flats=0.0020 flatrle=0.0032 objs=0.3250 black=0.0001 eff=0.0001 border=0.0001 gumps=0.0001 lights=0.0003
+DIRTYALL g320 brit_st mean=0.2799 med=0.1257 p90=0.1523
+STRIP g320 brit_st mean=0.0317 med=0.0305 p90=0.0374
+SHIFTCOPY g320 brit_st mean=0.0008 med=0.0008 p90=0.0008
+NPCRECT g320 brit_st mean=0.0208 med=0.0192 p90=0.0255
+LERP g320 brit_st mean=0.1366 med=0.1269 p90=0.1535
+SHOW g320 brit_st mean=0.7917 med=0.7691 p90=0.8375
+PAINT g320 brit_st S=2 mode=1 mean=0.4220 med=0.3838 p90=0.4089 min=0.3578 max=3.6019 | map=0.4210 flats=0.1159 flatrle=0.0064 objs=0.2985 black=0.0001 eff=0.0001 border=0.0001 gumps=0.0001 lights=0.0003 cold=0.765 cacheMB=0.00 entries=0
+PAINT g320 brit_st S=2 mode=2 mean=0.2558 med=0.2503 p90=0.2710 min=0.2107 max=0.5769 | map=0.2550 flats=0.0062 flatrle=0.0061 objs=0.2425 black=0.0001 eff=0.0001 border=0.0001 gumps=0.0001 lights=0.0003 cold=2.640 cacheMB=1.21 entries=69
+PAINT g320 brit_st S=3 mode=1 mean=0.5367 med=0.5195 p90=0.5573 min=0.4978 max=1.1932 | map=0.5358 flats=0.1518 flatrle=0.0089 objs=0.3749 black=0.0001 eff=0.0001 border=0.0001 gumps=0.0001 lights=0.0003 cold=0.591 cacheMB=0.00 entries=0
+PAINT g320 brit_st S=3 mode=2 mean=0.4171 med=0.4079 p90=0.4250 min=0.3923 max=0.9985 | map=0.4161 flats=0.0121 flatrle=0.0128 objs=0.3910 black=0.0001 eff=0.0001 border=0.0001 gumps=0.0001 lights=0.0004 cold=4.817 cacheMB=2.71 entries=69
+PAINT g320 brit_st S=4 mode=1 mean=0.6407 med=0.6390 p90=0.6574 min=0.6074 max=0.6910 | map=0.6398 flats=0.1890 flatrle=0.0103 objs=0.4403 black=0.0001 eff=0.0001 border=0.0000 gumps=0.0001 lights=0.0003 cold=0.673 cacheMB=0.00 entries=0
+PAINT g320 brit_st S=4 mode=2 mean=0.6012 med=0.5878 p90=0.6047 min=0.5717 max=1.1141 | map=0.6002 flats=0.0203 flatrle=0.0173 objs=0.5625 black=0.0001 eff=0.0001 border=0.0000 gumps=0.0001 lights=0.0004 cold=7.729 cacheMB=4.79 entries=69
+PAINT g320 brit_st S=6 mode=1 mean=0.9249 med=0.8963 p90=1.0080 min=0.8748 max=1.4978 | map=0.9240 flats=0.2722 flatrle=0.0148 objs=0.6368 black=0.0000 eff=0.0001 border=0.0001 gumps=0.0001 lights=0.0003 cold=0.944 cacheMB=0.00 entries=0
+PAINT g320 brit_st S=6 mode=2 mean=1.1000 med=1.0826 p90=1.1153 min=1.0599 max=1.5359 | map=1.0990 flats=0.0457 flatrle=0.0355 objs=1.0175 black=0.0001 eff=0.0000 border=0.0001 gumps=0.0001 lights=0.0004 cold=18.272 cacheMB=10.73 entries=69
+SCENE g320 brit_mkt tile=880,1300,0 in_dungeon=0 chunks=20 objs=523 flatrle=37 lights=0 rle_calls=97 remap=0 px_flat=64000 px_rle=54090 px_xlu=1572 px_fill=693 xlu_calls=287 copy8=12
+PAINT g320 brit_mkt S=1 mode=0 mean=0.0890 med=0.0872 p90=0.0980 min=0.0782 max=0.1233 | map=0.0880 flats=0.0023 flatrle=0.0015 objs=0.0840 black=0.0001 eff=0.0000 border=0.0000 gumps=0.0001 lights=0.0005
+DIRTYALL g320 brit_mkt mean=0.0897 med=0.0877 p90=0.0984
+STRIP g320 brit_mkt mean=0.0369 med=0.0353 p90=0.0425
+SHIFTCOPY g320 brit_mkt mean=0.0008 med=0.0008 p90=0.0008
+NPCRECT g320 brit_mkt mean=0.0283 med=0.0275 p90=0.0323
+LERP g320 brit_mkt mean=0.0927 med=0.0896 p90=0.1029
+SHOW g320 brit_mkt mean=0.7638 med=0.7556 p90=0.7834
+PAINT g320 brit_mkt S=2 mode=1 mean=0.3107 med=0.2993 p90=0.3312 min=0.2824 max=0.5947 | map=0.3095 flats=0.1170 flatrle=0.0022 objs=0.1902 black=0.0001 eff=0.0001 border=0.0001 gumps=0.0001 lights=0.0006 cold=0.529 cacheMB=0.00 entries=0
+PAINT g320 brit_mkt S=2 mode=2 mean=0.1779 med=0.1763 p90=0.1899 min=0.1606 max=0.2135 | map=0.1769 flats=0.0071 flatrle=0.0017 objs=0.1679 black=0.0001 eff=0.0001 border=0.0001 gumps=0.0001 lights=0.0005 cold=1.612 cacheMB=0.98 entries=58
+PAINT g320 brit_mkt S=3 mode=1 mean=0.4092 med=0.4062 p90=0.4377 min=0.3788 max=0.4621 | map=0.4081 flats=0.1497 flatrle=0.0022 objs=0.2561 black=0.0001 eff=0.0001 border=0.0001 gumps=0.0001 lights=0.0006 cold=0.482 cacheMB=0.00 entries=0
+PAINT g320 brit_mkt S=3 mode=2 mean=0.3000 med=0.2957 p90=0.3191 min=0.2844 max=0.3974 | map=0.2988 flats=0.0128 flatrle=0.0021 objs=0.2837 black=0.0001 eff=0.0001 border=0.0000 gumps=0.0001 lights=0.0006 cold=3.207 cacheMB=2.18 entries=58
+PAINT g320 brit_mkt S=4 mode=1 mean=0.5150 med=0.5122 p90=0.5322 min=0.4923 max=0.6037 | map=0.5138 flats=0.1882 flatrle=0.0024 objs=0.3230 black=0.0001 eff=0.0001 border=0.0001 gumps=0.0001 lights=0.0006 cold=0.525 cacheMB=0.00 entries=0
+PAINT g320 brit_mkt S=4 mode=2 mean=0.4521 med=0.4460 p90=0.4888 min=0.4254 max=0.5939 | map=0.4508 flats=0.0208 flatrle=0.0024 objs=0.4275 black=0.0001 eff=0.0001 border=0.0001 gumps=0.0001 lights=0.0006 cold=5.626 cacheMB=3.86 entries=58
+PAINT g320 brit_mkt S=6 mode=1 mean=0.7211 med=0.7208 p90=0.7415 min=0.6950 max=0.7613 | map=0.7199 flats=0.2655 flatrle=0.0025 objs=0.4517 black=0.0001 eff=0.0001 border=0.0001 gumps=0.0001 lights=0.0006 cold=0.790 cacheMB=0.00 entries=0
+PAINT g320 brit_mkt S=6 mode=2 mean=0.8437 med=0.8395 p90=0.8630 min=0.8085 max=1.0398 | map=0.8425 flats=0.0461 flatrle=0.0030 objs=0.7932 black=0.0001 eff=0.0001 border=0.0001 gumps=0.0001 lights=0.0006 cold=14.711 cacheMB=8.65 entries=58
+SCENE g320 castle tile=940,1160,0 in_dungeon=0 chunks=20 objs=1230 flatrle=0 lights=6 rle_calls=153 remap=0 px_flat=64000 px_rle=79533 px_xlu=23019 px_fill=22776 xlu_calls=6372 copy8=9
+PAINT g320 castle S=1 mode=0 mean=0.6365 med=0.3611 p90=0.6177 min=0.3340 max=4.9582 | map=0.6353 flats=0.0024 flatrle=0.0002 objs=0.6325 black=0.0001 eff=0.0001 border=0.0001 gumps=0.0001 lights=0.0005
+DIRTYALL g320 castle mean=0.6259 med=0.3642 p90=0.5554
+STRIP g320 castle mean=0.1336 med=0.1286 p90=0.1532
+SHIFTCOPY g320 castle mean=0.0008 med=0.0008 p90=0.0008
+NPCRECT g320 castle mean=0.1115 med=0.1075 p90=0.1261
+LERP g320 castle mean=0.3606 med=0.3547 p90=0.3768
+SHOW g320 castle mean=0.7809 med=0.7575 p90=0.8406
+PAINT g320 castle S=2 mode=1 mean=0.9057 med=0.8896 p90=0.9515 min=0.8665 max=1.2972 | map=0.9046 flats=0.1167 flatrle=0.0002 objs=0.7876 black=0.0001 eff=0.0001 border=0.0001 gumps=0.0001 lights=0.0004 cold=1.790 cacheMB=0.00 entries=0
+PAINT g320 castle S=2 mode=2 mean=0.7353 med=0.7245 p90=0.7657 min=0.6992 max=1.0528 | map=0.7343 flats=0.0057 flatrle=0.0002 objs=0.7282 black=0.0001 eff=0.0001 border=0.0001 gumps=0.0001 lights=0.0004 cold=2.785 cacheMB=1.40 entries=87
+PAINT g320 castle S=3 mode=1 mean=1.2152 med=1.2096 p90=1.2360 min=1.1836 max=1.4085 | map=1.2141 flats=0.1499 flatrle=0.0002 objs=1.0638 black=0.0001 eff=0.0001 border=0.0001 gumps=0.0001 lights=0.0004 cold=1.222 cacheMB=0.00 entries=0
+PAINT g320 castle S=3 mode=2 mean=1.0831 med=1.0719 p90=1.0982 min=1.0533 max=1.3163 | map=1.0821 flats=0.0123 flatrle=0.0002 objs=1.0694 black=0.0001 eff=0.0001 border=0.0001 gumps=0.0001 lights=0.0004 cold=6.151 cacheMB=3.12 entries=87
+PAINT g320 castle S=4 mode=1 mean=1.5192 med=1.4989 p90=1.5517 min=1.4689 max=2.0915 | map=1.5182 flats=0.1883 flatrle=0.0002 objs=1.3295 black=0.0001 eff=0.0001 border=0.0000 gumps=0.0001 lights=0.0004 cold=1.530 cacheMB=0.00 entries=0
+PAINT g320 castle S=4 mode=2 mean=1.4571 med=1.4520 p90=1.5020 min=1.4212 max=1.5556 | map=1.4561 flats=0.0209 flatrle=0.0002 objs=1.4348 black=0.0001 eff=0.0001 border=0.0001 gumps=0.0001 lights=0.0004 cold=10.210 cacheMB=5.52 entries=87
+PAINT g320 castle S=6 mode=1 mean=2.2207 med=2.2099 p90=2.2571 min=2.1720 max=2.4022 | map=2.2196 flats=0.2660 flatrle=0.0002 objs=1.9532 black=0.0001 eff=0.0001 border=0.0001 gumps=0.0001 lights=0.0004 cold=3.033 cacheMB=0.00 entries=0
+PAINT g320 castle S=6 mode=2 mean=2.4462 med=2.4381 p90=2.5323 min=2.3805 max=2.6081 | map=2.4450 flats=0.0471 flatrle=0.0002 objs=2.3976 black=0.0001 eff=0.0001 border=0.0001 gumps=0.0002 lights=0.0005 cold=22.120 cacheMB=12.37 entries=87
+SCENE g320 throne tile=936,1140,0 in_dungeon=0 chunks=20 objs=1027 flatrle=0 lights=5 rle_calls=157 remap=0 px_flat=64000 px_rle=80264 px_xlu=20478 px_fill=19654 xlu_calls=5491 copy8=9
+PAINT g320 throne S=1 mode=0 mean=0.4838 med=0.3170 p90=0.3710 min=0.2901 max=6.4445 | map=0.4827 flats=0.0023 flatrle=0.0002 objs=0.4800 black=0.0001 eff=0.0001 border=0.0001 gumps=0.0001 lights=0.0005
+DIRTYALL g320 throne mean=0.5364 med=0.3216 p90=0.3742
+STRIP g320 throne mean=0.1030 med=0.0990 p90=0.1188
+SHIFTCOPY g320 throne mean=0.0008 med=0.0008 p90=0.0008
+NPCRECT g320 throne mean=0.0679 med=0.0655 p90=0.0784
+LERP g320 throne mean=0.3163 med=0.3137 p90=0.3334
+SHOW g320 throne mean=0.7732 med=0.7593 p90=0.8009
+PAINT g320 throne S=2 mode=1 mean=0.8070 med=0.8038 p90=0.8271 min=0.7728 max=0.9045 | map=0.8059 flats=0.1152 flatrle=0.0002 objs=0.6903 black=0.0001 eff=0.0001 border=0.0001 gumps=0.0001 lights=0.0005 cold=1.226 cacheMB=0.00 entries=0
+PAINT g320 throne S=2 mode=2 mean=0.6619 med=0.6521 p90=0.6878 min=0.6271 max=0.8279 | map=0.6607 flats=0.0065 flatrle=0.0002 objs=0.6539 black=0.0001 eff=0.0001 border=0.0001 gumps=0.0001 lights=0.0005 cold=2.723 cacheMB=1.39 entries=84
+PAINT g320 throne S=3 mode=1 mean=1.0884 med=1.0874 p90=1.1091 min=1.0520 max=1.1512 | map=1.0873 flats=0.1508 flatrle=0.0002 objs=0.9362 black=0.0001 eff=0.0001 border=0.0001 gumps=0.0001 lights=0.0005 cold=1.098 cacheMB=0.00 entries=0
+PAINT g320 throne S=3 mode=2 mean=0.9865 med=0.9784 p90=1.0038 min=0.9560 max=1.3255 | map=0.9853 flats=0.0131 flatrle=0.0002 objs=0.9719 black=0.0001 eff=0.0001 border=0.0001 gumps=0.0002 lights=0.0005 cold=5.278 cacheMB=3.10 entries=84
+PAINT g320 throne S=4 mode=1 mean=1.3501 med=1.3488 p90=1.3789 min=1.3092 max=1.4049 | map=1.3486 flats=0.1936 flatrle=0.0002 objs=1.1547 black=0.0000 eff=0.0001 border=0.0000 gumps=0.0001 lights=0.0005 cold=1.378 cacheMB=0.00 entries=0
+PAINT g320 throne S=4 mode=2 mean=1.3400 med=1.3348 p90=1.3774 min=1.2853 max=1.4806 | map=1.3388 flats=0.0218 flatrle=0.0002 objs=1.3167 black=0.0001 eff=0.0001 border=0.0001 gumps=0.0001 lights=0.0005 cold=10.010 cacheMB=5.49 entries=84
+PAINT g320 throne S=6 mode=1 mean=1.9947 med=1.9870 p90=2.0456 min=1.9408 max=2.1445 | map=1.9936 flats=0.2641 flatrle=0.0002 objs=1.7291 black=0.0001 eff=0.0001 border=0.0000 gumps=0.0001 lights=0.0005 cold=2.066 cacheMB=0.00 entries=0
+PAINT g320 throne S=6 mode=2 mean=2.3048 med=2.2645 p90=2.4442 min=2.2123 max=2.6701 | map=2.3032 flats=0.0587 flatrle=0.0002 objs=2.2441 black=0.0001 eff=0.0003 border=0.0001 gumps=0.0002 lights=0.0006 cold=20.921 cacheMB=12.30 entries=84
+SCENE g320 forest tile=600,600,0 in_dungeon=0 chunks=20 objs=190 flatrle=156 lights=0 rle_calls=63 remap=0 px_flat=64000 px_rle=34278 px_xlu=639 px_fill=66 xlu_calls=79 copy8=9
+PAINT g320 forest S=1 mode=0 mean=0.0563 med=0.0556 p90=0.0658 min=0.0396 max=0.0754 | map=0.0554 flats=0.0016 flatrle=0.0092 objs=0.0444 black=0.0000 eff=0.0000 border=0.0000 gumps=0.0001 lights=0.0005
+DIRTYALL g320 forest mean=0.0563 med=0.0554 p90=0.0637
+STRIP g320 forest mean=0.0114 med=0.0104 p90=0.0146
+SHIFTCOPY g320 forest mean=0.0008 med=0.0008 p90=0.0008
+NPCRECT g320 forest mean=0.0107 med=0.0092 p90=0.0154
+LERP g320 forest mean=0.0563 med=0.0553 p90=0.0626
+SHOW g320 forest mean=0.7843 med=0.7504 p90=0.8356
+PAINT g320 forest S=2 mode=1 mean=0.2379 med=0.2338 p90=0.2546 min=0.1366 max=0.3663 | map=0.2369 flats=0.1154 flatrle=0.0165 objs=0.1048 black=0.0001 eff=0.0000 border=0.0001 gumps=0.0001 lights=0.0005 cold=0.378 cacheMB=0.00 entries=0
+PAINT g320 forest S=2 mode=2 mean=0.1180 med=0.1154 p90=0.1293 min=0.1056 max=0.1722 | map=0.1170 flats=0.0057 flatrle=0.0159 objs=0.0952 black=0.0001 eff=0.0001 border=0.0000 gumps=0.0001 lights=0.0005 cold=1.912 cacheMB=1.27 entries=51
+PAINT g320 forest S=3 mode=1 mean=0.3309 med=0.3200 p90=0.3711 min=0.2993 max=0.7897 | map=0.3298 flats=0.1587 flatrle=0.0225 objs=0.1484 black=0.0001 eff=0.0001 border=0.0001 gumps=0.0001 lights=0.0006 cold=0.342 cacheMB=0.00 entries=0
+PAINT g320 forest S=3 mode=2 mean=0.2075 med=0.1986 p90=0.2176 min=0.1856 max=0.7659 | map=0.2063 flats=0.0122 flatrle=0.0246 objs=0.1693 black=0.0001 eff=0.0001 border=0.0000 gumps=0.0001 lights=0.0006 cold=4.636 cacheMB=2.85 entries=51
+PAINT g320 forest S=4 mode=1 mean=0.4032 med=0.4022 p90=0.4149 min=0.3835 max=0.5068 | map=0.4019 flats=0.1912 flatrle=0.0260 objs=0.1846 black=0.0001 eff=0.0001 border=0.0000 gumps=0.0001 lights=0.0006 cold=0.424 cacheMB=0.00 entries=0
+PAINT g320 forest S=4 mode=2 mean=0.2956 med=0.2939 p90=0.3128 min=0.2821 max=0.3200 | map=0.2944 flats=0.0211 flatrle=0.0332 objs=0.2398 black=0.0001 eff=0.0001 border=0.0001 gumps=0.0001 lights=0.0006 cold=7.908 cacheMB=5.04 entries=51
+PAINT g320 forest S=6 mode=1 mean=0.5853 med=0.5705 p90=0.6130 min=0.5472 max=1.1101 | map=0.5840 flats=0.2827 flatrle=0.0358 objs=0.2653 black=0.0001 eff=0.0001 border=0.0001 gumps=0.0001 lights=0.0006 cold=0.591 cacheMB=0.00 entries=0
+PAINT g320 forest S=6 mode=2 mean=0.5800 med=0.5532 p90=0.6393 min=0.5321 max=1.0208 | map=0.5788 flats=0.0489 flatrle=0.0591 objs=0.4706 black=0.0000 eff=0.0001 border=0.0001 gumps=0.0001 lights=0.0006 cold=17.820 cacheMB=11.32 entries=51
+SCENE g320 dung tile=580,1200,0 in_dungeon=5 chunks=24 objs=328 flatrle=5 lights=1 rle_calls=61 remap=0 px_flat=64000 px_rle=32559 px_xlu=969 px_fill=66 xlu_calls=166 copy8=6
+PAINT g320 dung S=1 mode=0 mean=0.1166 med=0.0517 p90=0.0574 min=0.0458 max=4.5411 | map=0.1157 flats=0.0017 flatrle=0.0005 objs=0.1098 black=0.0037 eff=0.0000 border=0.0000 gumps=0.0001 lights=0.0004
+DIRTYALL g320 dung mean=0.1370 med=0.0519 p90=0.0596
+STRIP g320 dung mean=0.0142 med=0.0133 p90=0.0166
+SHIFTCOPY g320 dung mean=0.0009 med=0.0008 p90=0.0008
+NPCRECT g320 dung mean=0.0111 med=0.0101 p90=0.0147
+LERP g320 dung mean=0.0539 med=0.0511 p90=0.0576
+SHOW g320 dung mean=1.1579 med=0.6972 p90=4.7656
+PAINT g320 dung S=2 mode=1 mean=0.2291 med=0.2185 p90=0.2326 min=0.2042 max=0.6417 | map=0.2281 flats=0.1439 flatrle=0.0009 objs=0.0796 black=0.0037 eff=0.0001 border=0.0000 gumps=0.0001 lights=0.0005 cold=0.380 cacheMB=0.00 entries=0
+PAINT g320 dung S=2 mode=2 mean=0.1088 med=0.1015 p90=0.1216 min=0.0954 max=0.3889 | map=0.1077 flats=0.0061 flatrle=0.0006 objs=0.0965 black=0.0045 eff=0.0000 border=0.0001 gumps=0.0001 lights=0.0005 cold=1.528 cacheMB=1.04 entries=38
+PAINT g320 dung S=3 mode=1 mean=0.2939 med=0.2856 p90=0.3101 min=0.2631 max=0.4945 | map=0.2928 flats=0.1785 flatrle=0.0009 objs=0.1097 black=0.0036 eff=0.0001 border=0.0000 gumps=0.0001 lights=0.0005 cold=0.293 cacheMB=0.00 entries=0
+PAINT g320 dung S=3 mode=2 mean=0.1767 med=0.1728 p90=0.1890 min=0.1614 max=0.2734 | map=0.1754 flats=0.0128 flatrle=0.0006 objs=0.1580 black=0.0039 eff=0.0001 border=0.0001 gumps=0.0001 lights=0.0006 cold=3.695 cacheMB=2.34 entries=38
+PAINT g320 dung S=4 mode=1 mean=0.3662 med=0.3618 p90=0.4017 min=0.3371 max=0.4489 | map=0.3651 flats=0.2280 flatrle=0.0010 objs=0.1321 black=0.0039 eff=0.0001 border=0.0000 gumps=0.0001 lights=0.0005 cold=0.365 cacheMB=0.00 entries=0
+PAINT g320 dung S=4 mode=2 mean=0.2703 med=0.2615 p90=0.2817 min=0.2362 max=0.6040 | map=0.2689 flats=0.0220 flatrle=0.0008 objs=0.2418 black=0.0042 eff=0.0001 border=0.0001 gumps=0.0001 lights=0.0008 cold=6.847 cacheMB=4.15 entries=38
+PAINT g320 dung S=6 mode=1 mean=0.5097 med=0.5077 p90=0.5315 min=0.4039 max=0.6305 | map=0.5082 flats=0.3121 flatrle=0.0011 objs=0.1908 black=0.0040 eff=0.0000 border=0.0001 gumps=0.0001 lights=0.0006 cold=0.569 cacheMB=0.00 entries=0
+PAINT g320 dung S=6 mode=2 mean=0.5119 med=0.5026 p90=0.5893 min=0.4697 max=0.6471 | map=0.5106 flats=0.0453 flatrle=0.0010 objs=0.4603 black=0.0039 eff=0.0001 border=0.0001 gumps=0.0001 lights=0.0006 cold=14.920 cacheMB=9.32 entries=38
+#   translucent shapes found: 37 (first: 177)
+SCENE g320 brit_xlu tile=860,1380,0 in_dungeon=0 chunks=20 objs=714 flatrle=21 lights=15 rle_calls=110 remap=0 px_flat=64000 px_rle=71691 px_xlu=41205 px_fill=7373 xlu_calls=5735 copy8=9
+PAINT g320 brit_xlu S=1 mode=0 mean=0.2415 med=0.2355 p90=0.2615 min=0.2138 max=0.3954 | map=0.2406 flats=0.0018 flatrle=0.0219 objs=0.2167 black=0.0001 eff=0.0001 border=0.0000 gumps=0.0001 lights=0.0003
+DIRTYALL g320 brit_xlu mean=0.2370 med=0.2323 p90=0.2519
+STRIP g320 brit_xlu mean=0.0359 med=0.0348 p90=0.0421
+SHIFTCOPY g320 brit_xlu mean=0.0008 med=0.0008 p90=0.0008
+NPCRECT g320 brit_xlu mean=0.0391 med=0.0382 p90=0.0462
+LERP g320 brit_xlu mean=0.2414 med=0.2368 p90=0.2628
+SHOW g320 brit_xlu mean=0.7706 med=0.7575 p90=0.7922
+PAINT g320 brit_xlu S=2 mode=1 mean=0.6898 med=0.6850 p90=0.7079 min=0.6636 max=0.9668 | map=0.6889 flats=0.1166 flatrle=0.0655 objs=0.5067 black=0.0001 eff=0.0001 border=0.0001 gumps=0.0001 lights=0.0004 cold=1.034 cacheMB=0.00 entries=0
+PAINT g320 brit_xlu S=2 mode=2 mean=0.5467 med=0.5431 p90=0.5677 min=0.5159 max=0.6159 | map=0.5457 flats=0.0065 flatrle=0.0643 objs=0.4748 black=0.0001 eff=0.0001 border=0.0001 gumps=0.0001 lights=0.0004 cold=2.333 cacheMB=1.21 entries=68
+PAINT g320 brit_xlu S=3 mode=1 mean=1.0119 med=0.9720 p90=1.0023 min=0.9430 max=4.1969 | map=1.0109 flats=0.1490 flatrle=0.1083 objs=0.7534 black=0.0001 eff=0.0001 border=0.0001 gumps=0.0001 lights=0.0004 cold=0.981 cacheMB=0.00 entries=0
+PAINT g320 brit_xlu S=3 mode=2 mean=0.8637 med=0.8599 p90=0.8839 min=0.8386 max=0.9981 | map=0.8627 flats=0.0113 flatrle=0.1113 objs=0.7399 black=0.0001 eff=0.0001 border=0.0001 gumps=0.0001 lights=0.0004 cold=4.718 cacheMB=2.71 entries=68
+PAINT g320 brit_xlu S=4 mode=1 mean=1.3443 med=1.3041 p90=1.4784 min=1.2488 max=1.8562 | map=1.3432 flats=0.1971 flatrle=0.1655 objs=0.9804 black=0.0001 eff=0.0001 border=0.0001 gumps=0.0001 lights=0.0004 cold=1.305 cacheMB=0.00 entries=0
+PAINT g320 brit_xlu S=4 mode=2 mean=1.2562 med=1.2365 p90=1.3040 min=1.2077 max=1.5378 | map=1.2552 flats=0.0215 flatrle=0.1710 objs=1.0626 black=0.0001 eff=0.0001 border=0.0001 gumps=0.0001 lights=0.0004 cold=8.511 cacheMB=4.79 entries=68
+PAINT g320 brit_xlu S=6 mode=1 mean=2.0851 med=2.0447 p90=2.2812 min=1.9974 max=2.7873 | map=2.0839 flats=0.2649 flatrle=0.3157 objs=1.5031 black=0.0001 eff=0.0001 border=0.0001 gumps=0.0001 lights=0.0004 cold=2.787 cacheMB=0.00 entries=0
+PAINT g320 brit_xlu S=6 mode=2 mean=4.1005 med=2.2942 p90=11.7972 min=2.1763 max=12.8677 | map=4.0989 flats=0.0795 flatrle=0.7126 objs=3.3065 black=0.0001 eff=0.0001 border=0.0001 gumps=0.0003 lights=0.0005 cold=17.729 cacheMB=10.72 entries=68
+# done g320

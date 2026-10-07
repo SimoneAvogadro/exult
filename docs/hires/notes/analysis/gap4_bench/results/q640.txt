@@ -1,0 +1,99 @@
+# tag=q640 game=640x400 full=640x400 off=0,0 N=200
+SCENE q640 start tile=1079,2214,0 in_dungeon=0 chunks=48 objs=1153 flatrle=57 lights=6 rle_calls=331 remap=0 px_flat=256000 px_rle=180232 px_xlu=5842 px_fill=1305 xlu_calls=1142 copy8=24
+PAINT q640 start S=1 mode=0 mean=0.2376 med=0.2210 p90=0.2624 min=0.1946 max=0.6922 | map=0.2372 flats=0.0052 flatrle=0.0176 objs=0.2142 black=0.0000 eff=0.0000 border=0.0000 gumps=0.0000 lights=0.0002
+DIRTYALL q640 start mean=0.2217 med=0.2175 p90=0.2443
+STRIP q640 start mean=0.0077 med=0.0076 p90=0.0077
+SHIFTCOPY q640 start mean=0.0032 med=0.0022 p90=0.0038
+NPCRECT q640 start mean=0.0140 med=0.0132 p90=0.0134
+LERP q640 start mean=0.2304 med=0.2260 p90=0.2528
+SHOW q640 start mean=0.6031 med=0.5995 p90=0.6210
+PAINT q640 start S=2 mode=1 mean=0.6691 med=0.6651 p90=0.6940 min=0.6286 max=0.8139 | map=0.6683 flats=0.2336 flatrle=0.0353 objs=0.3993 black=0.0000 eff=0.0000 border=0.0000 gumps=0.0001 lights=0.0003 cold=1.100 cacheMB=0.00 entries=0
+PAINT q640 start S=2 mode=2 mean=0.4741 med=0.4694 p90=0.4998 min=0.4387 max=0.7569 | map=0.4735 flats=0.0211 flatrle=0.0385 objs=0.4138 black=0.0000 eff=0.0000 border=0.0000 gumps=0.0001 lights=0.0003 cold=4.599 cacheMB=2.65 entries=170
+PAINT q640 start S=3 mode=1 mean=0.8726 med=0.8624 p90=0.8962 min=0.8344 max=1.3133 | map=0.8717 flats=0.3120 flatrle=0.0455 objs=0.5140 black=0.0001 eff=0.0001 border=0.0000 gumps=0.0001 lights=0.0003 cold=1.511 cacheMB=0.00 entries=0
+PAINT q640 start S=3 mode=2 mean=0.7555 med=0.7513 p90=0.7771 min=0.7224 max=0.9566 | map=0.7547 flats=0.0396 flatrle=0.0509 objs=0.6641 black=0.0000 eff=0.0001 border=0.0000 gumps=0.0001 lights=0.0003 cold=8.901 cacheMB=5.89 entries=170
+SCENE q640 brit_st tile=860,1380,0 in_dungeon=0 chunks=42 objs=898 flatrle=24 lights=9 rle_calls=307 remap=0 px_flat=256000 px_rle=238226 px_xlu=4668 px_fill=1045 xlu_calls=756 copy8=24
+PAINT q640 brit_st S=1 mode=0 mean=0.1942 med=0.1837 p90=0.2130 min=0.1610 max=0.6752 | map=0.1938 flats=0.0052 flatrle=0.0066 objs=0.1819 black=0.0000 eff=0.0000 border=0.0000 gumps=0.0000 lights=0.0002
+DIRTYALL q640 brit_st mean=0.1910 med=0.1838 p90=0.2200
+STRIP q640 brit_st mean=0.0193 med=0.0182 p90=0.0196
+SHIFTCOPY q640 brit_st mean=0.0021 med=0.0021 p90=0.0022
+NPCRECT q640 brit_st mean=0.0082 med=0.0079 p90=0.0080
+LERP q640 brit_st mean=0.1926 med=0.1870 p90=0.2211
+SHOW q640 brit_st mean=0.6180 med=0.6045 p90=0.6415
+PAINT q640 brit_st S=2 mode=1 mean=0.6654 med=0.6548 p90=0.6862 min=0.6206 max=1.1572 | map=0.6647 flats=0.2135 flatrle=0.0165 objs=0.4345 black=0.0000 eff=0.0000 border=0.0000 gumps=0.0001 lights=0.0002 cold=0.915 cacheMB=0.00 entries=0
+PAINT q640 brit_st S=2 mode=2 mean=0.4624 med=0.4592 p90=0.4870 min=0.4256 max=0.5393 | map=0.4618 flats=0.0227 flatrle=0.0217 objs=0.4173 black=0.0000 eff=0.0000 border=0.0000 gumps=0.0001 lights=0.0002 cold=3.042 cacheMB=2.04 entries=124
+PAINT q640 brit_st S=3 mode=1 mean=0.8870 med=0.8743 p90=0.9060 min=0.8446 max=1.4607 | map=0.8862 flats=0.2706 flatrle=0.0236 objs=0.5918 black=0.0001 eff=0.0001 border=0.0000 gumps=0.0001 lights=0.0003 cold=0.894 cacheMB=0.00 entries=0
+PAINT q640 brit_st S=3 mode=2 mean=0.8003 med=0.7972 p90=0.8233 min=0.7592 max=0.8885 | map=0.7996 flats=0.0428 flatrle=0.0464 objs=0.7103 black=0.0000 eff=0.0000 border=0.0000 gumps=0.0001 lights=0.0002 cold=7.372 cacheMB=4.54 entries=124
+SCENE q640 brit_mkt tile=880,1300,0 in_dungeon=0 chunks=48 objs=1339 flatrle=61 lights=2 rle_calls=428 remap=0 px_flat=256000 px_rle=275416 px_xlu=3539 px_fill=2499 xlu_calls=778 copy8=24
+PAINT q640 brit_mkt S=1 mode=0 mean=0.2690 med=0.2616 p90=0.3002 min=0.2348 max=0.7063 | map=0.2684 flats=0.0061 flatrle=0.0092 objs=0.2529 black=0.0000 eff=0.0000 border=0.0000 gumps=0.0000 lights=0.0003
+DIRTYALL q640 brit_mkt mean=0.2730 med=0.2646 p90=0.3057
+STRIP q640 brit_mkt mean=0.0353 med=0.0320 p90=0.0414
+SHIFTCOPY q640 brit_mkt mean=0.0021 med=0.0021 p90=0.0021
+NPCRECT q640 brit_mkt mean=0.0153 med=0.0148 p90=0.0151
+LERP q640 brit_mkt mean=0.2671 med=0.2639 p90=0.2958
+SHOW q640 brit_mkt mean=0.6127 med=0.5987 p90=0.6517
+PAINT q640 brit_mkt S=2 mode=1 mean=0.7586 med=0.7511 p90=0.7831 min=0.7114 max=1.1823 | map=0.7576 flats=0.2324 flatrle=0.0222 objs=0.5029 black=0.0000 eff=0.0000 border=0.0000 gumps=0.0001 lights=0.0005 cold=0.882 cacheMB=0.00 entries=0
+PAINT q640 brit_mkt S=2 mode=2 mean=0.5810 med=0.5777 p90=0.6006 min=0.5440 max=0.9074 | map=0.5802 flats=0.0218 flatrle=0.0278 objs=0.5304 black=0.0000 eff=0.0001 border=0.0000 gumps=0.0001 lights=0.0004 cold=3.353 cacheMB=2.26 entries=180
+PAINT q640 brit_mkt S=3 mode=1 mean=1.0033 med=0.9789 p90=1.0114 min=0.9417 max=1.4907 | map=1.0022 flats=0.3087 flatrle=0.0298 objs=0.6635 black=0.0001 eff=0.0000 border=0.0001 gumps=0.0001 lights=0.0005 cold=1.011 cacheMB=0.00 entries=0
+PAINT q640 brit_mkt S=3 mode=2 mean=0.9646 med=0.9606 p90=0.9866 min=0.9025 max=1.3467 | map=0.9635 flats=0.0377 flatrle=0.0608 objs=0.8648 black=0.0001 eff=0.0001 border=0.0001 gumps=0.0001 lights=0.0005 cold=7.962 cacheMB=5.03 entries=180
+SCENE q640 castle tile=940,1160,0 in_dungeon=0 chunks=42 objs=1517 flatrle=0 lights=12 rle_calls=499 remap=0 px_flat=256000 px_rle=268885 px_xlu=91628 px_fill=121014 xlu_calls=27427 copy8=30
+PAINT q640 castle S=1 mode=0 mean=0.5841 med=0.5758 p90=0.6203 min=0.5333 max=0.8775 | map=0.5834 flats=0.0056 flatrle=0.0002 objs=0.5774 black=0.0000 eff=0.0000 border=0.0000 gumps=0.0001 lights=0.0003
+DIRTYALL q640 castle mean=0.5841 med=0.5763 p90=0.6072
+STRIP q640 castle mean=0.0972 med=0.0882 p90=0.1225
+SHIFTCOPY q640 castle mean=0.0021 med=0.0021 p90=0.0021
+NPCRECT q640 castle mean=0.0577 med=0.0528 p90=0.0725
+LERP q640 castle mean=0.5916 med=0.5730 p90=0.6367
+SHOW q640 castle mean=0.6165 med=0.5977 p90=0.6430
+PAINT q640 castle S=2 mode=1 mean=1.7016 med=1.6571 p90=1.7297 min=1.6017 max=2.6695 | map=1.7007 flats=0.2178 flatrle=0.0002 objs=1.4825 black=0.0001 eff=0.0001 border=0.0000 gumps=0.0001 lights=0.0003 cold=1.924 cacheMB=0.00 entries=0
+PAINT q640 castle S=2 mode=2 mean=1.4865 med=1.4672 p90=1.5096 min=1.4276 max=2.0933 | map=1.4856 flats=0.0241 flatrle=0.0002 objs=1.4611 black=0.0001 eff=0.0000 border=0.0001 gumps=0.0001 lights=0.0003 cold=4.922 cacheMB=2.63 entries=184
+PAINT q640 castle S=3 mode=1 mean=2.3905 med=2.3428 p90=2.5161 min=2.2758 max=3.1399 | map=2.3895 flats=0.2731 flatrle=0.0002 objs=2.1160 black=0.0001 eff=0.0001 border=0.0001 gumps=0.0001 lights=0.0003 cold=2.392 cacheMB=0.00 entries=0
+PAINT q640 castle S=3 mode=2 mean=2.3354 med=2.3139 p90=2.4142 min=2.2724 max=2.8818 | map=2.3345 flats=0.0387 flatrle=0.0003 objs=2.2955 black=0.0000 eff=0.0001 border=0.0001 gumps=0.0001 lights=0.0003 cold=9.774 cacheMB=5.84 entries=184
+SCENE q640 throne tile=936,1140,0 in_dungeon=0 chunks=48 objs=1336 flatrle=0 lights=10 rle_calls=463 remap=0 px_flat=256000 px_rle=285118 px_xlu=82367 px_fill=105958 xlu_calls=24426 copy8=20
+PAINT q640 throne S=1 mode=0 mean=0.5584 med=0.5518 p90=0.5912 min=0.5051 max=0.9904 | map=0.5577 flats=0.0053 flatrle=0.0002 objs=0.5521 black=0.0000 eff=0.0000 border=0.0000 gumps=0.0001 lights=0.0003
+DIRTYALL q640 throne mean=0.5589 med=0.5504 p90=0.5903
+STRIP q640 throne mean=0.0863 med=0.0796 p90=0.1085
+SHIFTCOPY q640 throne mean=0.0022 med=0.0021 p90=0.0021
+NPCRECT q640 throne mean=0.0286 med=0.0269 p90=0.0308
+LERP q640 throne mean=0.5559 med=0.5514 p90=0.5892
+SHOW q640 throne mean=0.6138 med=0.5958 p90=0.6692
+PAINT q640 throne S=2 mode=1 mean=1.6874 med=1.6090 p90=1.9348 min=1.5495 max=2.4777 | map=1.6865 flats=0.2479 flatrle=0.0002 objs=1.4382 black=0.0001 eff=0.0001 border=0.0001 gumps=0.0001 lights=0.0003 cold=2.061 cacheMB=0.00 entries=0
+PAINT q640 throne S=2 mode=2 mean=1.4124 med=1.4002 p90=1.4480 min=1.3546 max=1.7506 | map=1.4113 flats=0.0228 flatrle=0.0002 objs=1.3882 black=0.0001 eff=0.0001 border=0.0001 gumps=0.0001 lights=0.0003 cold=4.745 cacheMB=2.66 entries=172
+PAINT q640 throne S=3 mode=1 mean=2.3730 med=2.2908 p90=2.5507 min=2.2273 max=3.3318 | map=2.3721 flats=0.3081 flatrle=0.0002 objs=2.0636 black=0.0001 eff=0.0001 border=0.0001 gumps=0.0001 lights=0.0003 cold=2.320 cacheMB=0.00 entries=0
+PAINT q640 throne S=3 mode=2 mean=2.2309 med=2.1916 p90=2.3481 min=2.1433 max=2.7362 | map=2.2300 flats=0.0377 flatrle=0.0003 objs=2.1919 black=0.0001 eff=0.0001 border=0.0001 gumps=0.0001 lights=0.0003 cold=9.306 cacheMB=5.92 entries=172
+SCENE q640 forest tile=600,600,0 in_dungeon=0 chunks=48 objs=495 flatrle=386 lights=0 rle_calls=260 remap=0 px_flat=256000 px_rle=150105 px_xlu=1053 px_fill=129 xlu_calls=218 copy8=25
+PAINT q640 forest S=1 mode=0 mean=0.1097 med=0.0997 p90=0.1400 min=0.0926 max=0.3045 | map=0.1093 flats=0.0047 flatrle=0.0173 objs=0.0872 black=0.0000 eff=0.0000 border=0.0000 gumps=0.0000 lights=0.0002
+DIRTYALL q640 forest mean=0.1076 med=0.0982 p90=0.1403
+STRIP q640 forest mean=0.0127 med=0.0122 p90=0.0124
+SHIFTCOPY q640 forest mean=0.0022 med=0.0021 p90=0.0022
+NPCRECT q640 forest mean=0.0058 med=0.0056 p90=0.0057
+LERP q640 forest mean=0.1108 med=0.1008 p90=0.1437
+SHOW q640 forest mean=0.6202 med=0.5978 p90=0.6959
+PAINT q640 forest S=2 mode=1 mean=0.5387 med=0.5212 p90=0.5747 min=0.4828 max=1.0708 | map=0.5379 flats=0.2403 flatrle=0.0395 objs=0.2581 black=0.0000 eff=0.0001 border=0.0000 gumps=0.0001 lights=0.0004 cold=0.610 cacheMB=0.00 entries=0
+PAINT q640 forest S=2 mode=2 mean=0.3034 med=0.3002 p90=0.3375 min=0.2691 max=0.4399 | map=0.3028 flats=0.0222 flatrle=0.0365 objs=0.2440 black=0.0000 eff=0.0000 border=0.0000 gumps=0.0001 lights=0.0003 cold=3.019 cacheMB=2.17 entries=90
+PAINT q640 forest S=3 mode=1 mean=0.7048 med=0.7033 p90=0.7243 min=0.6676 max=0.8384 | map=0.7039 flats=0.3054 flatrle=0.0481 objs=0.3503 black=0.0000 eff=0.0001 border=0.0000 gumps=0.0001 lights=0.0004 cold=0.766 cacheMB=0.00 entries=0
+PAINT q640 forest S=3 mode=2 mean=0.5605 med=0.5613 p90=0.5911 min=0.5267 max=0.6544 | map=0.5597 flats=0.0397 flatrle=0.0608 objs=0.4591 black=0.0000 eff=0.0000 border=0.0000 gumps=0.0001 lights=0.0004 cold=6.275 cacheMB=4.85 entries=90
+SCENE q640 dung tile=580,1200,0 in_dungeon=5 chunks=48 objs=550 flatrle=61 lights=33 rle_calls=204 remap=0 px_flat=256000 px_rle=106543 px_xlu=1792 px_fill=328 xlu_calls=367 copy8=24
+PAINT q640 dung S=1 mode=0 mean=0.0806 med=0.0751 p90=0.1013 min=0.0697 max=0.1495 | map=0.0803 flats=0.0049 flatrle=0.0040 objs=0.0676 black=0.0037 eff=0.0000 border=0.0000 gumps=0.0000 lights=0.0001
+DIRTYALL q640 dung mean=0.0856 med=0.0751 p90=0.1014
+STRIP q640 dung mean=0.0127 med=0.0124 p90=0.0125
+SHIFTCOPY q640 dung mean=0.0021 med=0.0021 p90=0.0022
+NPCRECT q640 dung mean=0.0066 med=0.0059 p90=0.0062
+LERP q640 dung mean=0.0803 med=0.0745 p90=0.1009
+SHOW q640 dung mean=0.5099 med=0.5081 p90=0.5285
+PAINT q640 dung S=2 mode=1 mean=0.3746 med=0.3664 p90=0.4133 min=0.3283 max=0.6931 | map=0.3741 flats=0.2322 flatrle=0.0093 objs=0.1284 black=0.0042 eff=0.0000 border=0.0000 gumps=0.0001 lights=0.0002 cold=0.493 cacheMB=0.00 entries=0
+PAINT q640 dung S=2 mode=2 mean=0.2063 med=0.2007 p90=0.2286 min=0.1817 max=0.2641 | map=0.2059 flats=0.0189 flatrle=0.0075 objs=0.1756 black=0.0039 eff=0.0000 border=0.0000 gumps=0.0000 lights=0.0001 cold=2.644 cacheMB=1.90 entries=84
+PAINT q640 dung S=3 mode=1 mean=0.5104 med=0.4902 p90=0.5596 min=0.4635 max=0.9299 | map=0.5098 flats=0.3149 flatrle=0.0131 objs=0.1778 black=0.0039 eff=0.0000 border=0.0000 gumps=0.0001 lights=0.0002 cold=0.527 cacheMB=0.00 entries=0
+PAINT q640 dung S=3 mode=2 mean=0.4012 med=0.3790 p90=0.4598 min=0.3597 max=0.8434 | map=0.4006 flats=0.0396 flatrle=0.0118 objs=0.3450 black=0.0040 eff=0.0000 border=0.0000 gumps=0.0001 lights=0.0002 cold=6.169 cacheMB=4.26 entries=84
+#   translucent shapes found: 37 (first: 177)
+SCENE q640 brit_xlu tile=860,1380,0 in_dungeon=0 chunks=42 objs=951 flatrle=34 lights=16 rle_calls=306 remap=0 px_flat=256000 px_rle=238205 px_xlu=43361 px_fill=8348 xlu_calls=6107 copy8=24
+PAINT q640 brit_xlu S=1 mode=0 mean=0.2818 med=0.2791 p90=0.3083 min=0.2519 max=0.7139 | map=0.2813 flats=0.0052 flatrle=0.0198 objs=0.2562 black=0.0000 eff=0.0000 border=0.0000 gumps=0.0000 lights=0.0002
+DIRTYALL q640 brit_xlu mean=0.2967 med=0.2807 p90=0.3468
+STRIP q640 brit_xlu mean=0.0208 med=0.0197 p90=0.0211
+SHIFTCOPY q640 brit_xlu mean=0.0022 med=0.0021 p90=0.0021
+NPCRECT q640 brit_xlu mean=0.0165 med=0.0158 p90=0.0161
+LERP q640 brit_xlu mean=0.2921 med=0.2810 p90=0.3145
+SHOW q640 brit_xlu mean=0.6082 med=0.6022 p90=0.6281
+PAINT q640 brit_xlu S=2 mode=1 mean=0.8610 med=0.8464 p90=0.8913 min=0.8135 max=1.2192 | map=0.8603 flats=0.2087 flatrle=0.0559 objs=0.5956 black=0.0000 eff=0.0001 border=0.0000 gumps=0.0001 lights=0.0003 cold=1.067 cacheMB=0.00 entries=0
+PAINT q640 brit_xlu S=2 mode=2 mean=0.6774 med=0.6608 p90=0.6936 min=0.6372 max=1.0785 | map=0.6767 flats=0.0216 flatrle=0.0625 objs=0.5924 black=0.0000 eff=0.0000 border=0.0000 gumps=0.0001 lights=0.0003 cold=3.193 cacheMB=2.04 entries=123
+PAINT q640 brit_xlu S=3 mode=1 mean=1.1952 med=1.1746 p90=1.2398 min=1.1516 max=1.7869 | map=1.1944 flats=0.2773 flatrle=0.0950 objs=0.8219 black=0.0001 eff=0.0001 border=0.0001 gumps=0.0001 lights=0.0003 cold=1.211 cacheMB=0.00 entries=0
+PAINT q640 brit_xlu S=3 mode=2 mean=1.1453 med=1.1033 p90=1.2623 min=1.0642 max=1.8698 | map=1.1445 flats=0.0412 flatrle=0.1144 objs=0.9887 black=0.0000 eff=0.0000 border=0.0001 gumps=0.0001 lights=0.0003 cold=6.497 cacheMB=4.54 entries=123
+# done q640

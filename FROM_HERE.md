@@ -1,0 +1,126 @@
+# FROM_HERE: handover for the next agent
+
+Status date: 2026-10-07. Owner: Simone Avogadro (GitHub `SimoneAvogadro`). The owner's language is Italian:
+answer in Italian, write code, commits and docs in English.
+
+## 1. What this fork is
+
+A fork of Exult, the Ultima VII engine, with two goals:
+
+1. **High-resolution world rendering.** The game world renders internally at an integer **render scale S**.
+   The target is S=6, that is 6x the *original* game resolution: a 320x200 game view becomes 1920x1200.
+   - Game logic, hit testing and mouse picking stay in original game pixels.
+   - If the window is smaller than the render, the image is downscaled at present time.
+   - Larger "extended" views also run at S=6; the user accepts that. On the user's fullscreen profile
+     (3440x1440, game view 860x300) the internal size is 5160x1800.
+2. **Hi-res art overrides.** Mods can replace shape frames selectively with 6x art: one tile, a group, or a
+   whole 16x16-tile terrain chunk.
+   - The art is palette-indexed against palette 0, so day/night, colour cycling and translucency keep
+     working.
+   - Terrain flats (shapes 0..149 of `shapes.vga`, 8x8 px) come first. RLE sprites are milestone M2; UI,
+     gumps, fonts and faces are M3.
+
+The authoritative spec is **`docs/hires/DESIGN.md`**:
+- §2: invariants;
+- §5: override file format and rules;
+- §9: work packages (WP);
+- §12: adversarial review log;
+- §13: user decisions.
+
+Background and per-WP notes are in **`docs/hires/notes/`**, copied from the owner's machine:
+- `analysis/`: code analysis of upstream master; start with `analysis/00_architecture_map.md`;
+- `design/`: the three original proposals and DESIGN rev 2;
+- `impl/WP-*.md`: per-WP implementation notes with exact commands and deviations; read the WP you touch;
+- `upscale-research/`: AI and algorithmic upscaler research; `00_recommendation.md` is the summary;
+- `art/phase_a_report.md` and `art/phase_b_pilot.md`: art results;
+- `test/windows_matrix.md`: Windows performance measurements;
+- `workflows/*.js`: the orchestration scripts used so far, for reference only. Their paths are the owner's.
+
+## 2. Branches (remote `fork` = github.com/SimoneAvogadro/exult)
+
+| Branch | Base | Content |
+|---|---|---|
+| `hires` | upstream `8b6ab6b43` | **Main feature branch.** The engine work, tests and docs. This file lives here. |
+| `hires-art` | upstream `8b6ab6b43` | Python art tooling `tools/hires/u7hires/` (pipeline, QA, validator, packer, routes 1/2/3, voting). **Not merged into `hires` yet.** Merge it (expect conflicts in `tools/hires/`) or keep it separate. |
+| `upstream-fixes` | upstream `8b6ab6b43` | Upstreamable bug fixes that change 1x output (P1, P2, P5 plus tests). They are deliberately kept **out** of `hires`, so `hires` stays byte-identical to upstream at S=1. The owner decides whether to submit them to exult/exult. |
+
+`master` on the fork is upstream plus one owner commit. It is not used by this work.
+
+## 3. Done (all on `hires` unless stated)
+
+| WP | Content |
+|---|---|
+| WP-00 | Build matrix: -O2, ASan/UBSan, SDL 3.2.14 lane, upstream reference build; buildmap goldens |
+| WP-01 | Test infrastructure: vendored doctest, `make check` (`tests/unit`, `tests/present`), `tests/game` (game-data oracles), `tools/hires/ci.sh`, pytest smoke |
+| WP-02 | Windows GPU probe: INDEX8 textures are pixel-exact on D3D11, D3D12, Vulkan and OpenGL (RTX 5070 Ti). Notes only |
+| WP-03 | Prerequisites: P3 zero-fill, `find_flat_source`/`paint_flats`, minimap 1x buffer, flats cache size, main-buffer ownership, pngio leak, opaque palette, `create_buffer_1x` |
+| WP-04 | Scaled `Image_buffer8` (`pixel_scale`, logical API with physical storage, `ibuf8_scaled.cc`, write tracker) with a fuzz oracle against nearest-neighbour |
+| WP-05 | Scale policy (`world_scale.h`) and `World_presenter`. Includes INDEX8 and tracked uploads, so **WP-14 is effectively done** |
+| WP-06 | World integration: flats cache per scale, `blit`, resize toast |
+| WP-07 | `--render-test` headless region renderer and oracles; `tests/game` scripts; perf baseline |
+| WP-08 | Override store (`shapes/hires_png`, `hires_rules`, `hires_store`, bundle reader), `hires_glue`, the `<HIRES>` path tag |
+| WP-09 | Per-tile hi-res flats in `Chunk_terrain::paint_flats`; identity and marker oracles (`tools/hires/mkpack_identity.py`) |
+| WP-11 | `--dump-art` reference set (flats, templates, terrain T1 keys, maps) |
+| WP-10 | Developer loop: Ctrl-Alt-O toggle, Ctrl-Alt-R reload, Ctrl-Alt-I inspect, `.reload` trigger file |
+| WP-15 (WIP) | Windows build with MSYS2 UCRT64 on the owner's PC, plus measurements. Last commit "WIP WP-15"; see §4 |
+
+On the owner's PC, outside the repo:
+- the Windows build is installed in `E:\Dati\Ultima7_Upscale\ExultHires`;
+- the launcher is `Play-ExultHires.bat`; the config is `exult-hires.cfg` (`render_scale=art`, `dev=yes`, pack `packs\bg`);
+- measured on the 860x300 view at S=6 with real art: p95 frame time **2.7 ms on D3D11**.
+
+**Art (local only, never committed: the art is derived from EA data).** All 3,885 Black Gate flats exist at 6x.
+- Packs:
+  - `packs/bg`: the default, route-3 hybrid xBRZ; passes every QA gate;
+  - `bg-r3`: plain xBRZ;
+  - `bg-r2`: NXbrz model.
+- Where they are: `/home/simonea/ultima7_exult/packs` on the WSL machine, mirrored to `E:\Dati\Ultima7_Upscale\packs`.
+- Limitation: the algorithmic routes add no detail inside grass, dirt and sand.
+- Diffusion pilot (SDXL + xinsir Tile ControlNet, `tools/hires/u7hires/route1.py` on `hires-art`):
+  - it adds believable detail, but only on **whole terrains**, not as per-tile flats, which seam;
+  - so the production path is per-terrain overrides (WP-17) plus border blending.
+
+## 4. What is left, in order
+
+1. **Finish WP-15.** The last minor review findings were being fixed when the session ended.
+   - Review the "WIP WP-15" commit (`render_test.cc` walk bench, `hires_glue.cc` Windows path fix, `tests/windows/`).
+   - Run `make check`.
+   - Amend or follow up with a clean commit.
+   - The Windows-side re-verification needs the owner's PC.
+2. **WP-16, performance pass** (DESIGN §9): `memset` runs in the scaled RLE painter, row-batched translucency, a `fast_paths` test. The current numbers already pass, so this is optional polish.
+3. **WP-17, per-terrain overrides** (DESIGN §3.4, §3.5, §5.2): a T1 key cache in `Chunk_terrain`, `Store::terrain` decode with precedence terrain > tile > NN, and an identity oracle for terrains. **This unlocks the diffusion art.**
+4. **Wrap-up docs:** the user guide `docs/hires.md` and `docs/hires_modding.md`; then rerun the full test matrix.
+5. **Art phase B2** (owner's machine with GPU): generate 5-10 per-terrain overrides with route 1, blend the borders, A/B them in the engine; then a production run of about 600-1,100 terrains (3-6 GPU hours).
+6. **M2, sprites** (DESIGN §3.6) and **M3, UI** (§3.7).
+
+## 5. How to build and test (generic Linux, e.g. a cloud VM)
+
+- **Dependencies:** a C++17 compiler, autotools, pkg-config, SDL3 ≥ 3.2 (3.4 enables INDEX8 and PIXELART), libpng, zlib, ogg and vorbis.
+  - The owner's WSL had no sudo, so everything was built in user space. That is not needed on a normal VM.
+
+```bash
+autoreconf -v -i
+mkdir ../build && cd ../build
+../exult/configure --disable-exult-studio --disable-gimp-plugin --disable-aseprite-plugin \
+    --disable-shp-thumbnailer --with-optimization=normal --with-debug=symbols
+make -j"$(nproc)" && make check      # data-free unit + presenter tests (SDL offscreen/software)
+```
+
+- **Game-data tests:** `make check-game` with `U7_BG_STATIC=<Black Gate static dir>`. They need the original Ultima VII files, which are copyrighted, **not in the repo**, and not available in the cloud. Without them the scripts exit 77 (skip).
+  - So in the cloud only `make check` and code review are possible.
+  - Pixel-level oracles, art production and the Windows build must run on the owner's machine.
+- **ASan:** build with `--with-optimization=light` and `CXXFLAGS="-fsanitize=address,undefined -fno-sanitize=null,alignment,vptr"`.
+  - With g++ 9.4, the three excluded UBSan checks make `exult.cc` compile forever.
+  - Under WSL2, run ASan processes as `setarch x86_64 -R` (ASLR hang).
+- **Build lists:** register every new source file in `Makefile.am`, `Makefile.common` and `msvcstuff/vs2019/*.vcxproj(+filters)`. `tools/hires/check_build_lists.py --strict` lints this.
+
+## 6. Rules and gotchas
+
+- **S=1 must stay byte-identical to upstream (+P3).** S>1 code goes in new files or functions, with one-line hooks in existing ones. Never change 1x output on `hires`; put that on `upstream-fixes`.
+- **Never commit EA-derived pixels.** That covers packs, renders and dumps. Commit hash lists only.
+- **Paint order depends on heap address order.** `Game_object::dependencies` is a `std::set` of pointers (`objs/objs.h:93`). Builds with a different allocator, such as ASan, produce slightly different buildmaps, so each lane has its own reference.
+- **The owner's PC had unstable RAM:** bit flips under load and a 0x1A bugcheck. The overclock is now disabled, but stability is not yet proven.
+  - On that machine keep loads moderate.
+  - Re-run non-reproducible failures before debugging them.
+  - Produce art with the redundancy/vote tools (`tools/hires/README.md` on `hires-art`).
+- **Commits:** messages end with `Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>`. Push to the `fork` remote only, never to exult/exult.

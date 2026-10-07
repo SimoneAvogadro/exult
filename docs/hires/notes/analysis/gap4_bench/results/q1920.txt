@@ -1,0 +1,67 @@
+# tag=q1920 game=1920x1080 full=1920x1080 off=0,0 N=200
+SCENE q1920 start tile=1079,2214,0 in_dungeon=0 chunks=198 objs=2858 flatrle=247 lights=15 rle_calls=1878 remap=0 px_flat=2073600 px_rle=1394462 px_xlu=36919 px_fill=25645 xlu_calls=7935 copy8=144
+PAINT q1920 start S=1 mode=0 mean=2.2039 med=2.1678 p90=2.3139 min=2.1066 max=2.9046 | map=2.2030 flats=0.8011 flatrle=0.2626 objs=1.1392 black=0.0001 eff=0.0001 border=0.0000 gumps=0.0001 lights=0.0004
+DIRTYALL q1920 start mean=2.2178 med=2.1603 p90=2.3787
+STRIP q1920 start mean=0.0087 med=0.0079 p90=0.0080
+SHIFTCOPY q1920 start mean=0.0186 med=0.0187 p90=0.0191
+NPCRECT q1920 start mean=0.0153 med=0.0146 p90=0.0149
+LERP q1920 start mean=2.1867 med=2.1690 p90=2.2364
+SHOW q1920 start mean=2.7589 med=2.6856 p90=2.9259
+SCENE q1920 brit_st tile=860,1380,0 in_dungeon=0 chunks=187 objs=3863 flatrle=117 lights=17 rle_calls=2432 remap=0 px_flat=2073600 px_rle=1896622 px_xlu=35074 px_fill=9456 xlu_calls=5765 copy8=144
+PAINT q1920 brit_st S=1 mode=0 mean=1.5829 med=1.5440 p90=1.6646 min=1.4930 max=2.2915 | map=1.5820 flats=0.0412 flatrle=0.1197 objs=1.4209 black=0.0001 eff=0.0000 border=0.0000 gumps=0.0001 lights=0.0003
+DIRTYALL q1920 brit_st mean=1.5612 med=1.5391 p90=1.5964
+STRIP q1920 brit_st mean=0.0293 med=0.0273 p90=0.0324
+SHIFTCOPY q1920 brit_st mean=0.0188 med=0.0187 p90=0.0191
+NPCRECT q1920 brit_st mean=0.0121 med=0.0116 p90=0.0117
+LERP q1920 brit_st mean=1.5806 med=1.5440 p90=1.6461
+SHOW q1920 brit_st mean=2.7321 med=2.6849 p90=2.8830
+SCENE q1920 brit_mkt tile=880,1300,0 in_dungeon=0 chunks=198 objs=3586 flatrle=120 lights=21 rle_calls=2225 remap=0 px_flat=2073600 px_rle=1635772 px_xlu=32354 px_fill=13104 xlu_calls=5841 copy8=144
+PAINT q1920 brit_mkt S=1 mode=0 mean=1.3312 med=1.2954 p90=1.3893 min=1.2548 max=2.1806 | map=1.3303 flats=0.0409 flatrle=0.0295 objs=1.2597 black=0.0001 eff=0.0000 border=0.0001 gumps=0.0001 lights=0.0003
+DIRTYALL q1920 brit_mkt mean=1.3252 med=1.2990 p90=1.3700
+STRIP q1920 brit_mkt mean=0.0232 med=0.0215 p90=0.0274
+SHIFTCOPY q1920 brit_mkt mean=0.0188 med=0.0186 p90=0.0189
+NPCRECT q1920 brit_mkt mean=0.0206 med=0.0196 p90=0.0203
+LERP q1920 brit_mkt mean=1.3624 med=1.3396 p90=1.4698
+SHOW q1920 brit_mkt mean=2.7934 med=2.7387 p90=3.0172
+SCENE q1920 castle tile=940,1160,0 in_dungeon=0 chunks=187 objs=3021 flatrle=48 lights=13 rle_calls=1990 remap=0 px_flat=2073600 px_rle=1442324 px_xlu=225200 px_fill=308542 xlu_calls=65224 copy8=144
+PAINT q1920 castle S=1 mode=0 mean=2.5614 med=2.4982 p90=2.7248 min=2.4083 max=3.6504 | map=2.5603 flats=0.7111 flatrle=0.0113 objs=1.8378 black=0.0001 eff=0.0001 border=0.0000 gumps=0.0001 lights=0.0005
+DIRTYALL q1920 castle mean=2.5292 med=2.4873 p90=2.6490
+STRIP q1920 castle mean=0.0187 med=0.0173 p90=0.0228
+SHIFTCOPY q1920 castle mean=0.0178 med=0.0173 p90=0.0179
+NPCRECT q1920 castle mean=0.0620 med=0.0565 p90=0.0768
+LERP q1920 castle mean=2.5340 med=2.4926 p90=2.6887
+SHOW q1920 castle mean=2.7442 med=2.6758 p90=2.9425
+SCENE q1920 throne tile=936,1140,0 in_dungeon=0 chunks=198 objs=3204 flatrle=64 lights=13 rle_calls=1727 remap=0 px_flat=2073600 px_rle=1238328 px_xlu=191514 px_fill=256677 xlu_calls=55294 copy8=135
+PAINT q1920 throne S=1 mode=0 mean=2.3241 med=2.2812 p90=2.4516 min=2.2119 max=3.0186 | map=2.3230 flats=0.7402 flatrle=0.0130 objs=1.5697 black=0.0001 eff=0.0001 border=0.0001 gumps=0.0001 lights=0.0004
+DIRTYALL q1920 throne mean=2.3197 med=2.2744 p90=2.4165
+STRIP q1920 throne mean=0.0338 med=0.0320 p90=0.0351
+SHIFTCOPY q1920 throne mean=0.0208 med=0.0187 p90=0.0289
+NPCRECT q1920 throne mean=0.0410 med=0.0373 p90=0.0530
+LERP q1920 throne mean=2.3331 med=2.2829 p90=2.4546
+SHOW q1920 throne mean=2.7521 med=2.6741 p90=3.1779
+SCENE q1920 forest tile=600,600,0 in_dungeon=0 chunks=198 objs=1997 flatrle=1483 lights=0 rle_calls=2320 remap=0 px_flat=2073600 px_rle=1527168 px_xlu=6497 px_fill=1120 xlu_calls=1080 copy8=135
+PAINT q1920 forest S=1 mode=0 mean=1.0680 med=1.0588 p90=1.1012 min=1.0212 max=1.4430 | map=1.0669 flats=0.0395 flatrle=0.1267 objs=0.9005 black=0.0001 eff=0.0001 border=0.0000 gumps=0.0001 lights=0.0006
+DIRTYALL q1920 forest mean=1.0691 med=1.0571 p90=1.1117
+STRIP q1920 forest mean=0.0244 med=0.0229 p90=0.0247
+SHIFTCOPY q1920 forest mean=0.0185 med=0.0186 p90=0.0189
+NPCRECT q1920 forest mean=0.0061 med=0.0056 p90=0.0057
+LERP q1920 forest mean=1.0780 med=1.0632 p90=1.1086
+SHOW q1920 forest mean=2.7837 med=2.6825 p90=2.8320
+SCENE q1920 dung tile=580,1200,0 in_dungeon=5 chunks=198 objs=1842 flatrle=360 lights=49 rle_calls=1363 remap=0 px_flat=2073600 px_rle=756745 px_xlu=7168 px_fill=433900 xlu_calls=1755 copy8=160
+PAINT q1920 dung S=1 mode=0 mean=0.8021 med=0.7899 p90=0.8278 min=0.7481 max=1.2310 | map=0.8013 flats=0.0407 flatrle=0.0491 objs=0.5772 black=0.1342 eff=0.0001 border=0.0000 gumps=0.0001 lights=0.0003
+DIRTYALL q1920 dung mean=0.8020 med=0.7890 p90=0.8264
+STRIP q1920 dung mean=0.0229 med=0.0215 p90=0.0226
+SHIFTCOPY q1920 dung mean=0.0190 med=0.0186 p90=0.0189
+NPCRECT q1920 dung mean=0.0060 med=0.0058 p90=0.0059
+LERP q1920 dung mean=0.7877 med=0.7855 p90=0.8116
+SHOW q1920 dung mean=2.5199 med=2.4827 p90=2.6301
+#   translucent shapes found: 37 (first: 177)
+SCENE q1920 brit_xlu tile=860,1380,0 in_dungeon=0 chunks=187 objs=3917 flatrle=127 lights=24 rle_calls=2431 remap=0 px_flat=2073600 px_rle=1896601 px_xlu=73767 px_fill=16759 xlu_calls=11116 copy8=144
+PAINT q1920 brit_xlu S=1 mode=0 mean=1.7203 med=1.6911 p90=1.7540 min=1.6329 max=2.7369 | map=1.7194 flats=0.0420 flatrle=0.1373 objs=1.5400 black=0.0001 eff=0.0001 border=0.0000 gumps=0.0001 lights=0.0003
+DIRTYALL q1920 brit_xlu mean=1.7098 med=1.6869 p90=1.7495
+STRIP q1920 brit_xlu mean=0.0351 med=0.0300 p90=0.0428
+SHIFTCOPY q1920 brit_xlu mean=0.0174 med=0.0173 p90=0.0177
+NPCRECT q1920 brit_xlu mean=0.0242 med=0.0208 p90=0.0310
+LERP q1920 brit_xlu mean=1.7086 med=1.6872 p90=1.7514
+SHOW q1920 brit_xlu mean=2.7322 med=2.6736 p90=2.9155
+# done q1920

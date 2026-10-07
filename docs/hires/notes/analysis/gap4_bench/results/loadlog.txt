@@ -1,0 +1,12 @@
+q320 load: 3.63 12.98 13.55
+q320 exit=0 load-after: 3.29 12.60 13.42
+q640 load: 3.29 12.60 13.42
+q640 exit=0 load-after: 2.94 12.22 13.29
+q1280 load: 2.94 12.22 13.29
+q1280 exit=0 load-after: 2.64 11.85 13.16
+q1720 load: 2.64 11.85 13.16
+q1720 exit=0 load-after: 2.44 11.21 12.92
+q1920 load: 2.44 11.21 12.92
+q1920 exit=0 load-after: 2.12 10.71 12.73
+q320O0 load: 2.12 10.71 12.73
+q320O0 exit=0 load-after: 1.87 10.23 12.54
