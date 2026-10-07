@@ -65,7 +65,7 @@ Background and per-WP notes are in **`docs/hires/notes/`**, copied from the owne
 | WP-15 | Windows build with MSYS2 UCRT64 on the owner's PC, plus measurements. Code and review fixes complete (commit "WIP WP-15"); `make check` re-run in the cloud on 2026-10-07. Open: WP-15b, the interactive Windows checks of `notes/impl/WP-15.md` §6 |
 | §13.1 | **User decision 2026-10-07: always 6x.** `render_scale` defaults to `art` (Android/iOS keep `off`); precedence terrain → tile → NN, NN without smoothing |
 | WP-17 | Per-terrain overrides in the engine (`Chunk_terrain::get_t1_key`, `paint_hires_terrain`), inspector, `--render-test marked=terrain`, `mkpack_identity.py --terrain`, unit and pytest cases. Verified end to end on the synthetic world (`make check-world`); the BG cases of `override_regions.sh` are not run yet; see `notes/impl/WP-17.md` |
-| BG in the cloud | The private repos `SimoneAvogadro/u7assets` (original game files) and `SimoneAvogadro/ultima7-high-res-tiles` (packs, art_ref, pilot) let a cloud session run `make check-game` (`U7_BG_STATIC=<u7assets>/blackgate/static`): all pass after the `terrain-reduce-britain` fix (notes/impl/WP-17.md §2c). Clone them **outside** the exult tree; nothing from them is ever committed here |
+| BG in the cloud | With the private repos of §4b, a cloud session ran `make check-game`: all pass after the `terrain-reduce-britain` fix (notes/impl/WP-17.md §2c). pytest with `U7_BG_STATIC`, `U7_XBRZ_LIB` and `U7_ART_ORIGINAL=<hires-assets>/art_original`: all pass but the numpy version pin of that venv |
 | mkterrain | `tools/hires/mkterrain.py`: whole-terrain overrides from route-1 windows; terrains 1825/1826 of the pilot verified in the engine |
 | Test world | `tests/data/hires/world` (generator `make_world.py`) and `tests/world/world_tests.sh` (`make check-world`, also a `ci.sh` step): 25 cases, data-free. `dev_loop.sh`'s `golden/inspect.json` was updated by hand for WP-17 (its fake terrain file is now rejected, F1, when painted), as the world test confirmed; re-run `dev_loop.sh` on BG to confirm |
 
@@ -115,10 +115,10 @@ export U7_BG_STATIC=$PWD/u7assets/blackgate/static            # enables make che
 #            savegame/gamedat/patch/mods = scratch dirs OUTSIDE both repos (Exult writes there)
 ```
 
-With these, the game-data oracles and the art tooling (`hires-art` branch, `tools/hires/u7hires`) also work in
+With these, the game-data oracles and the art tooling (`tools/hires/u7hires`, merged from `hires-art`) also work in
 the cloud. GPU routes (route 1 diffusion, route 2 NXbrz) need a CUDA GPU. Model weights are not stored: route 1
 downloads SDXL base, xinsir/controlnet-tile-sdxl-1.0 and madebyollin/sdxl-vae-fp16-fix from HuggingFace, and
-the SR models are listed with SHA-256 in `tools/hires/u7hires` on `hires-art`.
+the SR models are listed with SHA-256 in `tools/hires/u7hires`.
 
 **Keep them in sync:** commit new packs or reports to `ultima7-high-res-tiles`, and pull before working.
 On the owner's WSL machine the clones are `/home/simonea/ultima7_exult/u7assets` and
