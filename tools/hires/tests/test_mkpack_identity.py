@@ -187,3 +187,104 @@ def test_refuses_output_overlapping_static(tmp_path, where):
     with pytest.raises(SystemExit):
         mkpack_identity.main([str(static), str(out), "--scales", "2", "--force"])
     assert sorted(os.listdir(static)) == before
+
+
+def fake_dump(root, layers, terrain_rows, filtered=False):
+    """A minimal --dump-art tree: terrain/<t1>.png (128x128 layers) and terrain.txt rows."""
+    tdir = root / "terrain"
+    tdir.mkdir(parents=True)
+    pal = expected_palette()
+    for key, layer in layers.items():
+        im = Image.fromarray(layer, "P")
+        im.putpalette(pal)
+        # Pillow picks PNG filters per row when optimizing: the decoder must undo them all.
+        im.save(tdir / f"{key}.png", optimize=filtered)
+    lines = ["# tnum t1 uses own_cells rle_cells missing_cells duplicate_of same_layer"]
+    lines += [" ".join(map(str, row)) for row in terrain_rows]
+    (root / "terrain.txt").write_text("\n".join(lines) + "\n")
+    return str(root)
+
+
+def gradient_layer(seed):
+    rng = np.random.default_rng(seed)
+    return rng.integers(0x10, 0xD0, size=(128, 128), dtype=np.uint8)
+
+
+@pytest.mark.parametrize("filtered", [False, True])
+def test_terrain_identity_and_marker(tmp_path, flats, filtered):
+    a, b, c, d = "00000000000000a1", "00000000000000b2", "00000000000000c3", "00000000000000d4"
+    layers = {a: gradient_layer(1), b: gradient_layer(2), c: gradient_layer(3), d: gradient_layer(4)}
+    layers[d][5, 7] = 0xFF                            # P0: skipped
+    rows = [(0, a, 3, 256, 0, 0, "-", "-"), (1, b, 1, 250, 6, 0, "-", "-"), (2, c, 1, 256, 0, 0, "-", "-"),
+            (3, c, 1, 250, 6, 0, 2, 0),               # c shared with a different layer: skipped
+            (4, a, 1, 256, 0, 0, 0, 1), (5, d, 1, 256, 0, 0, "-", "-")]
+    dump = fake_dump(tmp_path / "dump", layers, rows, filtered)
+    out = make(tmp_path, "--scales", "2,6", "--terrain", dump, "--terrain-kind", "marker", "--marker", "3")
+    for scale in (2, 6):
+        assert sorted(os.listdir(os.path.join(out, f"x{scale}", "terrain"))) == [f"{a}.png", f"{b}.png"]
+        for key in (a, b):
+            px, plte, text = read_png(os.path.join(out, f"x{scale}", "terrain", f"{key}.png"))
+            expect = np.repeat(np.repeat(layers[key], scale, 0), scale, 1)
+            expect[::scale, ::scale] = 3
+            assert np.array_equal(px, expect)
+            assert plte == expected_palette()
+            assert text["Exult-Terrain-Key"] == key and text["Exult-Origin"] == "marker:3"
+        # The tiles keep --kind (identity).
+        shape, frame = sorted(flats)[0]
+        px, _, _ = read_png(os.path.join(out, f"x{scale}", "flats", f"{shape:04d}", f"{shape:04d}_{frame:02d}.png"))
+        assert np.array_equal(px, np.repeat(np.repeat(flats[(shape, frame)], scale, 0), scale, 1))
+
+
+def test_terrain_only(tmp_path):
+    key = "0123456789abcdef"
+    layer = gradient_layer(7)
+    dump = fake_dump(tmp_path / "dump", {key: layer}, [(0, key, 1, 256, 0, 0, "-", "-")])
+    out = make(tmp_path, "--scales", "3", "--terrain", dump, "--no-flats")
+    assert sorted(os.listdir(os.path.join(out, "x3"))) == ["terrain"]
+    px, _, text = read_png(os.path.join(out, "x3", "terrain", f"{key}.png"))
+    assert np.array_equal(px, np.repeat(np.repeat(layer, 3, 0), 3, 1))
+    assert text["Exult-Origin"] == "identity"
+    meta = dict(line.split("=", 1) for line in open(os.path.join(out, "pack.txt")).read().splitlines())
+    assert meta["route"] == "identity"
+    # --force recognises the terrain-only pack as its own.
+    assert mkpack_identity.main([GAME, out, "--scales", "2", "--terrain", dump, "--no-flats", "--force"]) == 0
+
+
+def test_terrain_options_need_a_dump(tmp_path):
+    with pytest.raises(SystemExit):
+        mkpack_identity.main([GAME, str(tmp_path / "p"), "--no-flats"])
+    with pytest.raises(SystemExit):
+        mkpack_identity.main([GAME, str(tmp_path / "p"), "--terrain-kind", "marker"])
+
+
+def test_decode_png8_undoes_every_filter():
+    rng = np.random.default_rng(11)
+    w, h = 13, 10
+    px = rng.integers(0, 256, size=(h, w), dtype=np.int64)
+    raw = b""
+    prev = np.zeros(w, np.int64)
+    for y in range(h):
+        ftype = y % 5
+        cur = px[y]
+        a = np.concatenate(([0], cur[:-1]))
+        c = np.concatenate(([0], prev[:-1]))
+        if ftype == 0:
+            pred = np.zeros(w, np.int64)
+        elif ftype == 1:
+            pred = a
+        elif ftype == 2:
+            pred = prev
+        elif ftype == 3:
+            pred = (a + prev) >> 1
+        else:
+            p = a + prev - c
+            pa, pb, pc = abs(p - a), abs(p - prev), abs(p - c)
+            pred = np.where((pa <= pb) & (pa <= pc), a, np.where(pb <= pc, prev, c))
+        raw += bytes([ftype]) + bytes(((cur - pred) & 0xFF).astype(np.uint8))
+        prev = cur
+    chunk = mkpack_identity.png_chunk
+    data = (mkpack_identity.PNG_SIGNATURE + chunk(b"IHDR", struct.pack(">IIBBBBB", w, h, 8, 3, 0, 0, 0))
+            + chunk(b"PLTE", bytes(768)) + chunk(b"IDAT", zlib.compress(raw)) + chunk(b"IEND", b""))
+    dw, dh, out = mkpack_identity.decode_png8(data)
+    assert (dw, dh) == (w, h)
+    assert out == bytes(px.astype(np.uint8).tobytes())

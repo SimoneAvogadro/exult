@@ -1037,7 +1037,8 @@ namespace Hires {
 			for (int y = 0; y < side; y++) {
 				std::memcpy(dst + static_cast<size_t>(y) * dst_pitch, px.data() + static_cast<size_t>(y) * side, side);
 			}
-			t.info.rule = Rule::none;
+			t.info.state = Entry_state::loaded;
+			t.info.rule  = Rule::none;
 			t.info.detail.clear();
 			return true;
 		} catch (const std::exception& e) {
@@ -1050,6 +1051,11 @@ namespace Hires {
 			}
 			return false;
 		}
+	}
+
+	bool Store::has_terrain(uint64_t key) const {
+		const auto it = terrain_index.find(key);
+		return it != terrain_index.end() && it->second.info.state != Entry_state::rejected;
 	}
 
 	const Entry_info* Store::explain_flat(int shape, int frame) const {
@@ -1132,6 +1138,22 @@ namespace Hires {
 		}
 		const Store* s = store(scale);
 		return s != nullptr ? s->flat(shape, frame & 31) : Tile_view();
+	}
+
+	size_t Store_set::terrain_count(int scale) {
+		if (!is_on || scale < 2) {
+			return 0;
+		}
+		const Store* s = store(scale);
+		return s != nullptr ? s->terrain_count() : 0;
+	}
+
+	bool Store_set::has_terrain(uint64_t key, int scale) {
+		if (!is_on || scale < 2) {
+			return false;
+		}
+		const Store* s = store(scale);
+		return s != nullptr && s->has_terrain(key);
 	}
 
 	bool Store_set::terrain(uint64_t key, int scale, const uint8_t* layer1x, uint8_t* dst, int dst_w, int dst_h, int dst_pitch) {

@@ -59,6 +59,14 @@ namespace Hires {
 	 */
 	bool terrain(uint64_t key, int scale, const uint8_t* layer1x, uint8_t* dst, int dst_w, int dst_h, int dst_pitch);
 
+	// The number of terrain overrides indexed at 'scale' (0 when overrides are
+	// disabled, scale < 2 or the store failed): a cheap test before a T1 key.
+	size_t terrain_count(int scale);
+
+	// An override for T1 key 'key' is indexed at 'scale' and not known to be
+	// rejected; terrain() may still reject it on decode.
+	bool has_terrain(uint64_t key, int scale);
+
 	// Changes whenever flat() or terrain() may answer differently: caches that
 	// hold overrides compare it (WP-09).
 	uint32_t generation();

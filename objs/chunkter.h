@@ -43,6 +43,12 @@ class Chunk_terrain : public Game_singletons {
 	Image_buffer8* rendered_flats;    // Flats rendered for entire chunk.
 	int            rendered_scale = 1;    // Its pixel scale.
 	uint32         rendered_gen   = 0;    // Hires::generation() it was painted at (scale > 1).
+
+	// Hi-res: the T1 key of the terrain's own flats (per-terrain overrides),
+	//   valid while t1_valid and t1_gen == Hires::generation().
+	uint64 t1_key   = 0;
+	uint32 t1_gen   = 0;
+	bool   t1_valid = false;
 	// Most-recently used circular queue
 	//   for rendered_flats:
 	static Chunk_terrain* render_queue;
@@ -58,6 +64,9 @@ class Chunk_terrain : public Game_singletons {
 	void           free_rendered_flats();
 	// Hi-res: the cache was painted with the current overrides.
 	bool hires_flats_current() const;
+	// Hi-res: paint the per-terrain override into dst (scale > 1); false
+	//   when there is none.
+	bool paint_hires_terrain(Image_buffer8& dst);
 
 public:
 	// Create from 16x16x2 data:
@@ -121,6 +130,10 @@ public:
 
 	// Paint the flats (c_chunksize x c_chunksize) into dst.
 	void paint_flats(Image_buffer8& dst, bool overrides);
+
+	// Hi-res: the T1 key of the terrain's own flats (DESIGN.md section 5.2),
+	//   the key of its per-terrain override.  Cached; loads frames.
+	uint64 get_t1_key();
 
 	void render_all(int cx, int cy, int pass);    // Render terrain-editing mode.
 	// Write out to chunk.

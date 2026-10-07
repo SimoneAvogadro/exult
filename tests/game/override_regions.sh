@@ -15,6 +15,11 @@
 #     passes=all it differs from NN; repaints leave it unchanged;
 #   * O4b, per-tile fallback: a marker pack of the tiles whose shape + frame is even only
 #     (coverage=partial), so the same flats caches mix overridden and NN cells, predicted exactly;
+#   * WP-17, per-terrain overrides, from the 1x terrain layers of a --dump-art of the game:
+#     O4a with identity tiles plus identity terrains on every region (S = 2, 3, 6), and with x6
+#     terrains only (S = 2 and 3 reduced by the store); the precedence oracle (identity tiles plus
+#     marker terrains, marked=terrain, passes=flats): the marker exactly on the cells of the chunks
+#     whose terrain has an override, NN elsewhere;
 #   * toggle (I8): overrides on, off (NN of the reference, through Hires::generation() and the
 #     flats caches), on again (the first render), in one process, in pushed buffers and in the
 #     window's buffer with a game area offset in the full area; each toggle must render every flats
@@ -42,6 +47,16 @@ python3 "$mkpack" "$U7_BG_STATIC" "$packs/identity" || exit 2
 python3 "$mkpack" "$U7_BG_STATIC" "$packs/identity6" --scales 6 --bundle || exit 2
 python3 "$mkpack" "$U7_BG_STATIC" "$packs/marker" --kind marker --marker 1 || exit 2
 python3 "$mkpack" "$U7_BG_STATIC" "$packs/marker-even" --kind marker --marker 1 --scales 2,3,6 --subset even || exit 2
+# WP-17: the engine's own terrain layers and T1 keys.
+game_make_sandbox dump-for-terrain
+if ! game_run_exult --bg --dump-art "$packs/dump" || ! game_check_log "$GAME_SANDBOX/run.log"; then
+	echo "FAIL: --dump-art for the terrain packs (log: $GAME_SANDBOX/run.log)" >&2
+	exit 2
+fi
+game_cleanup > /dev/null
+python3 "$mkpack" "$U7_BG_STATIC" "$packs/terrain" --terrain "$packs/dump" || exit 2
+python3 "$mkpack" "$U7_BG_STATIC" "$packs/terrain6" --scales 6 --terrain "$packs/dump" --no-flats || exit 2
+python3 "$mkpack" "$U7_BG_STATIC" "$packs/terrain-marker" --terrain "$packs/dump" --terrain-kind marker --marker 1 || exit 2
 all_flats=$(find "$packs/identity/x6/flats" -name '*.png' | wc -l)
 even_flats=$(find "$packs/marker-even/x6/flats" -name '*.png' | wc -l)
 flats=$all_flats
@@ -84,6 +99,16 @@ while read -r name region; do
 	game_check_render "marker-$name" "$region,scales=2:3:6,overrides=yes,expect=marker:1,passes=flats,repaint=16"
 done < <(regions)
 
+GAME_HIRES_PACK=$packs/terrain
+while read -r name region; do
+	game_check_render "terrain-identity-$name" "$region,scales=2:3:6,overrides=yes,expect=identity,repaint=16"
+done < <(regions)
+
+GAME_HIRES_PACK=$packs/terrain-marker
+while read -r name region; do
+	game_check_render "terrain-precedence-$name" "$region,scales=2:3:6,overrides=yes,expect=marker:1,marked=terrain,passes=flats,repaint=16"
+done < <(regions)
+
 if [ -z "${REGIONS:-}" ]; then
 	britain="tx=800,ty=1330,lift=16,seed=1"
 	coast="tx=1040,ty=1560,w=640,h=400,lift=16,seed=1"
@@ -103,6 +128,9 @@ if [ -z "${REGIONS:-}" ]; then
 	flats=$even_flats
 	game_check_render marker-partial-britain "$britain,w=640,h=400,scales=2:3:6,overrides=yes,expect=marker:1,coverage=partial,passes=flats,repaint=16,toggle=1"
 	game_check_render marker-partial-coast "$coast,scales=2:6,overrides=yes,expect=marker:1,coverage=partial,passes=flats"
+	flats=0
+	GAME_HIRES_PACK=$packs/terrain6
+	game_check_render terrain-reduce-britain "$britain,w=640,h=400,scales=2:3:6,overrides=yes,expect=identity,coverage=partial"
 	flats=$all_flats
 fi
 

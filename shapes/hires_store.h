@@ -151,9 +151,9 @@ namespace Hires {
 	};
 
 	enum class Entry_state : uint8_t {
-		loaded,      // Served.
+		loaded,      // Served (terrain: decoded without a reject at least once).
 		rejected,    // Rejected, or (terrain) rejected when decoded.
-		indexed      // Terrain: found, not decoded yet (or decoded without a reject).
+		indexed      // Terrain: found, not decoded yet (or only P4-rejected so far).
 	};
 
 	// What the store knows about a key (for the inspector): the served
@@ -235,6 +235,10 @@ namespace Hires {
 		 */
 		bool terrain(uint64_t key, const uint8_t* layer1x, uint8_t* dst, int dst_w, int dst_h, int dst_pitch);
 
+		// A terrain override of T1 key 'key' is indexed and not latched as
+		// rejected (terrain() may still reject it when it decodes it).
+		bool has_terrain(uint64_t key) const;
+
 		const Entry_info* explain_flat(int shape, int frame) const;
 		const Entry_info* explain_terrain(uint64_t key) const;
 
@@ -298,6 +302,10 @@ namespace Hires {
 		Tile_view flat(int shape, int frame, int scale);
 		// Store::terrain of the store for 'scale' (false when disabled, scale < 2 or failed).
 		bool terrain(uint64_t key, int scale, const uint8_t* layer1x, uint8_t* dst, int dst_w, int dst_h, int dst_pitch);
+		// Store::terrain_count of the store for 'scale' (0 when disabled, scale < 2 or failed).
+		size_t terrain_count(int scale);
+		// Store::has_terrain of the store for 'scale' (false when disabled, scale < 2 or failed).
+		bool has_terrain(uint64_t key, int scale);
 
 		/*
 		 *  The store for 'scale', loading it now if needed; nullptr for

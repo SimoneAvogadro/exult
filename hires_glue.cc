@@ -217,6 +217,14 @@ namespace Hires {
 		return stores().terrain(key, scale, layer1x, dst, dst_w, dst_h, dst_pitch);
 	}
 
+	size_t terrain_count(int scale) {
+		return stores().terrain_count(scale);
+	}
+
+	bool has_terrain(uint64_t key, int scale) {
+		return stores().has_terrain(key, scale);
+	}
+
 	uint32_t generation() {
 		return stores().generation();
 	}

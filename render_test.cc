@@ -48,7 +48,13 @@
  *    coverage      full | partial (full): with expect=identity|marker, the
  *                  pack must cover every flat cell of the view (full), or
  *                  some but not all of them (partial: overridden and NN
- *                  cells in the same flats caches)
+ *                  cells in the same flats caches). A per-terrain override
+ *                  covers every cell of its chunks, cells without a flat
+ *                  source included (DESIGN.md section 3.4)
+ *    marked        any | terrain (any), with expect=marker: which overrides
+ *                  carry the marker: any (tile and terrain), or terrain only
+ *                  (the tile overrides are identity: the precedence oracle,
+ *                  terrain over tile)
  *    toggle        1: after each S render, overrides off (must give NN of
  *                  the reference, I8) and on again (must give the first S
  *                  render back), each repainting every flats cache of the
@@ -152,6 +158,7 @@
 #include <filesystem>
 #include <fstream>
 #include <iostream>
+#include <map>
 #include <memory>
 #include <set>
 #include <sstream>
@@ -190,17 +197,18 @@ namespace {
 		int            h    = 200;
 		int            lift = 16;
 		vector<int>    scales{2, 3, 6};
-		bool           plain     = false;
-		bool           overrides = false;
-		int            marker    = -1;       // expect=marker:<idx>; -1: none.
-		bool           identity  = false;    // expect=identity.
-		bool           toggle    = false;
-		bool           dev       = false;
-		bool           keys      = false;
-		bool           partial   = false;    // coverage=partial.
-		bool           flats     = false;
-		int            repaint   = 0;
-		bool           present   = false;
+		bool           plain          = false;
+		bool           overrides      = false;
+		int            marker         = -1;       // expect=marker:<idx>; -1: none.
+		bool           identity       = false;    // expect=identity.
+		bool           toggle         = false;
+		bool           dev            = false;
+		bool           keys           = false;
+		bool           partial        = false;    // coverage=partial.
+		bool           marked_terrain = false;    // marked=terrain.
+		bool           flats          = false;
+		int            repaint        = 0;
+		bool           present        = false;
 		string         format;    // argb, index8, both; empty: the configuration.
 		string         filter;
 		int            win_w  = 0;
@@ -384,6 +392,11 @@ namespace {
 					error("coverage must be full or partial");
 				}
 				p.partial = val == "partial";
+			} else if (key == "marked") {
+				if (val != "any" && val != "terrain") {
+					error("marked must be any or terrain");
+				}
+				p.marked_terrain = val == "terrain";
 			} else if (key == "dev") {
 				if (!parse_bool(val, p.dev)) {
 					error("dev must be 0 or 1");
@@ -511,6 +524,9 @@ namespace {
 		}
 		if (p.partial && !p.identity && p.marker < 0) {
 			error("coverage=partial needs expect=identity or expect=marker");
+		}
+		if (p.marked_terrain && p.marker < 0) {
+			error("marked=terrain needs expect=marker");
 		}
 		if (p.marker >= 0 && (p.present || p.edit)) {
 			error("expect=marker takes no present or edit (their oracles are NN)");
@@ -644,16 +660,18 @@ namespace {
 	struct Cell_grid {
 		constexpr static unsigned char has_source   = 1;
 		constexpr static unsigned char has_override = 2;
+		constexpr static unsigned char has_terrain  = 4;    // The chunk's terrain override paints it.
 
 		int                    col0 = 0;    // Tile of extent x 0, relative to the region's tx.
 		int                    row0 = 0;
 		int                    cols = 0;
 		int                    rows = 0;
 		vector<unsigned char>  flags;
-		int                    sources   = 0;    // Tiles with a flat source.
-		int                    overrides = 0;    // Of those, tiles whose source has an override.
-		int                    chunks    = 0;    // Distinct chunks under the full area.
-		vector<Chunk_terrain*> terrains;         // Their distinct terrains (one flats cache each).
+		int                    sources    = 0;    // Tiles with a flat source, or under a terrain override.
+		int                    overrides  = 0;    // Of those, tiles painted by an override.
+		int                    by_terrain = 0;    // Of those, tiles painted by a terrain override.
+		int                    chunks     = 0;    // Distinct chunks under the full area.
+		vector<Chunk_terrain*> terrains;          // Their distinct terrains (one flats cache each).
 
 		// The flags of logical px (lx, ly) of the full area (game px, the
 		// game area's top-left at (0, 0)).
@@ -931,8 +949,9 @@ namespace {
 			g.cols = floor_div(p.w - off_x - 1, c_tilesize) - g.col0 + 1;
 			g.rows = floor_div(p.h - off_y - 1, c_tilesize) - g.row0 + 1;
 			g.flags.assign(static_cast<size_t>(g.cols) * g.rows, 0);
-			std::set<int>            chunks;
-			std::set<Chunk_terrain*> terrains;
+			std::set<int>                  chunks;
+			std::set<Chunk_terrain*>       terrains;
+			std::map<Chunk_terrain*, bool> terrain_art;    // Its terrain override paints it.
 			for (int r = 0; r < g.rows; r++) {
 				for (int c = 0; c < g.cols; c++) {
 					const int      tx    = wrap(p.tx + g.col0 + c);
@@ -947,13 +966,24 @@ namespace {
 					chunks.insert(cy * c_num_chunks + cx);
 					if (terrains.insert(terr).second) {
 						g.terrains.push_back(terr);
+						// As the inspector decides it (hires_dev.cc): indexed,
+						// and not rejected on its last decode.
+						const Hires::Explanation x = Hires::explain_terrain(terr->get_t1_key(), S);
+						terrain_art[terr]          = x.result == "TERRAIN" && x.reason.compare(0, 9, "P4 reject") != 0;
 					}
-					const int src = terr->get_flat_source(tx % c_tiles_per_chunk, ty % c_tiles_per_chunk);
+					const int      src = terr->get_flat_source(tx % c_tiles_per_chunk, ty % c_tiles_per_chunk);
+					unsigned char& f   = g.flags[static_cast<size_t>(r) * g.cols + c];
+					if (terrain_art[terr]) {
+						f = Cell_grid::has_override | Cell_grid::has_terrain | (src >= 0 ? Cell_grid::has_source : 0);
+						g.sources++;
+						g.overrides++;
+						g.by_terrain++;
+						continue;
+					}
 					if (src < 0) {
 						continue;
 					}
-					unsigned char& f = g.flags[static_cast<size_t>(r) * g.cols + c];
-					f                = Cell_grid::has_source;
+					f = Cell_grid::has_source;
 					g.sources++;
 					const ShapeID id = terr->get_flat(src % c_tiles_per_chunk, src / c_tiles_per_chunk);
 					if (Hires::flat(id.get_shapenum(), id.get_framenum() & 31, S).px != nullptr) {
@@ -983,9 +1013,13 @@ namespace {
 			}
 			const Cell_grid cells = cell_grid(S);
 			record(tag + "_cells",
-				   std::to_string(cells.overrides) + " of " + std::to_string(cells.sources) + " flat cells overridden");
+				   std::to_string(cells.overrides) + " of " + std::to_string(cells.sources) + " flat cells overridden"
+						   + (cells.by_terrain > 0 ? " (" + std::to_string(cells.by_terrain) + " by terrain)" : ""));
 			if (!(p.identity || p.marker >= 0)) {
 				return cells;
+			}
+			if (p.marked_terrain && cells.by_terrain == 0) {
+				fail(tag + ": marked=terrain, but no terrain override paints a cell of the view");
 			}
 			if (p.partial && (cells.overrides == 0 || cells.overrides >= cells.sources)) {
 				fail(tag + ": the overrides cover " + std::to_string(cells.overrides) + " of the " + std::to_string(cells.sources)
@@ -998,8 +1032,8 @@ namespace {
 		}
 
 		// O4b. passes=flats: phys(hi) is NN of the reference, except the
-		// top-left sub-px of every logical px of a cell with an override,
-		// which is the marker. passes=all: hi differs from NN of the
+		// top-left sub-px of every logical px of a cell with an override
+		// (marked=terrain: a terrain override), which is the marker. passes=all: hi differs from NN of the
 		// reference (translucent shapes and objects modify markers).
 		void check_marker(const string& tag, const Extent& hi, const Cell_grid& cells) {
 			if (!p.flats) {
@@ -1014,12 +1048,13 @@ namespace {
 			Nn_result             res;
 			vector<unsigned char> expect(static_cast<size_t>(hi.phys_w()));
 			long long             markers = 0;
+			const unsigned char   marked  = p.marked_terrain ? Cell_grid::has_terrain : Cell_grid::has_override;
 			for (int y = 0; y < ref_extent.h && hi.w == ref_extent.w && hi.h == ref_extent.h; y++) {
 				const unsigned char* src = ref_extent.row(y);
 				for (int k = 0; k < S; k++) {
 					for (int x = 0; x < ref_extent.w; x++) {
 						std::memset(&expect[static_cast<size_t>(x) * S], src[x], static_cast<size_t>(S));
-						if (k == 0 && (cells.at(x - off_x, y - off_y) & Cell_grid::has_override)) {
+						if (k == 0 && (cells.at(x - off_x, y - off_y) & marked)) {
 							expect[static_cast<size_t>(x) * S] = static_cast<unsigned char>(p.marker);
 							markers++;
 						}

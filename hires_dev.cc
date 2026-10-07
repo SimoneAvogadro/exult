@@ -238,12 +238,15 @@ namespace Hires {
 			r.src_frame       = src.get_framenum() & 31;
 		}
 		r.terrain_override = explain_terrain(r.t1, scale);
+		// Precedence (Chunk_terrain::paint_flats): a terrain override that
+		// decodes covers every cell, RLE cells included.
+		const bool by_terrain = r.terrain_override.result == "TERRAIN" && r.terrain_override.reason.compare(0, 9, "P4 reject") != 0;
 		if (r.src_cell < 0) {
-			r.result = std::string("none (no flat source: ") + r.own_kind + ")";
+			r.result = by_terrain ? r.terrain_override.text() : std::string("none (no flat source: ") + r.own_kind + ")";
 			return r;
 		}
 		r.tile_override = explain_flat(r.src_shape, r.src_frame, scale);
-		r.result        = r.tile_override.text();
+		r.result        = by_terrain ? r.terrain_override.text() : r.tile_override.text();
 		return r;
 	}
 

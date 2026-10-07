@@ -34,6 +34,8 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #include <algorithm>
 #include <cstring>
 #include <iostream>
+#include <new>
+#include <vector>
 
 Chunk_terrain* Chunk_terrain::render_queue = nullptr;
 int            Chunk_terrain::queue_size   = 0;
@@ -115,6 +117,69 @@ static bool Paint_hires_flat(Image_buffer8& dst, const ShapeID& id, int tilex, i
 }
 
 /*
+ *  Hi-res: paint the per-terrain override (the whole 128x128 game px layer)
+ *  into dst, at dst's pixel scale (> 1).
+ *
+ *  Output: false when there is none (overrides off, no art for this T1 key,
+ *  a rejected file, or the store failed); the caller then paints per tile.
+ */
+
+bool Chunk_terrain::paint_hires_terrain(Image_buffer8& dst) {
+	const int scale = dst.get_pixel_scale();
+	// No terrain art at this scale: skip the key (it would load every frame).
+	if (static_cast<int>(dst.get_width()) != c_chunksize || static_cast<int>(dst.get_height()) != c_chunksize
+		|| Hires::terrain_count(scale) == 0) {
+		return false;
+	}
+	const uint64 key = get_t1_key();
+	if (!Hires::has_terrain(key, scale)) {
+		return false;
+	}
+	try {
+		// The 1x flat layer, fill included: the parent pixels of the P4 rule
+		// and of the reduction from the art scale.
+		Image_buffer8 layer(c_chunksize, c_chunksize);
+		paint_flats(layer, false);
+		std::vector<unsigned char> layer1x(c_chunksize * c_chunksize);
+		for (int y = 0; y < c_chunksize; y++) {
+			std::memcpy(&layer1x[y * c_chunksize], layer.get_bits() + y * layer.get_line_width(), c_chunksize);
+		}
+		const int                  side = c_chunksize * scale;
+		std::vector<unsigned char> px(static_cast<size_t>(side) * side);
+		if (!Hires::terrain(key, scale, layer1x.data(), px.data(), side, side, side)) {
+			return false;
+		}
+		dst.put_phys(px.data(), side, side, side, 0, 0);
+		return true;
+	} catch (const std::bad_alloc&) {
+		return false;    // Fail soft: per tile (I11).
+	}
+}
+
+/*
+ *  Hi-res: the T1 key of the terrain's own flats (DESIGN.md section 5.2):
+ *  FNV-1a-64 over the bitmap of the non-RLE tiles and their 1x pixels.  It
+ *  does not depend on the fill heuristic or on the terrain's number.  Cached
+ *  until an edit, or until Hires::generation() changes (shapes reloaded).
+ */
+
+uint64 Chunk_terrain::get_t1_key() {
+	const uint32 gen = Hires::generation();
+	if (t1_valid && t1_gen == gen) {
+		return t1_key;
+	}
+	const uint8_t* own[Hires::terrain_tiles];
+	for (int t = 0; t < Hires::terrain_tiles; t++) {
+		Shape_frame* shape = shapes[t].get_shape();
+		own[t]             = shape != nullptr && !shape->is_rle() ? shape->get_data() : nullptr;
+	}
+	t1_key   = Hires::terrain_key_t1(own);
+	t1_gen   = gen;
+	t1_valid = true;
+	return t1_key;
+}
+
+/*
  *  Paint the flats of the chunk (c_chunksize x c_chunksize) into a buffer.
  *  Flat tiles paint themselves.  We still want to draw a flat tile under RLE
  *  shapes to fix black gaps in the ice caves: the original didn't clear its
@@ -131,6 +196,10 @@ void Chunk_terrain::paint_flats(
 	// uninitialised memory or the previous render.
 	dst.fill8(0);
 	const int scale = dst.get_pixel_scale();
+	// Hi-res precedence: per-terrain, then per-tile, then the 1x flat (NN).
+	if (scale > 1 && overrides && paint_hires_terrain(dst)) {
+		return;
+	}
 	for (int tiley = 0; tiley < c_tiles_per_chunk; tiley++) {
 		for (int tilex = 0; tilex < c_tiles_per_chunk; tilex++) {
 			const int src = get_flat_source(tilex, tiley);
@@ -236,6 +305,7 @@ void Chunk_terrain::set_flat(int tilex, int tiley, const ShapeID& id) {
 	}
 	shapes[16 * tiley + tilex] = id;
 	modified                   = true;
+	t1_valid                   = false;
 }
 
 /*
@@ -264,6 +334,7 @@ void Chunk_terrain::abort_edits() {
 		std::memcpy(reinterpret_cast<char*>(&shapes[0]), reinterpret_cast<char*>(undo_shapes), sizeof(shapes));
 		delete[] undo_shapes;
 		undo_shapes = nullptr;
+		t1_valid    = false;
 	}
 }
 

@@ -51,7 +51,7 @@ namespace Hires {
 		bool        enabled = false;    // Hires::is_enabled().
 		Explanation terrain_override;
 		Explanation tile_override;
-		// The painted result: "TILE <where>", "NN (...)", or "none (no flat
+		// The painted result: "TERRAIN <where>", "TILE <where>", "NN (...)", or "none (no flat
 		// source: <kind>)" when nothing is painted.
 		std::string result;
 

@@ -705,6 +705,8 @@ TEST_CASE("hires store: terrain overrides are indexed, decoded on demand and che
 	}
 	CHECK(rows_ok);
 	CHECK(store.take_findings().empty());
+	CHECK(store.explain_terrain(key_ok)->state == Hires::Entry_state::loaded);
+	CHECK(store.has_terrain(key_ok));
 	// The wrong destination size: false, nothing written.
 	std::vector<uint8_t> small(384 * 384, 0x5a);
 	CHECK_FALSE(store.terrain(key_ok, layer.data(), small.data(), 384, 384, 384));
@@ -721,6 +723,8 @@ TEST_CASE("hires store: terrain overrides are indexed, decoded on demand and che
 	CHECK_FALSE(store.terrain(key_p0, layer.data(), dst.data(), 768, 768, 800));
 	CHECK(store.take_findings().empty());
 	CHECK(store.explain_terrain(key_p0)->state == Hires::Entry_state::rejected);
+	CHECK_FALSE(store.has_terrain(key_p0));    // latched
+	CHECK_FALSE(store.has_terrain(0x9999ULL));
 	// P4 depends on the layer: rejected and reported once, but not latched.
 	CHECK_FALSE(store.terrain(key_p4, static_layer.data(), dst.data(), 768, 768, 800));
 	found = store.take_findings();
@@ -728,6 +732,7 @@ TEST_CASE("hires store: terrain overrides are indexed, decoded on demand and che
 	CHECK(found[0].rule == Rule::p4_cycling);
 	CHECK(store.explain_terrain(key_p4)->state == Hires::Entry_state::indexed);
 	CHECK(store.explain_terrain(key_p4)->rule == Rule::p4_cycling);
+	CHECK(store.has_terrain(key_p4));    // not latched: another layer may pass
 	CHECK_FALSE(store.terrain(key_p4, static_layer.data(), dst.data(), 768, 768, 800));
 	CHECK(store.take_findings().empty());              // reported once
 	std::vector<uint8_t> f0_layer(128 * 128, 0xf0);    // every parent pixel in F0-F3
@@ -1085,6 +1090,23 @@ TEST_CASE("hires store: Store_set loads lazily per scale; generation, toggle, fa
 	std::vector<uint8_t> layer(128 * 128);
 	CHECK_FALSE(set.terrain(1, 6, layer.data(), dst.data(), 768, 768, 768));    // no terrain overrides
 	CHECK_FALSE(set.terrain(1, 1, layer.data(), dst.data(), 128, 128, 128));
+	CHECK(set.terrain_count(6) == 0);
+	CHECK_FALSE(set.has_terrain(1, 6));
+
+	// A terrain override: counted and found at S > 1 while enabled only.
+	const std::vector<uint8_t> art(768 * 768, 0x20);
+	const uint64_t             key = 0x0123456789abcdefULL;
+	write_tile(tmp / "x6" / "terrain" / Hires::terrain_name(key), art, 768, w.pal);
+	set.invalidate();
+	CHECK(set.terrain_count(6) == 1);
+	CHECK(set.terrain_count(1) == 0);
+	CHECK(set.has_terrain(key, 6));
+	CHECK_FALSE(set.has_terrain(key + 1, 6));
+	CHECK_FALSE(set.has_terrain(key, 1));
+	set.set_enabled(false);
+	CHECK(set.terrain_count(6) == 0);
+	CHECK_FALSE(set.has_terrain(key, 6));
+	set.set_enabled(true);
 }
 
 TEST_CASE("hires store: Store_set survives report and text functions that throw") {
