@@ -12,7 +12,7 @@ from conftest import real_static_dir
 
 STATIC = real_static_dir()
 pytestmark = pytest.mark.skipif(STATIC is None, reason="BG static dir not available (set U7_BG_STATIC)")
-ART_ORIGINAL = "/home/simonea/ultima7_exult/art_original"
+ART_ORIGINAL = os.environ.get("U7_ART_ORIGINAL", "/home/simonea/ultima7_exult/art_original")
 
 
 @pytest.fixture(scope="module")

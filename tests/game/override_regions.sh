@@ -130,7 +130,7 @@ if [ -z "${REGIONS:-}" ]; then
 	game_check_render marker-partial-coast "$coast,scales=2:6,overrides=yes,expect=marker:1,coverage=partial,passes=flats"
 	flats=0
 	GAME_HIRES_PACK=$packs/terrain6
-	game_check_render terrain-reduce-britain "$britain,w=640,h=400,scales=2:3:6,overrides=yes,expect=identity,coverage=partial"
+	game_check_render terrain-reduce-britain "$britain,w=640,h=400,scales=2:3:6,overrides=yes,expect=identity"
 	flats=$all_flats
 fi
 

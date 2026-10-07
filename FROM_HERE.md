@@ -65,6 +65,8 @@ Background and per-WP notes are in **`docs/hires/notes/`**, copied from the owne
 | WP-15 | Windows build with MSYS2 UCRT64 on the owner's PC, plus measurements. Code and review fixes complete (commit "WIP WP-15"); `make check` re-run in the cloud on 2026-10-07. Open: WP-15b, the interactive Windows checks of `notes/impl/WP-15.md` §6 |
 | §13.1 | **User decision 2026-10-07: always 6x.** `render_scale` defaults to `art` (Android/iOS keep `off`); precedence terrain → tile → NN, NN without smoothing |
 | WP-17 | Per-terrain overrides in the engine (`Chunk_terrain::get_t1_key`, `paint_hires_terrain`), inspector, `--render-test marked=terrain`, `mkpack_identity.py --terrain`, unit and pytest cases. Verified end to end on the synthetic world (`make check-world`); the BG cases of `override_regions.sh` are not run yet; see `notes/impl/WP-17.md` |
+| BG in the cloud | The private repos `SimoneAvogadro/u7assets` (original game files) and `SimoneAvogadro/ultima7-high-res-tiles` (packs, art_ref, pilot) let a cloud session run `make check-game` (`U7_BG_STATIC=<u7assets>/blackgate/static`): all pass after the `terrain-reduce-britain` fix (notes/impl/WP-17.md §2c). Clone them **outside** the exult tree; nothing from them is ever committed here |
+| mkterrain | `tools/hires/mkterrain.py`: whole-terrain overrides from route-1 windows; terrains 1825/1826 of the pilot verified in the engine |
 | Test world | `tests/data/hires/world` (generator `make_world.py`) and `tests/world/world_tests.sh` (`make check-world`, also a `ci.sh` step): 25 cases, data-free. `dev_loop.sh`'s `golden/inspect.json` was updated by hand for WP-17 (its fake terrain file is now rejected, F1, when painted), as the world test confirmed; re-run `dev_loop.sh` on BG to confirm |
 
 On the owner's PC, outside the repo:
@@ -85,9 +87,8 @@ On the owner's PC, outside the repo:
 
 ## 4. What is left, in order
 
-1. **Run the WP-17 game-data oracles** on the owner's machine: `tests/game/override_regions.sh` (terrain cases) and
-   the rest of `make check-game` (the default is now `art`, but every test config sets `render_scale`). Fix what
-   they find; `notes/impl/WP-17.md` §2 lists the points to check.
+1. ~~Run the WP-17 game-data oracles~~: done in the cloud with the asset repos (all pass). Still worth one run on
+   the owner's WSL lanes (ASan, SDL 3.2) and an interactive BG session (headless, BG stops at character creation).
 2. **WP-15b** on the owner's PC: the interactive Windows items of `notes/impl/WP-15.md` §6.
 3. **WP-16, performance pass** (DESIGN §9): `memset` runs in the scaled RLE painter, row-batched translucency, a `fast_paths` test. The current numbers already pass, so this is optional polish. With per-terrain art, consider a decoded-terrain cache in the store.
 4. **Wrap-up docs:** the user guide `docs/hires.md` and `docs/hires_modding.md`; then rerun the full test matrix.
