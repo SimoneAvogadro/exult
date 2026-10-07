@@ -116,19 +116,43 @@ namespace {
 		return set;
 	}
 
+	// path with '/' separators and without empty or "." elements (a leading
+	// '/' is kept). The store writes '/' and builds its paths from the root's
+	// system path as given, so they keep what get_system_path leaves: '\' on
+	// Windows, the "." it appends there to a trailing separator, and a doubled
+	// separator. Both sides of a comparison go through this.
+	std::string lexical_path(const std::string& path) {
+		std::string s = path;
+		if constexpr (std::filesystem::path::preferred_separator != '/') {
+			std::replace(s.begin(), s.end(), '\\', '/');
+		}
+		std::string out = !s.empty() && s[0] == '/' ? "/" : "";
+		size_t      pos = 0;
+		while (pos < s.size()) {
+			size_t end = s.find('/', pos);
+			if (end == std::string::npos) {
+				end = s.size();
+			}
+			if (end > pos && !(end == pos + 1 && s[pos] == '.')) {
+				if (!out.empty() && out.back() != '/') {
+					out += '/';
+				}
+				out.append(s, pos, end - pos);
+			}
+			pos = end + 1;
+		}
+		return out;
+	}
+
 	// path as "<root label>/<path in the root>" when it lies in one of the
 	// roots (the bundle entry "#SSSS_FF" suffix included), else path.
 	std::string root_relative(const std::string& path) {
+		const std::string file = lexical_path(path);
 		for (const auto& root : Hires::roots()) {
-			std::string prefix = root.sys_path;
-			while (prefix.size() > 1 && (prefix.back() == '/' || prefix.back() == '\\')) {
-				prefix.pop_back();
-			}
-			if (path.size() > prefix.size() && path.compare(0, prefix.size(), prefix) == 0
-				&& (path[prefix.size()] == '/' || path[prefix.size()] == '\\')) {
-				std::string rest = path.substr(prefix.size() + 1);
-				std::replace(rest.begin(), rest.end(), '\\', '/');
-				return root.label + "/" + rest;
+			const std::string prefix = lexical_path(root.sys_path);
+			if (!prefix.empty() && prefix != "/" && file.size() > prefix.size() && file.compare(0, prefix.size(), prefix) == 0
+				&& file[prefix.size()] == '/') {
+				return root.label + "/" + file.substr(prefix.size() + 1);
 			}
 		}
 		return path;

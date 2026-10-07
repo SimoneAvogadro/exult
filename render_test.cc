@@ -35,7 +35,8 @@
  *    w, h          size of the region in game px (the full area; 320x200)
  *    lift          skip_above as in --buildmap: 16, 10, 5 (16)
  *    scales        S values, ':'-separated (2:3:6)
- *    mode          nn (oracles) | plain (images only) (nn)
+ *    mode          nn (oracles) | plain (images only; with present=1 the
+ *                  window is shown and timed, not read back) (nn)
  *    overrides     no | yes: hi-res overrides from the configured roots (no)
  *    expect        nn | identity | marker:<idx> (nn), the oracle of each S
  *                  render: nn = NN of the reference (O2); identity = the
@@ -79,7 +80,9 @@
  *                  inspect.json (no absolute paths) and the digest
  *    passes        all | flats (all)
  *    repaint       N random sub-rect repaints per scale (O6) (0)
- *    present       1: read the window back (one scale, S > 1) (0)
+ *    present       1: read the window back (one scale, S > 1) (0); the
+ *                  digest names the world texture's format and the SDL
+ *                  renderer in use (<tag>_present_format, _present_renderer)
  *    format        argb | index8 | both, with present=1 (configuration)
  *    filter        auto | nearest | linear | pixelart, with present=1
  *    window        WxH window, with present=1 (w*S x h*S)
@@ -93,6 +96,11 @@
  *                  (every flats cache of the view painted again with its
  *                  overrides) and N timed paint_flats of every flats cache
  *                  of the view (the render_flats p95 per cache)
+ *    walk          N timed frames per scale after the bench (0), each one
+ *                  tile further east than the last (with present=1 each
+ *                  frame is also uploaded and shown): a scrolling view,
+ *                  whose flats caches render as chunks come into view; then
+ *                  the region is painted again
  *    seed          srand() after init_files (1)
  *    images        1: also write the images of a passing nn run (0)
  *    out           output directory, must exist (required)
@@ -203,6 +211,7 @@ namespace {
 		bool           pushed_resize = false;
 		bool           edit          = false;
 		int            bench         = 0;
+		int            walk          = 0;
 		unsigned       seed          = 1;
 		bool           images        = false;
 		string         out;
@@ -448,6 +457,10 @@ namespace {
 				if (!parse_int(val, 0, 100000, p.bench)) {
 					error("bench must be 0..100000");
 				}
+			} else if (key == "walk") {
+				if (!parse_int(val, 0, 100000, p.walk)) {
+					error("walk must be 0..100000");
+				}
 			} else if (key == "seed") {
 				int seed = 0;
 				if (!parse_int(val, 0, 0x7fffffff, seed)) {
@@ -483,9 +496,9 @@ namespace {
 			error("format, filter and window need present=1");
 		}
 		if (p.plain
-			&& (p.repaint > 0 || p.present || !p.resize.empty() || p.pushed_resize || p.edit || p.toggle || p.dev || p.identity
+			&& (p.repaint > 0 || !p.resize.empty() || p.pushed_resize || p.edit || p.toggle || p.dev || p.identity
 				|| p.marker >= 0)) {
-			error("mode=plain takes no oracle keys (repaint, present, resize, pushed_resize, edit, toggle, dev, expect)");
+			error("mode=plain takes no oracle keys (repaint, resize, pushed_resize, edit, toggle, dev, expect)");
 		}
 		if ((p.identity || p.marker >= 0 || p.toggle || p.dev) && !p.overrides) {
 			error("expect=identity, expect=marker, toggle and dev need overrides=yes");
@@ -765,6 +778,7 @@ namespace {
 		int                               win_w = 0, win_h = 0, win_scale = 1;
 		int                               game_w = 0, game_h = 0;
 		int                               off_x = 0, off_y = 0;    // Of the game area in the full area.
+		int                               walk_dx = 0;             // walk=N: tiles east of tx.
 		vector<std::pair<string, string>> entries;                 // digest.json, in order.
 		vector<string>                    failures;
 		std::unique_ptr<Image_buffer8>    ref;
@@ -813,7 +827,7 @@ namespace {
 
 		void paint(Image_buffer8* target, int x, int y, int w, int h, bool whole) {
 			Image_buffer8* prev = target != nullptr ? gwin->push_render_target(target) : nullptr;
-			gwin->render_test_paint(x, y, w, h, p.tx, p.ty, p.lift, whole);
+			gwin->render_test_paint(x, y, w, h, (p.tx + walk_dx) % c_num_tiles, p.ty, p.lift, whole);
 			if (target != nullptr) {
 				gwin->pop_render_target(prev);
 			}
@@ -1454,12 +1468,37 @@ namespace {
 			paint_full(nullptr, e);
 			record(tag + "_scale", win->get_world_scale());
 			record(tag + "_hi", digest(e));
-			check_mini(tag, nullptr);
 			if (!p.plain) {
+				check_mini(tag, nullptr);
 				check_render(tag, e);
 			} else if (p.overrides && e.scale > 1) {
 				check_coverage(tag, e.scale);
 			}
+			if (p.present) {
+				record_presenter(tag);
+			}
+		}
+
+		// present=1: the presenter that the timings and read-backs go through,
+		// in every mode (mode=plain has no read-back oracle to tell): the world
+		// texture's format and the SDL renderer. A single driver named by
+		// SDL_RENDER_DRIVER must be the one in use, and format=index8 at S > 1
+		// must not have fallen back to ARGB (present_checks says so for nn).
+		void record_presenter(const string& tag) {
+			const string format   = win->world_present_format();
+			const string renderer = win->renderer_name();
+			record(tag + "_present_format", format);
+			record(tag + "_present_renderer", renderer);
+			const char* hint = SDL_GetHint(SDL_HINT_RENDER_DRIVER);
+			if (hint != nullptr && *hint != '\0' && std::strchr(hint, ',') == nullptr
+				&& SDL_strcasecmp(hint, renderer.c_str()) != 0) {
+				fail("present: SDL_RENDER_DRIVER is " + string(hint) + ", the renderer is " + renderer);
+			}
+#if SDL_VERSION_ATLEAST(3, 4, 0)
+			if (p.plain && p.format == "index8" && win->get_world_scale() > 1 && format != "index8") {
+				fail("present: index8 requested, the world texture is " + format);
+			}
+#endif
 		}
 
 		// O7: the mini screenshot. (Not the light-source count: paint_map
@@ -1538,8 +1577,48 @@ namespace {
 			}
 		}
 
+		// walk=N: N frames, each one tile further east, as a scrolling view
+		// paints them (the flats caches of the chunks that come into view
+		// render on the way), then the region again. report(what, ms) as in
+		// bench().
+		template <typename Report>
+		void walk(const string& tag, Image_buffer8* target, const Extent& e, Report& report) {
+			using Clock            = std::chrono::steady_clock;
+			const bool     present = p.present && target == nullptr;
+			vector<double> paint_ms;
+			vector<double> upload_ms;
+			vector<double> show_ms;
+			vector<double> frame_ms;
+			const uint32   renders_before = Chunk_terrain::get_hires_renders();
+			for (int i = 0; i < p.walk; i++) {
+				walk_dx       = (i + 1) % c_num_tiles;
+				const auto t0 = Clock::now();
+				paint(target, -off_x, -off_y, e.w, e.h, true);
+				const auto t1 = Clock::now();
+				paint_ms.push_back(std::chrono::duration<double, std::milli>(t1 - t0).count());
+				auto t3 = t1;
+				if (present) {
+					win->upload_world();
+					const auto t2 = Clock::now();
+					win->show();
+					t3 = Clock::now();
+					upload_ms.push_back(std::chrono::duration<double, std::milli>(t2 - t1).count());
+					show_ms.push_back(std::chrono::duration<double, std::milli>(t3 - t2).count());
+				}
+				frame_ms.push_back(std::chrono::duration<double, std::milli>(t3 - t0).count());
+			}
+			record("bench_" + tag + "_walk_cache_renders",
+				   static_cast<long long>(Chunk_terrain::get_hires_renders() - renders_before));
+			walk_dx = 0;
+			paint_full(target, e);
+			report("walk_paint", paint_ms);
+			report("walk_upload", upload_ms);
+			report("walk_present", show_ms);
+			report("walk_frame", frame_ms);
+		}
+
 		void bench(const string& tag, Image_buffer8* target, const Extent& e) {
-			if (p.bench <= 0) {
+			if (p.bench <= 0 && p.walk <= 0) {
 				return;
 			}
 			using Clock = std::chrono::steady_clock;
@@ -1578,8 +1657,8 @@ namespace {
 				record_ms("bench_" + tag + "_" + what + "_p95_ms", p95);
 				char line[160];
 				snprintf(
-						line, sizeof(line), "[render-test] bench %s %s (%dx%d, %d runs): median %.3f ms, p95 %.3f ms", tag.c_str(),
-						what.c_str(), e.w, e.h, p.bench, median, p95);
+						line, sizeof(line), "[render-test] bench %s %s (%dx%d, %zu samples): median %.3f ms, p95 %.3f ms",
+						tag.c_str(), what.c_str(), e.w, e.h, ms.size(), median, p95);
 				cout << line << endl;
 			};
 			report("paint", paint_ms);
@@ -1588,6 +1667,9 @@ namespace {
 			if (e.scale > 1) {
 				// Warm paints reuse every flats cache (the generation check).
 				check_cache_renders("bench_" + tag + "_warm", warm_before, 0);
+			}
+			if (p.walk > 0) {
+				walk(tag, target, e, report);
 			}
 			if (!p.overrides || !Hires::is_enabled() || e.scale < 2) {
 				return;
@@ -2069,7 +2151,7 @@ namespace {
 					last_tag = tag;
 				}
 			}
-			if (p.present) {
+			if (p.present && !p.plain) {
 				present_checks();
 			}
 			for (size_t i = 0; i < p.resize.size(); i++) {

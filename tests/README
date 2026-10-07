@@ -87,7 +87,8 @@ Layout
                      the ireg objects); the present read-back at 1:1 and
                      1280x800 (ARGB and INDEX8, which must really be INDEX8
                      on SDL >= 3.4 and is skipped before), a game area with
-                     offset_x 17, passes=flats
+                     offset_x 17 (also after a short bench and walk=3, which
+                     must leave the region for the read-back), passes=flats
     override_regions.sh
                      the per-tile override oracles with packs that
                      tools/hires/mkpack_identity.py makes from the game's
@@ -108,7 +109,8 @@ Layout
                      cache, predicted exactly. The pack must cover every
                      flat cell of the view (some but not all with
                      coverage=partial), and the store must load every flat
-                     of the pack, no reject
+                     of the pack, no reject; a mode=plain present=1 run with
+                     a short bench and walk (no oracle) on the identity pack
     dump_art.sh      --dump-art (DESIGN.md section 4.2): two dumps give
                      identical trees; dump_art_check.py checks the tree
                      against the game's files (flat CRCs and palette CRC as
@@ -139,7 +141,9 @@ Layout
                      inspect=tx:ty for four Britain tiles (flat, RLE fill,
                      no override, rejected source; a terrain file) at S = 2
                      and 6 must give golden/inspect.json
-                     (INSPECT_RECORD=1 records it)
+                     (INSPECT_RECORD=1 records it), also with hires_path
+                     ending in "//." (a trailing separator on Windows gets
+                     a "." appended)
     perf.sh          the world paint at S=6 (bench=200, -O2 builds only):
                      p95 <= 2 ms at 320x200, and within 20 % of this host's
                      line in perf_baseline.json; warm paints render no
@@ -153,6 +157,8 @@ Layout
                      terrain numbers, T1 keys, pack paths), no pixels
     perf_baseline.json
                      paint p95 per host ("host/case/key": ms)
+  windows/         drivers of Exult.exe --render-test runs from WSL (the
+                   Windows renderer matrix; see "Running")
 
 Running
 -------
@@ -211,6 +217,33 @@ Makefile.mingw (Windows, via Makefile.common), from the source directory:
 
   make -f Makefile.mingw check-hires     builds hires_unit.exe and
                                           hires_present.exe and runs both
+
+The game scripts need a Linux build tree; on Windows, Exult.exe --render-test
+runs from a scratch configuration with Windows paths, as above. Two points
+for a run started from WSL through interop: the process gets a Linux argv[0],
+so the configuration must name data_path (the exe-relative fallback misses
+it), and -p keeps <HOME> in the current directory instead of
+%LOCALAPPDATA%\Exult. A run writes its configuration back with the test
+settings (vsync 0, among others): never point --render-test at a play
+configuration. walk=N with present=1 times N scrolling frames (paint, upload,
+present); mode=plain with present=1 times the real present path with a pack's
+art, without the read-back oracle. With present=1 the digest names the world
+texture's format and the renderer in use (<tag>_present_format and
+<tag>_present_renderer), and a single driver named by SDL_RENDER_DRIVER must be
+the one in use.
+
+windows/ holds the WSL-side drivers of such runs (the WP-15 renderer matrix,
+docs-hires/test/windows_matrix.md), for an Exult.exe installed with
+make -f Makefile.mingw install:
+
+  windows/win_rt.sh <name> <spec> [hires_path]
+                     one --render-test in the sandbox <EXULT_WIN_DIR>\rt\<name>
+                     (EXULT_WIN_DIR and U7_BG_STATIC_WIN: Windows paths)
+  windows/run_matrix.sh <out dir> [pack]
+                     5 renderers x 2 profiles x the read-back, PIXELART, both
+                     and (with a pack) real-art cases
+  windows/summarize.py <out dir>
+                     one table row per case
 
 hires_unit takes doctest's options, for example -tc='ibuf golden*' to run only
 the test cases whose names match, or -s to list successful assertions too.

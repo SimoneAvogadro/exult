@@ -16,7 +16,9 @@
 #     identity pack of the even tiles, one unreadable PNG and one terrain file: a flat tile (TILE),
 #     an RLE tile filled from a neighbour (TILE of the source), a tile without an override (NN), an
 #     RLE tile whose source is rejected (NN, F1), the terrain file (TERRAIN, not decoded); compared
-#     with golden/inspect.json (no pixels: shape, frame and terrain numbers, T1 keys, pack paths).
+#     with golden/inspect.json (no pixels: shape, frame and terrain numbers, T1 keys, pack paths);
+#     again with hires_path ending in "//." (as get_system_path leaves a trailing separator on
+#     Windows: "\."), which must give the same <HIRES>/... paths.
 # Every run is made twice with equal digests (once in an ASan build).
 # Skipped (77) without U7_BG_STATIC or tools/hires/mkpack_identity.py.
 # Usage: [U7_BG_STATIC=...] [EXULT_WRAPPER=...] [INSPECT_RECORD=1] dev_loop.sh [build-dir]
@@ -71,7 +73,13 @@ check_inspect() {
 }
 GAME_HIRES_PACK=$packs/inspect
 GAME_RUN_CHECK=check_inspect
-game_check_render inspect "$britain,scales=2:6,overrides=yes,inspect=810:1340,inspect=815:1336,inspect=850:1360,inspect=800:1331"
+inspect_spec="$britain,scales=2:6,overrides=yes,inspect=810:1340,inspect=815:1336,inspect=850:1360,inspect=800:1331"
+game_check_render inspect "$inspect_spec"
+if [ "${INSPECT_RECORD:-0}" != 1 ]; then
+	GAME_HIRES_SUFFIX=//.
+	game_check_render inspect-separators "$inspect_spec"
+	GAME_HIRES_SUFFIX=
+fi
 GAME_RUN_CHECK=
 
 echo "dev_loop: $game_pass passed, $game_fail failed in $(($(date +%s) - start)) s ($GAME_BUILD)"

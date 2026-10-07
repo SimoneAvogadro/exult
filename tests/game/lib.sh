@@ -11,6 +11,8 @@
 #   GAME_TIMEOUT     seconds before an exult run is killed (default 1800).
 #   GAME_HIRES_PACK  a pack root (absolute path) that new sandboxes use as their <HIRES> root:
 #                    the sandbox's hires directory becomes a link to it. Empty: an empty root.
+#   GAME_HIRES_SUFFIX  appended to the configured hires_path of new sandboxes (empty), for
+#                    example "//." to name the same root with a doubled separator and a ".".
 #   KEEP_SANDBOX=1   keep the sandbox of a passing run (it holds EA-derived images: never commit).
 #
 # The game data stays untouched: the config (test.cfg.in) points every writable path (game,
@@ -82,7 +84,7 @@ game_make_sandbox() {
 	ln -s "$GAME_BUILD/exult" "$GAME_SANDBOX/exult" || exit 2
 	ln -s "$GAME_BUILD/data" "$GAME_SANDBOX/data" || exit 2
 	sed -e "s|@SANDBOX@|$GAME_SANDBOX|g" -e "s|@BG_STATIC@|$U7_BG_STATIC|g" \
-		-e "s|@RENDER_SCALE@|$render_scale|g" \
+		-e "s|@RENDER_SCALE@|$render_scale|g" -e "s|@HIRES_SUFFIX@|${GAME_HIRES_SUFFIX:-}|g" \
 		"$game_tests_srcdir/game/test.cfg.in" > "$GAME_SANDBOX/exult.cfg" || exit 2
 }
 

@@ -10,7 +10,7 @@
         <source>@SANDBOX@/source</source>
         <savegame_path>@SANDBOX@/saves</savegame_path>
         <gamedat_path>@SANDBOX@/gamedat</gamedat_path>
-        <hires_path>@SANDBOX@/hires</hires_path>
+        <hires_path>@SANDBOX@/hires@HIRES_SUFFIX@</hires_path>
       </blackgate>
     </game>
   </disk>

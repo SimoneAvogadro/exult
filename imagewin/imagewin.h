@@ -678,6 +678,11 @@ public:
 		}
 		return presenter.format() == World_presenter::Format::Index8 ? "index8" : "argb";
 	}
+	// --render-test: the name of the window's SDL renderer ("none" without one).
+	const char* renderer_name() const {
+		const char* name = screen_renderer != nullptr ? SDL_GetRendererName(screen_renderer) : nullptr;
+		return name != nullptr ? name : "none";
+	}
 
 	bool is_palettized() {    // Does the window have a palette?
 		return uses_palette;

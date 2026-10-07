@@ -6,7 +6,8 @@
 #   * O4a: the identity pack (every tile NN_S of its 1x flat, x2, x3 and x6 folders of loose PNGs)
 #     on every region of regions.txt at S = 2, 3, 6: the render with overrides on equals NN of the
 #     scale-1 render, and the pack must cover every flat cell of the view; also through the
-#     window's buffer with the present read-back, the S cycle and a terrain edit;
+#     window's buffer with the present read-back, the S cycle and a terrain edit; and once with
+#     mode=plain and present=1 (no oracle: the window shown and timed, a short bench and walk);
 #   * O4a, reduction: an identity pack with an x6 bundle only, so S = 2 and 3 come from the
 #     store's reduction (section 5.6) and S = 6 from the bundle;
 #   * O4b: the marker pack (identity with index 1 at the top-left sub-pixel of every S x S block)
@@ -88,6 +89,7 @@ if [ -z "${REGIONS:-}" ]; then
 	coast="tx=1040,ty=1560,w=640,h=400,lift=16,seed=1"
 	GAME_HIRES_PACK=$packs/identity
 	game_check_render identity-present "$britain,w=320,h=200,scales=6,overrides=yes,expect=identity,present=1,format=both"
+	game_check_render identity-plain-walk "$britain,w=320,h=200,scales=6,mode=plain,overrides=yes,present=1,bench=2,walk=2"
 	game_check_render identity-resize "$britain,w=355,h=200,game=320x200,scales=6,overrides=yes,expect=identity,resize=off:force3:force2:force6,edit=1"
 	GAME_HIRES_PACK=$packs/identity6
 	game_check_render identity-reduce-coast "$coast,scales=2:3:6,overrides=yes,expect=identity,repaint=16"

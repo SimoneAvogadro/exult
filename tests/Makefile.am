@@ -119,6 +119,9 @@ EXTRA_DIST = \
 	game/golden/buildmap1.sha256 \
 	game/golden/buildmap2.sha256 \
 	game/golden/inspect.json \
+	windows/win_rt.sh \
+	windows/run_matrix.sh \
+	windows/summarize.py \
 	$(GAME_TESTS)
 
 CLEANFILES = *~
