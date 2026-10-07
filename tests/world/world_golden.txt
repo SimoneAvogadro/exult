@@ -1,0 +1,3 @@
+# The sample pack render of world_tests.sh ("sample"): FNV-1a-64 digests of digest.json.
+ref_1x ee290239f85b630e
+s6_hi 799effcc8090cb04

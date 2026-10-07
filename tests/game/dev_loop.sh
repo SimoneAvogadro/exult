@@ -15,7 +15,8 @@
 #   * inspect: the inspector (explain_at) for four known tiles of Britain at S = 2 and 6 with an
 #     identity pack of the even tiles, one unreadable PNG and one terrain file: a flat tile (TILE),
 #     an RLE tile filled from a neighbour (TILE of the source), a tile without an override (NN), an
-#     RLE tile whose source is rejected (NN, F1), the terrain file (TERRAIN, not decoded); compared
+#     RLE tile whose source is rejected (NN, F1), the terrain file (not a PNG: rejected, F1, when
+#     its terrain is painted, so the tiles paint; WP-17); compared
 #     with golden/inspect.json (no pixels: shape, frame and terrain numbers, T1 keys, pack paths);
 #     again with hires_path ending in "//." (as get_system_path leaves a trailing separator on
 #     Windows: "\."), which must give the same <HIRES>/... paths.
@@ -45,7 +46,7 @@ python3 "$mkpack" "$U7_BG_STATIC" "$packs/identity" --scales 2,6 || exit 2
 mv "$packs/identity/x2/flats" "$packs/dev/x2/flats.next" || exit 2
 mv "$packs/identity/x6/flats" "$packs/dev/x6/flats.next" || exit 2
 # inspect: the even tiles, an unreadable 0021_02 (odd: not in the pack otherwise) and a terrain
-# file for the T1 key of terrain 471 (indexed only: terrain overrides are not painted before WP-17).
+# file for the T1 key of terrain 471 (not a PNG: rejected when that terrain is painted, WP-17).
 python3 "$mkpack" "$U7_BG_STATIC" "$packs/inspect" --scales 6 --subset even || exit 2
 printf 'not a png\n' > "$packs/inspect/x6/flats/0021_02.png" || exit 2
 mkdir -p "$packs/inspect/x6/terrain" || exit 2

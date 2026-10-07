@@ -1,0 +1,30 @@
+<config>
+  <disk>
+    <data_path>@SANDBOX@/data</data_path>
+    <game>
+      <hirestest>
+        <path>@SANDBOX@/game</path>
+        <static_path>@BG_STATIC@</static_path>
+        <patch>@SANDBOX@/patch</patch>
+        <mods>@SANDBOX@/mods</mods>
+        <source>@SANDBOX@/source</source>
+        <savegame_path>@SANDBOX@/saves</savegame_path>
+        <gamedat_path>@SANDBOX@/gamedat</gamedat_path>
+        <hires_path>@SANDBOX@/hires@HIRES_SUFFIX@</hires_path>
+      </hirestest>
+    </game>
+  </disk>
+  <audio>
+    <enabled>no</enabled>
+  </audio>
+  <video>
+    <gamma>
+      <red>1.00</red>
+      <green>1.00</green>
+      <blue>1.00</blue>
+    </gamma>
+    <hires>
+      <render_scale>@RENDER_SCALE@</render_scale>
+    </hires>
+  </video>
+</config>

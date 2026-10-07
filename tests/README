@@ -71,6 +71,13 @@ Layout
                         by tools/hires/u7hires/pack.py
       make_fixtures.py, make_mkpack_bundle.py
                         the generators (deterministic)
+      world/            the synthetic test world (all original, procedural art;
+                        may be committed and redistributed), see its README.md:
+                        static/ (the DEVEL game "hirestest": palettes, flats,
+                        RLE objects, u7chunks, u7map), base/ (the 1x flats as
+                        PNG), pack/ (a 6x sample pack: tiles, a strict group,
+                        a disabled group, a whole-terrain override), world.txt,
+                        make_world.py (generator, --check, --assemble DIR)
   game/            game-data scripts for "make check-game"
     test.cfg.in      config template; lib.sh fills it in per sandbox
     lib.sh           shared helpers (skip rule, sandbox, run, log checks,
@@ -165,6 +172,21 @@ Layout
                      terrain numbers, T1 keys, pack paths), no pixels
     perf_baseline.json
                      paint p95 per host ("host/case/key": ms)
+  world/           "make check-world": the render oracles on the synthetic
+                   world, no game data needed
+    world_tests.sh   NN at S = 2, 3, 6 (repaints, map wrap, game offset,
+                     present read-back 1:1 and scaled, S cycle with a terrain
+                     edit, pushed resize, walk); identity and marker packs
+                     (loose, bundle reduced, passes=flats/all, partial,
+                     toggle); --dump-art with dump_art_check.py and
+                     determinism; WP-17 terrains (identity, reduced,
+                     precedence with marked=terrain); the sample pack (store
+                     line, inspector answers, the recorded S = 6 digest,
+                     window walk); dev=1 and keys=1; a terrain file that is
+                     not a PNG. Uses game/lib.sh with GAME_CFG_IN,
+                     GAME_STATIC and GAME_FLAGS="--game hirestest"
+    world.cfg.in     config template (game "hirestest")
+    world_golden.txt the sample render's digests (WORLD_RECORD=1 rewrites it)
   windows/         drivers of Exult.exe --render-test runs from WSL (the
                    Windows renderer matrix; see "Running")
 
@@ -174,6 +196,8 @@ Running
 Autotools (any build tree):
 
   make check          builds and runs hires_unit and hires_present
+  make check-world    builds "all", then runs world/world_tests.sh on the
+                      synthetic world (about 40 s; no game data)
   make check-game     runs game/*.sh; set U7_BG_STATIC to the "static"
                       directory of a Black Gate installation, otherwise every
                       script is skipped (exit code 77)

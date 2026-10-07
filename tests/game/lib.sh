@@ -14,6 +14,10 @@
 #   GAME_HIRES_SUFFIX  appended to the configured hires_path of new sandboxes (empty), for
 #                    example "//." to name the same root with a doubled separator and a ".".
 #   KEEP_SANDBOX=1   keep the sandbox of a passing run (it holds EA-derived images: never commit).
+#   GAME_CFG_IN      the config template of new sandboxes (default: game/test.cfg.in, Black Gate).
+#   GAME_STATIC      the static directory it names (default: U7_BG_STATIC).
+#   GAME_FLAGS       the game selection of game_render_test (default: --bg; the synthetic world of
+#                    tests/world uses "--game hirestest"). Split into words.
 #
 # The game data stays untouched: the config (test.cfg.in) points every writable path (game,
 # patch, mods, source, saves, gamedat, hires, HOME) into the sandbox. Rendered output depends on
@@ -83,9 +87,9 @@ game_make_sandbox() {
 	fi
 	ln -s "$GAME_BUILD/exult" "$GAME_SANDBOX/exult" || exit 2
 	ln -s "$GAME_BUILD/data" "$GAME_SANDBOX/data" || exit 2
-	sed -e "s|@SANDBOX@|$GAME_SANDBOX|g" -e "s|@BG_STATIC@|$U7_BG_STATIC|g" \
+	sed -e "s|@SANDBOX@|$GAME_SANDBOX|g" -e "s|@BG_STATIC@|${GAME_STATIC:-$U7_BG_STATIC}|g" \
 		-e "s|@RENDER_SCALE@|$render_scale|g" -e "s|@HIRES_SUFFIX@|${GAME_HIRES_SUFFIX:-}|g" \
-		"$game_tests_srcdir/game/test.cfg.in" > "$GAME_SANDBOX/exult.cfg" || exit 2
+		"${GAME_CFG_IN:-$game_tests_srcdir/game/test.cfg.in}" > "$GAME_SANDBOX/exult.cfg" || exit 2
 }
 
 # Runs the sandbox's exult with the sandbox config and the given arguments, from the sandbox,
@@ -120,15 +124,16 @@ game_check_hires_log() {
 	return 0
 }
 
-# Runs "exult --bg --render-test <spec>,out=<sandbox>/out" in a new sandbox named $1 (render_scale
-# off in the config: the spec sets the scale) and checks the exit code and the log. Sets
-# GAME_SANDBOX; the digest is $GAME_SANDBOX/out/digest.json. Returns 0 on a pass.
+# Runs "exult $GAME_FLAGS --render-test <spec>,out=<sandbox>/out" (GAME_FLAGS: --bg) in a new
+# sandbox named $1 (render_scale off in the config: the spec sets the scale) and checks the exit
+# code and the log. Sets GAME_SANDBOX; the digest is $GAME_SANDBOX/out/digest.json. Returns 0 on a pass.
 game_render_test() {
 	local name=$1
 	local spec=$2
 	game_make_sandbox "$name"
 	mkdir -p "$GAME_SANDBOX/out" || exit 2
-	game_run_exult --bg --render-test "$spec,out=$GAME_SANDBOX/out"
+	# shellcheck disable=SC2086
+	game_run_exult ${GAME_FLAGS:---bg} --render-test "$spec,out=$GAME_SANDBOX/out"
 	local rc=$?
 	if [ $rc -ne 0 ]; then
 		echo "FAIL: --render-test \"$spec\": exit code $rc (log: $GAME_SANDBOX/run.log)" >&2

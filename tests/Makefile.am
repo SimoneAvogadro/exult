@@ -7,6 +7,10 @@
 # They link the libtool convenience libraries, as tools/ipack does: a program
 # takes only the archive members it references, so the engine is not pulled in.
 #
+# "make check-world" runs world/world_tests.sh: the same kind of render oracles
+# on the synthetic test world of data/hires/world (original art, no game data),
+# so they run on any machine. It needs the exult built in the top-level tree.
+#
 # "make check-game" runs the game-data scripts in game/. Each one exits with 77
 # (skipped) unless U7_BG_STATIC names the "static" directory of a Black Gate
 # installation. EXULT_WRAPPER (environment) is prefixed to every exult call; for
@@ -102,7 +106,11 @@ regen-goldens:
 	@test -n '$(UPSTREAM_BUILD)' || { echo "regen-goldens: set UPSTREAM_BUILD to the build of upstream + P3" >&2; exit 2; }
 	HIRES_TESTS_SRCDIR='$(abs_srcdir)' bash '$(srcdir)'/game/regen_goldens.sh '$(UPSTREAM_BUILD)'
 
-.PHONY: check-game regen-goldens
+check-world:
+	EXULT_BUILD_DIR='$(abs_top_builddir)' HIRES_TESTS_SRCDIR='$(abs_srcdir)' \
+		bash '$(srcdir)'/world/world_tests.sh
+
+.PHONY: check-game check-world regen-goldens
 
 EXTRA_DIST = \
 	README \
@@ -119,6 +127,9 @@ EXTRA_DIST = \
 	game/golden/buildmap1.sha256 \
 	game/golden/buildmap2.sha256 \
 	game/golden/inspect.json \
+	world/world_tests.sh \
+	world/world.cfg.in \
+	world/world_golden.txt \
 	windows/win_rt.sh \
 	windows/run_matrix.sh \
 	windows/summarize.py \

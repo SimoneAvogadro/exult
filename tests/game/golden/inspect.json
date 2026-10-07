@@ -11,7 +11,7 @@
       "source": {"cell": [10, 12], "shape": 27, "frame": 25},
       "scale": 2,
       "overrides": true,
-      "terrain_override": {"result": "TERRAIN", "reason": "not decoded yet", "where": "<HIRES>/x6/terrain/005dde822ea6a3c8.png", "reduced": true, "bundle": false},
+      "terrain_override": {"result": "NN", "reason": "rejected: F1 unreadable PNG: not a PNG (bad signature)", "where": "<HIRES>/x6/terrain/005dde822ea6a3c8.png", "reduced": true, "bundle": false},
       "tile_override": {"result": "TILE", "reason": "", "where": "<HIRES>/x6/flats/0027/0027_25.png", "reduced": true, "bundle": false},
       "result": "TILE <HIRES>/x6/flats/0027/0027_25.png (reduced from x6)"
     },
@@ -26,7 +26,7 @@
       "source": {"cell": [10, 12], "shape": 27, "frame": 25},
       "scale": 6,
       "overrides": true,
-      "terrain_override": {"result": "TERRAIN", "reason": "not decoded yet", "where": "<HIRES>/x6/terrain/005dde822ea6a3c8.png", "reduced": false, "bundle": false},
+      "terrain_override": {"result": "NN", "reason": "rejected: F1 unreadable PNG: not a PNG (bad signature)", "where": "<HIRES>/x6/terrain/005dde822ea6a3c8.png", "reduced": false, "bundle": false},
       "tile_override": {"result": "TILE", "reason": "", "where": "<HIRES>/x6/flats/0027/0027_25.png", "reduced": false, "bundle": false},
       "result": "TILE <HIRES>/x6/flats/0027/0027_25.png"
     },
@@ -41,7 +41,7 @@
       "source": {"cell": [14, 7], "shape": 21, "frame": 11},
       "scale": 2,
       "overrides": true,
-      "terrain_override": {"result": "TERRAIN", "reason": "not decoded yet", "where": "<HIRES>/x6/terrain/005dde822ea6a3c8.png", "reduced": true, "bundle": false},
+      "terrain_override": {"result": "NN", "reason": "rejected: F1 unreadable PNG: not a PNG (bad signature)", "where": "<HIRES>/x6/terrain/005dde822ea6a3c8.png", "reduced": true, "bundle": false},
       "tile_override": {"result": "TILE", "reason": "", "where": "<HIRES>/x6/flats/0021/0021_11.png", "reduced": true, "bundle": false},
       "result": "TILE <HIRES>/x6/flats/0021/0021_11.png (reduced from x6)"
     },
@@ -56,7 +56,7 @@
       "source": {"cell": [14, 7], "shape": 21, "frame": 11},
       "scale": 6,
       "overrides": true,
-      "terrain_override": {"result": "TERRAIN", "reason": "not decoded yet", "where": "<HIRES>/x6/terrain/005dde822ea6a3c8.png", "reduced": false, "bundle": false},
+      "terrain_override": {"result": "NN", "reason": "rejected: F1 unreadable PNG: not a PNG (bad signature)", "where": "<HIRES>/x6/terrain/005dde822ea6a3c8.png", "reduced": false, "bundle": false},
       "tile_override": {"result": "TILE", "reason": "", "where": "<HIRES>/x6/flats/0021/0021_11.png", "reduced": false, "bundle": false},
       "result": "TILE <HIRES>/x6/flats/0021/0021_11.png"
     },
@@ -101,7 +101,7 @@
       "source": {"cell": [0, 2], "shape": 21, "frame": 2},
       "scale": 2,
       "overrides": true,
-      "terrain_override": {"result": "TERRAIN", "reason": "not decoded yet", "where": "<HIRES>/x6/terrain/005dde822ea6a3c8.png", "reduced": true, "bundle": false},
+      "terrain_override": {"result": "NN", "reason": "rejected: F1 unreadable PNG: not a PNG (bad signature)", "where": "<HIRES>/x6/terrain/005dde822ea6a3c8.png", "reduced": true, "bundle": false},
       "tile_override": {"result": "NN", "reason": "rejected: F1 unreadable PNG: not a PNG (bad signature)", "where": "<HIRES>/x6/flats/0021_02.png", "reduced": true, "bundle": false},
       "result": "NN (rejected: F1 unreadable PNG: not a PNG (bad signature)) <HIRES>/x6/flats/0021_02.png"
     },
@@ -116,7 +116,7 @@
       "source": {"cell": [0, 2], "shape": 21, "frame": 2},
       "scale": 6,
       "overrides": true,
-      "terrain_override": {"result": "TERRAIN", "reason": "not decoded yet", "where": "<HIRES>/x6/terrain/005dde822ea6a3c8.png", "reduced": false, "bundle": false},
+      "terrain_override": {"result": "NN", "reason": "rejected: F1 unreadable PNG: not a PNG (bad signature)", "where": "<HIRES>/x6/terrain/005dde822ea6a3c8.png", "reduced": false, "bundle": false},
       "tile_override": {"result": "NN", "reason": "rejected: F1 unreadable PNG: not a PNG (bad signature)", "where": "<HIRES>/x6/flats/0021_02.png", "reduced": false, "bundle": false},
       "result": "NN (rejected: F1 unreadable PNG: not a PNG (bad signature)) <HIRES>/x6/flats/0021_02.png"
     }

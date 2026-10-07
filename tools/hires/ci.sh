@@ -8,6 +8,8 @@
 #      ASAN_RUN (ASLR off, a timeout, leak checks off for the tools the build runs; the tests get
 #      their own options from the TEST_WRAPPER recorded at configure time). build-sdl32 must
 #      resolve SDL 3.2.14 from deps/prefix-3.2;
+#      Then make check-world (the oracles on the synthetic test world, no game data) in every
+#      lane that passed, build-asan under ASAN_RUN;
 #   3. the build-list lint (check_build_lists.py --strict);
 #   4. pytest tools/hires/tests (data-dependent tests skip themselves without U7_BG_STATIC);
 #   5. only with U7_BG_STATIC: make check-game in build-o2, and in build-asan under ASAN_RUN with
@@ -201,6 +203,19 @@ game_lane() {
 		timeout 7200 make check-game
 }
 
+# make check-world: like game_lane, on the synthetic world of tests/data/hires/world.
+world_lane() {
+	local lane=$1
+	local run=()
+	local wrapper=
+	if [ "$lane" = asan ]; then
+		run=("${ASAN_RUN[@]}")
+		wrapper=$EXULT_WRAPPER_ASAN
+	fi
+	in_dir "$ROOT/build-$lane" "${run[@]}" env HIRES_TEST_TMP="$ROOT/tmp" EXULT_WRAPPER="$wrapper" \
+		timeout 3600 make check-world
+}
+
 run_pytest() {
 	in_dir "$SRC" timeout 1800 "$VENV/bin/python" -m pytest -p no:cacheprovider \
 		--basetemp="$ROOT/tmp/pytest-ci" tools/hires/tests
@@ -217,6 +232,7 @@ for lane in $LANES; do
 	step "lane-$lane" check_lane "$lane" || continue
 	built+="$lane "
 	step "check-$lane" check_lane_tests "$lane"
+	step "world-$lane" world_lane "$lane"
 done
 step lint in_dir "$SRC" timeout 600 "$VENV/bin/python" tools/hires/check_build_lists.py --strict
 step pytest run_pytest

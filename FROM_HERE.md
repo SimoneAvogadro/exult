@@ -64,7 +64,8 @@ Background and per-WP notes are in **`docs/hires/notes/`**, copied from the owne
 | WP-10 | Developer loop: Ctrl-Alt-O toggle, Ctrl-Alt-R reload, Ctrl-Alt-I inspect, `.reload` trigger file |
 | WP-15 | Windows build with MSYS2 UCRT64 on the owner's PC, plus measurements. Code and review fixes complete (commit "WIP WP-15"); `make check` re-run in the cloud on 2026-10-07. Open: WP-15b, the interactive Windows checks of `notes/impl/WP-15.md` §6 |
 | §13.1 | **User decision 2026-10-07: always 6x.** `render_scale` defaults to `art` (Android/iOS keep `off`); precedence terrain → tile → NN, NN without smoothing |
-| WP-17 | Per-terrain overrides in the engine (`Chunk_terrain::get_t1_key`, `paint_hires_terrain`), inspector, `--render-test marked=terrain`, `mkpack_identity.py --terrain`, unit and pytest cases. **The game-data cases in `override_regions.sh` are written but not run yet**; see `notes/impl/WP-17.md` |
+| WP-17 | Per-terrain overrides in the engine (`Chunk_terrain::get_t1_key`, `paint_hires_terrain`), inspector, `--render-test marked=terrain`, `mkpack_identity.py --terrain`, unit and pytest cases. Verified end to end on the synthetic world (`make check-world`); the BG cases of `override_regions.sh` are not run yet; see `notes/impl/WP-17.md` |
+| Test world | `tests/data/hires/world` (generator `make_world.py`) and `tests/world/world_tests.sh` (`make check-world`, also a `ci.sh` step): 25 cases, data-free. `dev_loop.sh`'s `golden/inspect.json` was updated by hand for WP-17 (its fake terrain file is now rejected, F1, when painted), as the world test confirmed; re-run `dev_loop.sh` on BG to confirm |
 
 On the owner's PC, outside the repo:
 - the Windows build is installed in `E:\Dati\Ultima7_Upscale\ExultHires`;
@@ -107,9 +108,9 @@ mkdir ../build && cd ../build
 make -j"$(nproc)" && make check      # data-free unit + presenter tests (SDL offscreen/software)
 ```
 
+- **Synthetic-world tests:** `make check-world` (about 40 s) runs the render oracles, `--dump-art`, WP-17, the sample pack, the dev loop and the inspector on `tests/data/hires/world`, a tiny DEVEL game with original procedural art and a 6x sample pack (committed; no EA data). **They run in the cloud.**
 - **Game-data tests:** `make check-game` with `U7_BG_STATIC=<Black Gate static dir>`. They need the original Ultima VII files, which are copyrighted, **not in the repo**, and not available in the cloud. Without them the scripts exit 77 (skip).
-  - So in the cloud only `make check` and code review are possible.
-  - Pixel-level oracles, art production and the Windows build must run on the owner's machine.
+  - BG-specific checks (buildmap goldens vs upstream, BG regions, perf), art production and the Windows build must run on the owner's machine.
 - **ASan:** build with `--with-optimization=light` and `CXXFLAGS="-fsanitize=address,undefined -fno-sanitize=null,alignment,vptr"`.
   - With g++ 9.4, the three excluded UBSan checks make `exult.cc` compile forever.
   - Under WSL2, run ASan processes as `setarch x86_64 -R` (ASLR hang).

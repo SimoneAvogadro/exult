@@ -366,10 +366,14 @@ $(srcdir)/.git/config:
 check-game: all
 	cd tests && $(MAKE) $(AM_MAKEFLAGS) check-game
 
+# Render oracles on the synthetic test world (tests/world, no game data needed).
+check-world: all
+	cd tests && $(MAKE) $(AM_MAKEFLAGS) check-world
+
 regen-goldens:
 	cd tests && $(MAKE) $(AM_MAKEFLAGS) regen-goldens
 
-.PHONY: check-game regen-goldens
+.PHONY: check-game check-world regen-goldens
 
 BUILT_SOURCES=gitinfo.h
 
