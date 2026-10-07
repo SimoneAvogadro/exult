@@ -94,6 +94,37 @@ On the owner's PC, outside the repo:
 5. **Art phase B2** (owner's machine with GPU): generate 5-10 per-terrain overrides with route 1, blend the borders, A/B them in the engine; then a production run of about 600-1,100 terrains (3-6 GPU hours).
 6. **M2, sprites** (DESIGN §3.6) and **M3, UI** (§3.7).
 
+## 4b. Private asset repositories (game data and hi-res art)
+
+Two **private** repositories hold what this public fork must never contain. Never copy their content into this
+repo, into commit messages, or into anything public.
+
+| Repo | Content |
+|---|---|
+| `git@github.com:SimoneAvogadro/u7assets.git` | Original Ultima VII files: `blackgate/` (BG + FoV, `static/` is what Exult reads) and `serpentisle/` |
+| `git@github.com:SimoneAvogadro/ultima7-high-res-tiles.git` | 6x packs (`packs/bg` is the active one), `art_original/`, `art_ref/` (`--dump-art`), `work/` (QA, diffusion pilot, voted candidates, context windows) |
+
+Cloud or new-machine setup, next to the `exult` checkout:
+
+```bash
+git clone git@github.com:SimoneAvogadro/u7assets.git
+git clone git@github.com:SimoneAvogadro/ultima7-high-res-tiles.git hires-assets
+export U7_BG_STATIC=$PWD/u7assets/blackgate/static            # enables make check-game
+# exult.cfg: blackgate path = …/u7assets/blackgate ; hires_path = …/hires-assets/packs/bg ;
+#            savegame/gamedat/patch/mods = scratch dirs OUTSIDE both repos (Exult writes there)
+```
+
+With these, the game-data oracles and the art tooling (`hires-art` branch, `tools/hires/u7hires`) also work in
+the cloud. GPU routes (route 1 diffusion, route 2 NXbrz) need a CUDA GPU. Model weights are not stored: route 1
+downloads SDXL base, xinsir/controlnet-tile-sdxl-1.0 and madebyollin/sdxl-vae-fp16-fix from HuggingFace, and
+the SR models are listed with SHA-256 in `tools/hires/u7hires` on `hires-art`.
+
+**Keep them in sync:** commit new packs or reports to `ultima7-high-res-tiles`, and pull before working.
+On the owner's WSL machine the clones are `/home/simonea/ultima7_exult/u7assets` and
+`/home/simonea/ultima7_exult/hires-assets`. The old paths `packs/<name>`, `art_original`, `art_ref` and
+`art_work/<dir>` are symlinks into `hires-assets`. The Windows build reads `E:\Dati\Ultima7_Upscale\packs`, a
+mirror made with `publish.sh`.
+
 ## 5. How to build and test (generic Linux, e.g. a cloud VM)
 
 - **Dependencies:** a C++17 compiler, autotools, `autoconf-archive`, pkg-config, SDL3 ≥ 3.2 (3.4 enables INDEX8 and PIXELART), libpng, zlib, ogg and vorbis.
@@ -108,9 +139,9 @@ mkdir ../build && cd ../build
 make -j"$(nproc)" && make check      # data-free unit + presenter tests (SDL offscreen/software)
 ```
 
-- **Synthetic-world tests:** `make check-world` (about 40 s) runs the render oracles, `--dump-art`, WP-17, the sample pack, the dev loop and the inspector on `tests/data/hires/world`, a tiny DEVEL game with original procedural art and a 6x sample pack (committed; no EA data). **They run in the cloud.**
-- **Game-data tests:** `make check-game` with `U7_BG_STATIC=<Black Gate static dir>`. They need the original Ultima VII files, which are copyrighted, **not in the repo**, and not available in the cloud. Without them the scripts exit 77 (skip).
-  - BG-specific checks (buildmap goldens vs upstream, BG regions, perf), art production and the Windows build must run on the owner's machine.
+- **Synthetic-world tests:** `make check-world` (about 40 s) runs the render oracles, `--dump-art`, WP-17, the sample pack, the dev loop and the inspector on `tests/data/hires/world`, a tiny DEVEL game with original procedural art and a 6x sample pack (committed; no EA data). **They run anywhere.**
+- **Game-data tests:** `make check-game` with `U7_BG_STATIC=<Black Gate static dir>`. The original Ultima VII files are copyrighted and **not in this repo**: clone the private `u7assets` repo (§4b), which makes the BG checks (buildmap goldens vs upstream, BG regions, perf) possible in the cloud too. Without them the scripts exit 77 (skip).
+  - The Windows build and its measurements still need the owner's PC (MSYS2 on `E:`); GPU art routes need a CUDA GPU.
 - **ASan:** build with `--with-optimization=light` and `CXXFLAGS="-fsanitize=address,undefined -fno-sanitize=null,alignment,vptr"`.
   - With g++ 9.4, the three excluded UBSan checks make `exult.cc` compile forever.
   - Under WSL2, run ASan processes as `setarch x86_64 -R` (ASLR hang).
