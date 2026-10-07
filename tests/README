@@ -110,7 +110,15 @@ Layout
                      flat cell of the view (some but not all with
                      coverage=partial), and the store must load every flat
                      of the pack, no reject; a mode=plain present=1 run with
-                     a short bench and walk (no oracle) on the identity pack
+                     a short bench and walk (no oracle) on the identity pack;
+                     WP-17, per-terrain overrides made from a --dump-art of
+                     the game (mkpack_identity.py --terrain): O4a with
+                     identity tiles plus identity terrains on every region,
+                     and with x6 terrains only (reduced at S = 2, 3); the
+                     precedence oracle, identity tiles plus marker terrains
+                     (expect=marker:1, marked=terrain, passes=flats): the
+                     marker exactly on the cells of the chunks whose terrain
+                     has an override
     dump_art.sh      --dump-art (DESIGN.md section 4.2): two dumps give
                      identical trees; dump_art_check.py checks the tree
                      against the game's files (flat CRCs and palette CRC as

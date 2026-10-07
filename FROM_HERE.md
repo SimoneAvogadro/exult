@@ -62,7 +62,9 @@ Background and per-WP notes are in **`docs/hires/notes/`**, copied from the owne
 | WP-09 | Per-tile hi-res flats in `Chunk_terrain::paint_flats`; identity and marker oracles (`tools/hires/mkpack_identity.py`) |
 | WP-11 | `--dump-art` reference set (flats, templates, terrain T1 keys, maps) |
 | WP-10 | Developer loop: Ctrl-Alt-O toggle, Ctrl-Alt-R reload, Ctrl-Alt-I inspect, `.reload` trigger file |
-| WP-15 (WIP) | Windows build with MSYS2 UCRT64 on the owner's PC, plus measurements. Last commit "WIP WP-15"; see §4 |
+| WP-15 | Windows build with MSYS2 UCRT64 on the owner's PC, plus measurements. Code and review fixes complete (commit "WIP WP-15"); `make check` re-run in the cloud on 2026-10-07. Open: WP-15b, the interactive Windows checks of `notes/impl/WP-15.md` §6 |
+| §13.1 | **User decision 2026-10-07: always 6x.** `render_scale` defaults to `art` (Android/iOS keep `off`); precedence terrain → tile → NN, NN without smoothing |
+| WP-17 | Per-terrain overrides in the engine (`Chunk_terrain::get_t1_key`, `paint_hires_terrain`), inspector, `--render-test marked=terrain`, `mkpack_identity.py --terrain`, unit and pytest cases. **The game-data cases in `override_regions.sh` are written but not run yet**; see `notes/impl/WP-17.md` |
 
 On the owner's PC, outside the repo:
 - the Windows build is installed in `E:\Dati\Ultima7_Upscale\ExultHires`;
@@ -82,20 +84,19 @@ On the owner's PC, outside the repo:
 
 ## 4. What is left, in order
 
-1. **Finish WP-15.** The last minor review findings were being fixed when the session ended.
-   - Review the "WIP WP-15" commit (`render_test.cc` walk bench, `hires_glue.cc` Windows path fix, `tests/windows/`).
-   - Run `make check`.
-   - Amend or follow up with a clean commit.
-   - The Windows-side re-verification needs the owner's PC.
-2. **WP-16, performance pass** (DESIGN §9): `memset` runs in the scaled RLE painter, row-batched translucency, a `fast_paths` test. The current numbers already pass, so this is optional polish.
-3. **WP-17, per-terrain overrides** (DESIGN §3.4, §3.5, §5.2): a T1 key cache in `Chunk_terrain`, `Store::terrain` decode with precedence terrain > tile > NN, and an identity oracle for terrains. **This unlocks the diffusion art.**
+1. **Run the WP-17 game-data oracles** on the owner's machine: `tests/game/override_regions.sh` (terrain cases) and
+   the rest of `make check-game` (the default is now `art`, but every test config sets `render_scale`). Fix what
+   they find; `notes/impl/WP-17.md` §2 lists the points to check.
+2. **WP-15b** on the owner's PC: the interactive Windows items of `notes/impl/WP-15.md` §6.
+3. **WP-16, performance pass** (DESIGN §9): `memset` runs in the scaled RLE painter, row-batched translucency, a `fast_paths` test. The current numbers already pass, so this is optional polish. With per-terrain art, consider a decoded-terrain cache in the store.
 4. **Wrap-up docs:** the user guide `docs/hires.md` and `docs/hires_modding.md`; then rerun the full test matrix.
 5. **Art phase B2** (owner's machine with GPU): generate 5-10 per-terrain overrides with route 1, blend the borders, A/B them in the engine; then a production run of about 600-1,100 terrains (3-6 GPU hours).
 6. **M2, sprites** (DESIGN §3.6) and **M3, UI** (§3.7).
 
 ## 5. How to build and test (generic Linux, e.g. a cloud VM)
 
-- **Dependencies:** a C++17 compiler, autotools, pkg-config, SDL3 ≥ 3.2 (3.4 enables INDEX8 and PIXELART), libpng, zlib, ogg and vorbis.
+- **Dependencies:** a C++17 compiler, autotools, `autoconf-archive`, pkg-config, SDL3 ≥ 3.2 (3.4 enables INDEX8 and PIXELART), libpng, zlib, ogg and vorbis.
+  - Ubuntu 24.04 has no SDL3 package: build SDL 3.4 from source (`cmake -DSDL_UNIX_CONSOLE_BUILD=ON -DSDL_X11=OFF -DSDL_WAYLAND=OFF` is enough for `make check`, which uses the offscreen driver).
   - The owner's WSL had no sudo, so everything was built in user space. That is not needed on a normal VM.
 
 ```bash

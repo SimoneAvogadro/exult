@@ -18,6 +18,9 @@ lists the changes.
 Revision 2.5 (2026-10-06): after the WP-10 review, the `.reload` poll watches `x<S_art>` (and `x<S>` when it
 differs) (§3.8, §5.7), §4.2 lists the render-test keys `dev` and `keys` and the `inspect.json` shape, and the WP-10
 tests check the dev-mode gate of the keys and the 2 s reload limit; §12.5 lists the changes.
+Revision 2.6 (2026-10-07): the user's decision of §13.1: the world always renders at S_art = 6 by default
+(`render_scale` defaults to `art`, §4.1, G5), with per-tile and per-terrain art where it exists and NN of the 1x
+tiles elsewhere; WP-17 (per-terrain overrides) implemented (§3.4, §6, §9).
 Repo: `/home/simonea/ultima7_exult/exult-hires`, fork base = upstream master `8b6ab6b43`.
 Every `file:line` anchor refers to that commit. The lead architect re-checked the anchors in code; the
 analysis documents in `docs-hires/analysis/` back the other measured facts.
@@ -61,7 +64,7 @@ Terminology:
 * **G2.** Frames without an override are pixel-identical to today's point ×S (NN).
 * **G3.** Terrain flats can be overridden per tile, per group and per terrain with indexed 6x art, checked at load; anything missing or rejected falls back to NN.
 * **G4.** Presentation at any window size: exact at integer ratios, filtered when downscaling, never fatal (fail-soft to S=1).
-* **G5.** S=1 output is **byte-identical to upstream + P3** (§11 D-02); the feature is off by default in code. The fork's other prerequisite commits (main-buffer wiring, P11 palette alpha, the `Import_png8` leak) do not change paletted output, and O0 proves that. P11 can change true-colour screenshots where the display format has an alpha channel (§12.2).
+* **G5.** S=1 output is **byte-identical to upstream + P3** (§11 D-02); with `render_scale=off`. Since revision 2.6 the code default is `art` (§13.1): S=1 is no longer the default, but `off` still gives the upstream pipeline byte for byte (the buildmap and every 1x test set `off` explicitly). The fork's other prerequisite commits (main-buffer wiring, P11 palette alpha, the `Import_png8` leak) do not change paletted output, and O0 proves that. P11 can change true-colour screenshots where the display format has an alpha channel (§12.2).
 * **G6.** Automated tests: SDL-free unit tests and a data-free present test in `make check`, plus headless golden and oracle runs on real BG data here; the unit tests also run on Windows.
 * **G7.** A Windows build (MSYS2 UCRT64) for the user's PC, measured on D3D11, D3D12 and Vulkan.
 * **G8.** A complete 6x BG flat pack that passes the QA gates (Phase A), and a pipeline to replace families with AI art (Phase B).
@@ -674,7 +677,7 @@ dispatched next to it (`exult.cc:986-989`), and modelled on `BuildGameMap` (`exu
 
 | Key | Values | Default | Meaning |
 |---|---|---|---|
-| `render_scale` | `off` (or `1`) \| `art` \| `auto` \| `force:N` | `off` | Policy (§3.2.2). The user's configs set `art`. |
+| `render_scale` | `off` (or `1`) \| `art` \| `auto` \| `force:N` | `art` (`off` on Android and iOS) | Policy (§3.2.2). `art` renders at S_art = 6 whenever the world texture fits (§13.1). |
 | `art_scale` | 6 | 6 | S_art; must match the pack folders |
 | `max_world_mpx` | number | 10 (set finally by WP-15) | Pixel budget for `full·S²` |
 | `overrides` | `yes` \| `no` | `yes` | `no` = pure NN (oracles, A/B) |
@@ -727,6 +730,8 @@ Environment (debug): `EXULT_HIRES_FULL_UPLOAD=1` disables the write tracker.
 | `dev` | 0 \| 1 | Needs `overrides=yes`, no S = 1, no `identity`. Sets `config/video/hires/dev=yes`. After each S render (the pack must differ from NN): the toggle action off (NN) and on (the first render), the reload action (new generation, every flats cache of the view repainted, same render), then the `.reload` poll: no reload without a change; `x<S>/flats` and `flats.next` of the first root (`x<S_art>` when `x<S>` has no `flats.next`) swapped and that `.reload` touched: reload within 2 s and NN (`flats.next` holds identity flats); swapped back and touched: the first render; dev mode off: a touch does not reload. **Renames directories in the pack: scratch packs only** |
 | `keys` | 0 \| 1 | Needs `dev=1`. At the end, Ctrl-Alt-O, R and I as SDL key events through the key bindings at the window's S: nothing with cheats off; toggle twice, reload, and the inspector's text for the tile under the mouse on the clipboard with cheats on; nothing (cheats on) with dev mode off |
 | `expect` | `nn` \| `identity` \| `marker:<idx>` | The oracle to assert |
+| `coverage` | `full` \| `partial` | With `identity` or `marker`: the overrides must cover every flat cell of the view, or some but not all. A terrain override covers every cell of its chunks (WP-17) |
+| `marked` | `any` \| `terrain` | With `marker`: which overrides carry the marker; `terrain` = the tile overrides are identity (the precedence oracle, terrain over tile, WP-17) |
 | `seed` | 1 | `srand` after `init_files`, overriding `gamewin.cc:587-588` |
 | `out` | DIR | Output directory |
 
@@ -1521,3 +1526,21 @@ The user answered "ok, procedi" to §10.2 with the recommended defaults, plus on
 * **Q8** yes (route-3 tiles with B1 between 85 % and 97 % accepted and flagged for review).
 
 Commits go to local branches only (`hires`, `upstream-fixes`); nothing is pushed.
+
+### 13.1 User decision (2026-10-07): always 6x
+
+"The internal rendering always happens at 6x the original resolution; where upscaled artwork exists it is used
+for the terrain tiles, otherwise the original tiles are upscaled without smoothing."
+
+* `render_scale` defaults to `art` in code (Android and iOS keep `off`): S = S_art = 6 on every profile whose world
+  texture fits the renderer's texture limit and the 40 Mpx safety cap (§3.2.2; with the defaults only views larger
+  than about 1.1 M game px drop to 3). `off` stays available and byte-identical to upstream (G5).
+* Precedence per flats cache (§3.4): per-terrain override → per-tile override → NN of the 1x flat. NN is exact
+  replication; no filter is ever applied to game pixels at render time (filters act only at present, §3.2.4).
+* WP-17 (per-terrain overrides) is implemented in the engine: the T1 key is cached in `Chunk_terrain`
+  (`get_t1_key`, invalidated by edits and by `Hires::generation()`), `paint_flats` asks
+  `Hires::terrain_count`/`has_terrain` before computing it, decodes through `Hires::terrain` with the terrain's
+  1x layer (fill included) as the P4 and reduction parent, and falls back per tile on any failure (I11). The
+  inspector reports `TERRAIN <where>` when the terrain override paints the cell. Tests: the store unit tests,
+  `mkpack_identity.py --terrain <dump>` (identity and marker terrains from a `--dump-art` tree) and the
+  `override_regions.sh` terrain cases (identity, reduction, precedence with `marked=terrain`).
