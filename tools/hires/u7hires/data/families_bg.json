@@ -1,0 +1,8 @@
+{
+  "_comment": "BG overrides of the colour heuristic in families.py (shape numbers only, picked by eye from the flat atlas): 113-117 marsh (light grass with water veins), 0/27/47 floors, 68-82 letter/marker tiles.",
+  "0": "floor", "27": "floor", "47": "floor",
+  "113": "marsh", "114": "marsh", "115": "marsh", "116": "marsh", "117": "marsh",
+  "68": "other", "69": "other", "70": "other", "71": "other", "72": "other", "73": "other", "74": "other",
+  "75": "other", "76": "other", "77": "other", "78": "other", "79": "other", "80": "other", "81": "other",
+  "82": "other"
+}
