@@ -2329,10 +2329,19 @@ namespace {
 		World_filter_override   filter        = World_filter_override::Auto;
 	};
 
+	// The render_scale default: the world renders at S_art (6x the game
+	// resolution) unless the configuration says otherwise. Mobile builds keep
+	// the upstream 1x pipeline (memory; no PNG overrides there).
+#if defined(ANDROID) || defined(SDL_PLATFORM_IOS)
+	constexpr const char* default_render_scale = "off";
+#else
+	constexpr const char* default_render_scale = "art";
+#endif
+
 	World_settings read_world_settings(const std::string& override_policy) {
 		World_settings settings;
 		std::string    policy;
-		config->value("config/video/hires/render_scale", policy, "off");
+		config->value("config/video/hires/render_scale", policy, default_render_scale);
 		if (!override_policy.empty()) {
 			policy = override_policy;
 		}
