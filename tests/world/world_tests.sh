@@ -17,11 +17,12 @@
 #   * the sample pack (real 6x art): the store loads its 16 tiles and 1 terrain with no reject;
 #     the inspector names TERRAIN (pond), TILE (grass, water, road group), NN (sand: no file;
 #     cobble: disabled group; a rock RLE tile filled from cobble); the S = 6 render equals the
-#     recorded digest (world_golden.txt); the window path with a bench and walk;
+#     recorded digest (world_golden.txt); tools/hires/hirescheck.py agrees (when numpy and Pillow
+#     import; WORLD_PYTHON names another python); the window path with a bench and walk;
 #   * the developer loop (dev=1, keys=1) and a terrain file that is not a PNG (rejected on decode,
 #     F1, the tiles paint).
 # Every run is made twice with equal digests (once in an ASan build).
-# Usage: [EXULT_WRAPPER=...] [WORLD_RECORD=1] world_tests.sh [build-dir]
+# Usage: [EXULT_WRAPPER=...] [WORLD_RECORD=1] [WORLD_PYTHON=...] world_tests.sh [build-dir]
 #   WORLD_RECORD=1 writes the sample digests to world_golden.txt instead of comparing.
 set -u
 . "$(dirname "${BASH_SOURCE[0]}")/../game/lib.sh"
@@ -175,6 +176,22 @@ GAME_HIRES_PACK=$world/pack
 GAME_RUN_CHECK=check_sample
 game_check_render sample "$all6,scales=6,mode=plain,overrides=yes,$sample_inspect"
 GAME_RUN_CHECK=
+# The offline validator (tools/hires/hirescheck.py, needs numpy and Pillow) agrees with the store.
+hirescheck="$game_tests_srcdir/../tools/hires/hirescheck.py"
+python=${WORLD_PYTHON:-python3}
+if "$python" -c 'import numpy, PIL' 2> /dev/null; then
+	if out=$("$python" "$hirescheck" --static "$static" "$world/pack" 2>&1) \
+		&& grep -q "tiles 16 loaded 16 rejected 0 groups_skipped 0 unguarded 0 warnings 0" <<< "$out"; then
+		echo "ok: hirescheck on the sample pack (16 loaded, 0 rejected)"
+		game_pass=$((game_pass + 1))
+	else
+		echo "FAIL: hirescheck on the sample pack:" >&2
+		echo "$out" | head -10 >&2
+		game_fail=$((game_fail + 1))
+	fi
+else
+	echo "skip: hirescheck (no numpy/Pillow for $python; set WORLD_PYTHON to a venv's python)"
+fi
 game_check_render sample-window "tx=40,ty=20,w=355,h=200,game=320x200,scales=6,mode=plain,overrides=yes,present=1,bench=2,walk=4"
 
 # The developer loop: a marker pack whose flats.next holds the identity flats (dev_loop.sh).

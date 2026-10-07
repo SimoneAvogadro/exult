@@ -41,7 +41,7 @@ Background and per-WP notes are in **`docs/hires/notes/`**, copied from the owne
 | Branch | Base | Content |
 |---|---|---|
 | `hires` | upstream `8b6ab6b43` | **Main feature branch.** The engine work, tests and docs. This file lives here. |
-| `hires-art` | upstream `8b6ab6b43` | Python art tooling `tools/hires/u7hires/` (pipeline, QA, validator, packer, routes 1/2/3, voting). **Not merged into `hires` yet.** Merge it (expect conflicts in `tools/hires/`) or keep it separate. |
+| `hires-art` | upstream `8b6ab6b43` | Python art tooling `tools/hires/u7hires/` (pipeline, QA, validator, packer, routes 1/2/3, voting). **Merged into `hires` on 2026-10-07** (no conflicts); work on `hires` from now on. pytest: build xBRZ with `tools/hires/third_party/build_xbrz.sh <dir>` and set `U7_XBRZ_LIB=<dir>/libxbrz19.so`, otherwise the xBRZ tests skip. |
 | `upstream-fixes` | upstream `8b6ab6b43` | Upstreamable bug fixes that change 1x output (P1, P2, P5 plus tests). They are deliberately kept **out** of `hires`, so `hires` stays byte-identical to upstream at S=1. The owner decides whether to submit them to exult/exult. |
 
 `master` on the fork is upstream plus one owner commit. It is not used by this work.
@@ -79,7 +79,7 @@ On the owner's PC, outside the repo:
   - `bg-r2`: NXbrz model.
 - Where they are: `/home/simonea/ultima7_exult/packs` on the WSL machine, mirrored to `E:\Dati\Ultima7_Upscale\packs`.
 - Limitation: the algorithmic routes add no detail inside grass, dirt and sand.
-- Diffusion pilot (SDXL + xinsir Tile ControlNet, `tools/hires/u7hires/route1.py` on `hires-art`):
+- Diffusion pilot (SDXL + xinsir Tile ControlNet, `tools/hires/u7hires/route1.py`):
   - it adds believable detail, but only on **whole terrains**, not as per-tile flats, which seam;
   - so the production path is per-terrain overrides (WP-17) plus border blending.
 
@@ -124,5 +124,5 @@ make -j"$(nproc)" && make check      # data-free unit + presenter tests (SDL off
 - **The owner's PC had unstable RAM:** bit flips under load and a 0x1A bugcheck. The overclock is now disabled, but stability is not yet proven.
   - On that machine keep loads moderate.
   - Re-run non-reproducible failures before debugging them.
-  - Produce art with the redundancy/vote tools (`tools/hires/README.md` on `hires-art`).
+  - Produce art with the redundancy/vote tools (`tools/hires/README.md`).
 - **Commits:** messages end with `Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>`. Push to the `fork` remote only, never to exult/exult.

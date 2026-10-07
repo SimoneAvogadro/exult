@@ -213,7 +213,7 @@ world_lane() {
 		wrapper=$EXULT_WRAPPER_ASAN
 	fi
 	in_dir "$ROOT/build-$lane" "${run[@]}" env HIRES_TEST_TMP="$ROOT/tmp" EXULT_WRAPPER="$wrapper" \
-		timeout 3600 make check-world
+		WORLD_PYTHON="$VENV/bin/python" timeout 3600 make check-world
 }
 
 run_pytest() {

@@ -1,12 +1,14 @@
 """Route 1 CPU stages (diffusion itself needs torch + diffusers + SDXL and is not run here)."""
 
 import numpy as np
+import pytest
 
 from u7hires import rules
 from u7hires.quant import srgb_to_linear
 from u7hires.route1 import (PILOT_WINDOWS, R1Params, backproject_smooth, detail_gain, gaussian_blur,
                             lowpass_lock, parse_settings, pick_consensus, post)
 from u7hires.route3 import R3Kernel, R3Params
+from u7hires.scalers import xbrz_available
 
 
 def _noisy(world, src, sd=20.0, seed=3):
@@ -68,6 +70,7 @@ def test_pick_consensus_is_medoid():
     assert st1["picked"] == 0 and (single == 0).all()
 
 
+@pytest.mark.skipif(not xbrz_available(), reason="libxbrz19.so not built")    # post() runs route 3
 def test_post_is_deterministic_and_index_safe(world):
     rng = np.random.default_rng(6)
     idx = (6 + rng.integers(0, 5, (16, 16))).astype(np.uint8)
