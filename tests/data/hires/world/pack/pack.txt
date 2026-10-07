@@ -1,0 +1,6 @@
+game=DEVEL
+scale=6
+palette_crc32=2d47299a
+edge=none
+route=synthetic
+title=Synthetic test world sample pack (original art, free to redistribute)

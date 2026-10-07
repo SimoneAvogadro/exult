@@ -1,0 +1,21 @@
+# The synthetic test world (make_world.py); read by tests/world/world_tests.sh.
+identity=HIRESTEST
+palette_crc32=2d47299a
+pattern=terrain of chunk (cx, cy) is 0,1,2 / 3,4,5 by cx % 3, cy % 2
+flats=22
+pack_tiles_loaded=16
+pack_tiles_nn=sand (no file), cobble (group 0006.off)
+terrain 0 meadow t1=4c2fcbeac86a0d35
+terrain 1 path t1=a6001c9b351f06c9
+terrain 2 pond t1=0ab169dc66ab44e2 override
+terrain 3 beach t1=17164babc796182c
+terrain 4 plaza t1=770aebe72574eb4c
+terrain 5 road t1=518aaae1d39e4ac0
+shape 1 grass flat frames=4
+shape 2 dirt flat frames=4
+shape 3 sand flat frames=4
+shape 4 water flat frames=4
+shape 5 road flat frames=4
+shape 6 cobble flat frames=2
+shape 150 rock rle frames=1
+shape 151 bush rle frames=1

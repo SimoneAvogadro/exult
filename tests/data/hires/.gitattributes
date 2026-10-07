@@ -1,2 +1,6 @@
 # The flats bundle fixture is binary (DESIGN.md section 5.7).
 *.bundle	binary
+# The synthetic test world (world/make_world.py): game files and PNGs are binary.
+world/static/*	binary
+world/static/*.txt	text
+*.png	binary
